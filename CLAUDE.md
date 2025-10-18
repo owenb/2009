@@ -51,18 +51,81 @@ Built as a Base mini app following the Base platform specifications: https://doc
 
 ---
 
+## Architecture
+
+**NOTE:** Everything is in active development and subject to change. We're figuring this out in realtime.
+
+### Documentation
+- **`schema.md`** - Database structure and tables
+- **`GAME_DESIGN.md`** - Game mechanics, user flows, and design decisions
+
+### Core Principles
+
+1. **Smart Contract as Source of Truth**
+   - Base blockchain smart contract is the ultimate authority for all purchases
+   - Database is secondary (for UX and caching)
+   - All transactions verified on-chain
+
+2. **Slot Purchase Flow**
+   - User selects empty slot → 1-minute database lock
+   - User completes Base transaction → verified on-chain
+   - User submits prompt → sent to video API
+   - Video generated → saved to R2 → database updated
+   - Slot now filled for all users
+
+3. **Generation & Retry Logic**
+   - Video API may reject prompts (moderation)
+   - Users have **1 hour** to successfully generate after payment
+   - Unlimited retries with different prompts within window
+   - After 1 hour of failures: **50% refund**, slot reopens
+
+4. **Navigation**
+   - No tree map view - users must explore by watching scenes
+   - Each scene displays creator (ENS name), timestamp, and prompt
+   - Users can go back and try different branches
+
+---
+
 ## Development Progress
+
+### UI Implementation (2025-10-18)
+
+#### Countdown Animation
+- Created `YearCountdown` component with smooth animations
+- Counts down from 2025 → 2009 with ease-in-out timing
+- Independent scaling animation (0.1 → 1.0 scale)
+- Explosion effect at 2009 with fade-out
+- Fixed SSR hydration issue by moving `Date.now()` to useEffect
+
+#### Video Integration
+- Intro video (`/public/intro/intro.mp4`) preloads on mount
+- Fades in as countdown explodes (1s transition)
+- Holds on last frame when complete
+- Triggers modal popup when video ends
+
+#### Choice Modal
+- "What happens next?" popup with video game aesthetic
+- Three slots (A, B, C) displayed as horizontal full-width boxes
+- Glassmorphism design with blur effects
+- Fly-in animation with bounce easing
+- Hover effects and responsive design
+- Roboto Mono typography throughout
 
 ### Infrastructure Setup (2025-10-18)
 
-#### AWS S3 Integration
-- Installed official AWS SDK (`@aws-sdk/client-s3`)
-- Configured S3 credentials in `.env.local`:
+#### Video Storage
+- Using **Cloudflare R2** (S3-compatible API)
+- Credentials configured in `.env.local`:
   - `AWS_REGION=auto`
   - `AWS_ACCESS_KEY_ID`
   - `AWS_SECRET_ACCESS_KEY`
   - `AWS_S3_BUCKET_NAME=scenes`
-- S3 will be used for storing video scene files
+- AWS SDK (`@aws-sdk/client-s3`) for R2 interactions
+
+#### Database
+- PostgreSQL via Neon
+- See `schema.md` for full schema
+- `scenes` table with parent/child relationships
 
 #### Typography
 - Added Roboto Mono font via Next.js Google Fonts integration
@@ -72,4 +135,4 @@ Built as a Base mini app following the Base platform specifications: https://doc
 #### Development Environment
 - Dev server running on http://localhost:3001
 - Environment variables configured in `.env.local`
-- PostgreSQL database connected via Neon
+- Base mini app integration via OnchainKit
