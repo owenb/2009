@@ -18,7 +18,7 @@ export const minikitConfig = {
   miniapp: {
     version: "1",
     name: "2009",
-    subtitle: "What if we could go back in time and start again?",
+    subtitle: "An infinite adventure game",
     description: "Game",
     screenshotUrls: [`${ROOT_URL}/screenshot-portrait.png`],
     iconUrl: `${ROOT_URL}/blue-icon.png`,
