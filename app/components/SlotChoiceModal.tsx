@@ -3,6 +3,7 @@
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
 import styles from "./SlotChoiceModal.module.css";
 
@@ -36,16 +37,24 @@ interface SlotChoiceModalProps {
 }
 
 export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', onSlotSelected }: SlotChoiceModalProps) {
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<'A' | 'B' | 'C' | null>(null);
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [lockSceneId, setLockSceneId] = useState<number | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
-  const { isConnected } = useAccount();
+  const router = useRouter();
+  const { address, isConnected, chain } = useAccount();
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
+
+  // Check if user is on correct network
+  const REQUIRED_CHAIN_ID = 84532; // Base Sepolia testnet
+  const isWrongNetwork = chain && chain.id !== REQUIRED_CHAIN_ID;
 
   // Fetch slots when modal becomes visible
   useEffect(() => {
@@ -106,9 +115,15 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   };
 
   // Handle slot selection and transaction
-  const handleSlotClick = (slotIndex: number) => {
-    if (!isConnected) {
+  const handleSlotClick = async (slot: 'A' | 'B' | 'C', slotIndex: number) => {
+    if (!isConnected || !address) {
       alert("Please connect your wallet first!");
+      return;
+    }
+
+    // Check network before proceeding
+    if (isWrongNetwork) {
+      alert(`Wrong network! Please switch to Base Sepolia testnet in your wallet.\n\nCurrent: ${chain?.name}\nRequired: Base Sepolia (Chain ID: 84532)`);
       return;
     }
 
@@ -116,33 +131,105 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       return; // Prevent multiple clicks during transaction
     }
 
-    setSelectedSlot(slotIndex);
+    setSelectedSlot(slot);
+    setSelectedSlotIndex(slotIndex);
+    setStatusMessage('Acquiring lock...');
 
-    // Call claimSlot on the smart contract
-    // parentId = 0 (genesis/intro scene), slot = slotIndex (0=A, 1=B, 2=C)
-    writeContract({
-      address: CONTRACT_ADDRESS,
-      abi: VideoAdventureABI,
-      functionName: "claimSlot",
-      args: [BigInt(0), slotIndex], // parentId = 0, slot = 0/1/2
-      value: parseEther(SCENE_PRICE),
-    });
+    // Step 1: Acquire 1-minute lock
+    try {
+      const lockResponse = await fetch(`/api/scenes/${parentSceneId}/lock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slot,
+          userAddress: address,
+          fid: undefined // TODO: Get from Farcaster if available
+        })
+      });
+
+      if (!lockResponse.ok) {
+        const error = await lockResponse.json();
+        alert(error.error || 'Failed to acquire lock');
+        setStatusMessage('');
+        return;
+      }
+
+      const lockData = await lockResponse.json();
+      setLockSceneId(lockData.sceneId);
+      setStatusMessage('Lock acquired! Please confirm transaction...');
+
+      console.log('Lock acquired:', lockData);
+
+      // Step 2: Trigger smart contract transaction
+      const numericParentId = parentSceneId === 'genesis' ? 0 : Number(parentSceneId);
+
+      writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: VideoAdventureABI,
+        functionName: "claimSlot",
+        args: [BigInt(numericParentId), slotIndex],
+        value: parseEther(SCENE_PRICE),
+      });
+
+    } catch (error) {
+      console.error('Error acquiring lock:', error);
+      alert('Failed to acquire lock. Please try again.');
+      setStatusMessage('');
+    }
   };
 
-  // Show transaction status
+  // Verify payment after transaction confirms
   useEffect(() => {
-    if (isConfirmed && hash) {
-      console.log("Transaction confirmed!", hash);
-      alert(`Slot ${selectedSlot === 0 ? 'A' : selectedSlot === 1 ? 'B' : 'C'} claimed! Transaction: ${hash}`);
-      // TODO: Redirect to prompt input or next step
-    }
-  }, [isConfirmed, hash, selectedSlot]);
+    if (!isConfirmed || !hash || !lockSceneId || !address) return;
+
+    const verifyPayment = async () => {
+      setStatusMessage('Verifying payment...');
+
+      try {
+        const response = await fetch('/api/scenes/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sceneId: lockSceneId,
+            transactionHash: hash,
+            userAddress: address,
+            fid: undefined // TODO: Get from Farcaster if available
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.error || 'Payment verification failed');
+          setStatusMessage('');
+          return;
+        }
+
+        const data = await response.json();
+        console.log('Payment verified:', data);
+
+        setStatusMessage('Payment verified! Redirecting...');
+
+        // Step 3: Redirect to prompt creation page
+        setTimeout(() => {
+          router.push(`/create?attemptId=${data.attemptId}&sceneId=${lockSceneId}`);
+        }, 1000);
+
+      } catch (error) {
+        console.error('Error verifying payment:', error);
+        alert('Payment verification failed. Please contact support.');
+        setStatusMessage('');
+      }
+    };
+
+    verifyPayment();
+  }, [isConfirmed, hash, lockSceneId, address, router]);
 
   // Show transaction error
   useEffect(() => {
     if (error) {
       console.error("Transaction error:", error);
       alert(`Transaction failed: ${error.message}`);
+      setStatusMessage('');
     }
   }, [error]);
 
@@ -159,6 +246,33 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
           </p>
         )}
 
+        {isConnected && isWrongNetwork && (
+          <div style={{
+            background: 'rgba(255, 107, 107, 0.2)',
+            border: '2px solid rgba(255, 107, 107, 0.5)',
+            borderRadius: '10px',
+            padding: '1rem',
+            marginBottom: '1rem',
+            textAlign: 'center'
+          }}>
+            <p style={{ color: '#FF6B6B', fontWeight: 'bold', marginBottom: '0.5rem', fontFamily: 'var(--font-roboto-mono)' }}>
+              ⚠️ Wrong Network
+            </p>
+            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontFamily: 'var(--font-roboto-mono)' }}>
+              Please switch to <strong>Base Sepolia</strong> testnet in your wallet
+            </p>
+            <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.8rem', marginTop: '0.5rem', fontFamily: 'var(--font-roboto-mono)' }}>
+              Current: {chain?.name} (Chain ID: {chain?.id})
+            </p>
+          </div>
+        )}
+
+        {statusMessage && (
+          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
+            {statusMessage}
+          </p>
+        )}
+
         {isPending && (
           <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
             Waiting for wallet confirmation...
@@ -167,13 +281,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
         {isConfirming && (
           <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
-            Transaction pending...
-          </p>
-        )}
-
-        {isConfirmed && (
-          <p style={{ color: '#00FF00', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
-            Slot claimed successfully!
+            Transaction pending on Base...
           </p>
         )}
 
@@ -202,7 +310,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                     style={{ cursor: 'pointer' }}
                   >
                     <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                    <div className={styles.choiceText}>{slotInfo.label || ''}</div>
+                    <div className={styles.choiceText}>{slotInfo.label || 'view scene'}</div>
                   </div>
                 );
               }
@@ -228,14 +336,14 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                 <div
                   key={slotInfo.slot}
                   className={styles.choice}
-                  onClick={() => handleSlotClick(slotIndex)}
+                  onClick={() => handleSlotClick(slotInfo.slot, slotIndex)}
                   style={{
                     cursor: isPending || isConfirming ? 'not-allowed' : 'pointer',
                     opacity: isPending || isConfirming ? 0.5 : 1
                   }}
                 >
                   <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                  <div className={styles.choiceText}></div>
+                  <div className={styles.choiceText}>claim this slot</div>
                 </div>
               );
             })}
