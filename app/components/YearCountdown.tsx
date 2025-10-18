@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import {
   ConnectWallet,
   Wallet,
@@ -30,11 +31,19 @@ interface SceneData {
 
 export default function YearCountdown() {
   const { address } = useAccount(); // Get connected wallet address
+  const { isFrameReady, setFrameReady } = useMiniKit(); // Base mini app initialization
   const [showVideo, setShowVideo] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [currentScene, setCurrentScene] = useState<SceneData | null>(null);
   const [parentSceneId, setParentSceneId] = useState<number | 'genesis'>('genesis');
   const [previousSceneId, setPreviousSceneId] = useState<number | null>(null);
+
+  // Signal to Base mini app that we're ready to display
+  useEffect(() => {
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [setFrameReady, isFrameReady]);
 
   const handleCountdownComplete = () => {
     setShowVideo(true);

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
 import styles from "./SlotChoiceModal.module.css";
+import ExtendStoryModal from "./ExtendStoryModal";
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.00056";
@@ -44,6 +45,10 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lockSceneId, setLockSceneId] = useState<number | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>('');
+
+  // ExtendStoryModal state
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [pendingSlot, setPendingSlot] = useState<{ slot: 'A' | 'B' | 'C', index: number } | null>(null);
 
   const router = useRouter();
   const { address, isConnected, chain } = useAccount();
@@ -126,7 +131,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
     }
   };
 
-  // Handle slot selection and transaction
+  // Handle empty slot click - show ExtendStoryModal first
   const handleSlotClick = async (slot: 'A' | 'B' | 'C', slotIndex: number) => {
     if (!isConnected || !address) {
       alert("Please connect your wallet first!");
@@ -138,6 +143,27 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       alert(`Wrong network! Please switch to Base Sepolia testnet in your wallet.\n\nCurrent: ${chain?.name}\nRequired: Base Sepolia (Chain ID: 84532)`);
       return;
     }
+
+    // Show ExtendStoryModal
+    setPendingSlot({ slot, index: slotIndex });
+    setShowExtendModal(true);
+  };
+
+  // Handle closing ExtendStoryModal (cancel)
+  const handleCloseExtendModal = () => {
+    setShowExtendModal(false);
+    setPendingSlot(null);
+  };
+
+  // Handle confirmed slot extension (after user clicks CTA in ExtendStoryModal)
+  const handleConfirmExtend = async () => {
+    if (!pendingSlot || !isConnected || !address) return;
+
+    const { slot, index: slotIndex } = pendingSlot;
+
+    // Close ExtendStoryModal
+    setShowExtendModal(false);
+    setPendingSlot(null);
 
     if (isPending || isConfirming) {
       return; // Prevent multiple clicks during transaction
@@ -381,6 +407,16 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
           </div>
         )}
       </div>
+
+      {/* ExtendStoryModal - shown before lock/payment */}
+      {pendingSlot && (
+        <ExtendStoryModal
+          isVisible={showExtendModal}
+          slot={pendingSlot.slot}
+          onExtendClick={handleConfirmExtend}
+          onClose={handleCloseExtendModal}
+        />
+      )}
     </div>
   );
 }
