@@ -28,7 +28,7 @@ async function ensureMigrationsTable(client: Client): Promise<void> {
 }
 
 async function getAppliedMigrations(client: Client): Promise<Set<number>> {
-  const result = await client.query('SELECT id FROM migrations ORDER BY id');
+  const result = await client.query<{ id: number }>('SELECT id FROM migrations ORDER BY id');
   return new Set(result.rows.map(row => row.id));
 }
 

@@ -72,18 +72,6 @@ export default function YearCountdown() {
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
-  // Calculate delay based on position in countdown with easing
-  const getDelay = (): number => {
-    const progress = (2025 - currentYear) / (2025 - 2009);
-    const easedSpeed = easeInOutCubic(progress);
-
-    // Invert the easing so slower at beginning/end, faster in middle
-    const minDelay = 20; // Fastest (middle)
-    const maxDelay = 400; // Slowest (start/end)
-
-    return maxDelay - (easedSpeed * (maxDelay - minDelay));
-  };
-
   // Number countdown logic
   useEffect(() => {
     if (currentYear < 2009) return;
@@ -96,7 +84,15 @@ export default function YearCountdown() {
       return () => clearTimeout(explosionTimer);
     }
 
-    const delay = getDelay();
+    // Calculate delay based on position in countdown with easing
+    const progress = (2025 - currentYear) / (2025 - 2009);
+    const easedSpeed = easeInOutCubic(progress);
+
+    // Invert the easing so slower at beginning/end, faster in middle
+    const minDelay = 20; // Fastest (middle)
+    const maxDelay = 400; // Slowest (start/end)
+
+    const delay = maxDelay - (easedSpeed * (maxDelay - minDelay));
 
     const timer = setTimeout(() => {
       setIsAnimating(true);
