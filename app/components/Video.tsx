@@ -82,16 +82,22 @@ export default function Video({ sceneId, isVisible, onVideoEnd }: VideoProps) {
     }
   }, [isVisible, videoUrl]);
 
-  // Don't show error/loading states - just render video element
-  // The video will load in the background silently
   return (
     <>
+      {/* Show loading spinner for non-intro videos */}
+      {isLoading && sceneId !== null && (
+        <div className={styles.loading} style={{ opacity: isVisible ? 1 : 0 }}>
+          <p>Loading video...</p>
+        </div>
+      )}
+
       {error && (
         <div className={styles.error} style={{ opacity: isVisible ? 1 : 0 }}>
           <p>{error}</p>
           <button onClick={fetchVideoUrl}>Retry</button>
         </div>
       )}
+
       <video
         ref={videoRef}
         className={`${styles.video} ${isVisible ? styles.videoFadeIn : ''}`}
