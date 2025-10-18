@@ -3,7 +3,7 @@
  * Verifies VideoAdventure contract transactions on Base blockchain
  */
 
-import { createPublicClient, http, parseAbiItem, type Address, type Hash } from 'viem';
+import { createPublicClient, http, decodeEventLog, type Address, type Hash } from 'viem';
 import { base } from 'viem/chains';
 import VideoAdventureABI from './VideoAdventure.abi.json';
 
@@ -54,32 +54,29 @@ export async function verifySceneCreation(
     throw new Error('Transaction failed on blockchain');
   }
 
-  // Parse SceneCreated event from logs (supports both direct calls and smart wallet transactions)
-  const sceneCreatedEvent = parseAbiItem(
-    'event SceneCreated(uint256 indexed sceneId, uint256 indexed parentId, uint8 slot, address indexed creator)'
+  // Filter logs from the receipt to find our SceneCreated event
+  const eventLog = receipt.logs.find(log =>
+    log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase()
   );
 
-  const logs = await client.getLogs({
-    address: CONTRACT_ADDRESS,
-    event: sceneCreatedEvent,
-    fromBlock: receipt.blockNumber,
-    toBlock: receipt.blockNumber
+  if (!eventLog) {
+    throw new Error('No event found from VideoAdventure contract in transaction logs');
+  }
+
+  // Decode the event log using our ABI
+  const decodedLog = decodeEventLog({
+    abi: VideoAdventureABI,
+    data: eventLog.data,
+    topics: eventLog.topics,
   });
 
-  // Find the event log for this specific transaction
-  const eventLog = logs.find(log => log.transactionHash === txHash);
-
-  if (!eventLog) {
-    throw new Error('SceneCreated event not found in transaction logs');
+  // Verify this is the SceneCreated event
+  if (decodedLog.eventName !== 'SceneCreated') {
+    throw new Error(`Expected SceneCreated event, got ${decodedLog.eventName}`);
   }
 
-  // Verify the event came from the correct contract
-  if (eventLog.address.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
-    throw new Error(`Event came from wrong contract. Expected ${CONTRACT_ADDRESS}, got ${eventLog.address}`);
-  }
-
-  // Extract event arguments
-  const { sceneId, parentId, slot, creator } = eventLog.args as unknown as SceneCreatedEvent;
+  // Extract event arguments with proper typing
+  const { sceneId, parentId, slot, creator } = decodedLog.args as unknown as SceneCreatedEvent;
 
   // Validate creator address
   if (creator.toLowerCase() !== expectedCreator.toLowerCase()) {
