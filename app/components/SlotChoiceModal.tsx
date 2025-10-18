@@ -8,7 +8,7 @@ import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
 import styles from "./SlotChoiceModal.module.css";
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
-const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.00056";
+const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.000056";
 
 interface SlotInfo {
   slot: 'A' | 'B' | 'C';
@@ -46,15 +46,11 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   const [statusMessage, setStatusMessage] = useState<string>('');
 
   const router = useRouter();
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected } = useAccount();
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
-
-  // Check if user is on correct network
-  const REQUIRED_CHAIN_ID = 84532; // Base Sepolia testnet
-  const isWrongNetwork = chain && chain.id !== REQUIRED_CHAIN_ID;
 
   // Fetch slots when modal becomes visible
   useEffect(() => {
@@ -92,12 +88,6 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       return;
     }
 
-    // Check network before proceeding
-    if (isWrongNetwork) {
-      alert(`Wrong network! Please switch to Base Sepolia testnet in your wallet.\n\nCurrent: ${chain?.name}\nRequired: Base Sepolia (Chain ID: 84532)`);
-      return;
-    }
-
     try {
       const response = await fetch('/api/play', {
         method: 'POST',
@@ -130,12 +120,6 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   const handleSlotClick = async (slot: 'A' | 'B' | 'C', slotIndex: number) => {
     if (!isConnected || !address) {
       alert("Please connect your wallet first!");
-      return;
-    }
-
-    // Check network before proceeding
-    if (isWrongNetwork) {
-      alert(`Wrong network! Please switch to Base Sepolia testnet in your wallet.\n\nCurrent: ${chain?.name}\nRequired: Base Sepolia (Chain ID: 84532)`);
       return;
     }
 
@@ -270,27 +254,6 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
           </div>
         )}
 
-        {isConnected && isWrongNetwork && (
-          <div style={{
-            background: 'rgba(255, 107, 107, 0.2)',
-            border: '2px solid rgba(255, 107, 107, 0.5)',
-            borderRadius: '10px',
-            padding: '1rem',
-            marginBottom: '1rem',
-            textAlign: 'center'
-          }}>
-            <p style={{ color: '#FF6B6B', fontWeight: 'bold', marginBottom: '0.5rem', fontFamily: 'var(--font-roboto-mono)' }}>
-              ⚠️ Wrong Network
-            </p>
-            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontFamily: 'var(--font-roboto-mono)' }}>
-              Please switch to <strong>Base Sepolia</strong> testnet in your wallet
-            </p>
-            <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.8rem', marginTop: '0.5rem', fontFamily: 'var(--font-roboto-mono)' }}>
-              Current: {chain?.name} (Chain ID: {chain?.id})
-            </p>
-          </div>
-        )}
-
         {statusMessage && (
           <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
             {statusMessage}
@@ -326,7 +289,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
               // Filled slot (exists and completed)
               if (slotInfo.exists && slotInfo.status === 'completed') {
-                const canView = isConnected && !isWrongNetwork;
+                const canView = isConnected;
                 return (
                   <div
                     key={slotInfo.slot}

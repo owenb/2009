@@ -4,11 +4,11 @@
  */
 
 import { createPublicClient, http, parseAbiItem, type Address, type Hash } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import VideoAdventureABI from './VideoAdventure.abi.json';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as Address;
-const EXPECTED_PRICE = BigInt(560000000000000); // 0.00056 ETH in wei
+const EXPECTED_PRICE = BigInt(56000000000000); // 0.000056 ETH in wei
 
 export interface VerificationResult {
   verified: boolean;
@@ -41,9 +41,9 @@ export async function verifySceneCreation(
   expectedParentId: number,
   expectedSlot: number
 ): Promise<VerificationResult> {
-  // Create public client for Base Sepolia testnet
+  // Create public client for Base mainnet
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http()
   });
 
@@ -137,7 +137,7 @@ export async function getSceneFromContract(sceneId: number): Promise<{
   exists: boolean;
 }> {
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http()
   });
 
@@ -165,7 +165,7 @@ export async function getSceneFromContract(sceneId: number): Promise<{
  */
 export async function getAvailableSlotsFromContract(parentId: number): Promise<[boolean, boolean, boolean]> {
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http()
   });
 
@@ -186,7 +186,7 @@ export async function getAvailableSlotsFromContract(parentId: number): Promise<[
  */
 export async function getChildScenesFromContract(parentId: number): Promise<[bigint, bigint, bigint]> {
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http()
   });
 
@@ -206,7 +206,7 @@ export async function getChildScenesFromContract(parentId: number): Promise<[big
  */
 export async function getTotalScenesFromContract(): Promise<number> {
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http()
   });
 
@@ -228,7 +228,7 @@ export async function getTotalScenesFromContract(): Promise<number> {
 export async function isTransactionConfirmed(txHash: Hash): Promise<boolean> {
   try {
     const client = createPublicClient({
-      chain: baseSepolia,
+      chain: base,
       transport: http()
     });
 
@@ -241,12 +241,12 @@ export async function isTransactionConfirmed(txHash: Hash): Promise<boolean> {
 }
 
 /**
- * Get current block number on Base Sepolia
+ * Get current block number on Base mainnet
  * @returns Current block number
  */
 export async function getCurrentBlockNumber(): Promise<bigint> {
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: http()
   });
 
