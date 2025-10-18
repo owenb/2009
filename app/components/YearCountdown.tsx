@@ -10,9 +10,14 @@ export default function YearCountdown() {
   const [scale, setScale] = useState(0.1);
   const [videoFadeIn, setVideoFadeIn] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const totalDuration = 4000; // Total animation duration in ms
+
+  // Initialize start time once on mount
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+  }, []);
 
   // Ease-in-out function (cubic)
   const easeInOutCubic = (t: number): number => {
