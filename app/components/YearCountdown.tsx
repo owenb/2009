@@ -18,9 +18,20 @@ import Video from "./Video";
 import SlotChoiceModal from "./SlotChoiceModal";
 import styles from "./YearCountdown.module.css";
 
+interface SceneData {
+  sceneId: number;
+  videoUrl: string;
+  slotLabel: string | null;
+  creatorAddress: string | null;
+  creatorFid: number | null;
+  createdAt: string;
+}
+
 export default function YearCountdown() {
   const [showVideo, setShowVideo] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [currentScene, setCurrentScene] = useState<SceneData | null>(null);
+  const [parentSceneId, setParentSceneId] = useState<number | 'genesis'>('genesis');
 
   const handleCountdownComplete = () => {
     setShowVideo(true);
@@ -28,6 +39,20 @@ export default function YearCountdown() {
 
   const handleVideoEnd = () => {
     setShowPopup(true);
+  };
+
+  const handleSlotSelected = (sceneData: SceneData) => {
+    // Hide modal
+    setShowPopup(false);
+
+    // Set current scene data
+    setCurrentScene(sceneData);
+
+    // Show video
+    setShowVideo(true);
+
+    // Update parent scene ID for next modal
+    setParentSceneId(sceneData.sceneId);
   };
 
   return (
@@ -50,14 +75,26 @@ export default function YearCountdown() {
         </Wallet>
       </div>
 
-      {/* Genesis video (intro) */}
-      <Video sceneId={null} isVisible={showVideo} onVideoEnd={handleVideoEnd} />
+      {/* Video player */}
+      <Video
+        sceneId={currentScene?.sceneId ?? null}
+        isVisible={showVideo}
+        onVideoEnd={handleVideoEnd}
+        directUrl={currentScene?.videoUrl}
+        creatorAddress={currentScene?.creatorAddress}
+        creatorFid={currentScene?.creatorFid}
+        slotLabel={currentScene?.slotLabel}
+      />
 
       {/* Countdown animation */}
       {!showVideo && <Countdown onComplete={handleCountdownComplete} />}
 
       {/* Slot choice modal */}
-      <SlotChoiceModal isVisible={showPopup} />
+      <SlotChoiceModal
+        isVisible={showPopup}
+        parentSceneId={parentSceneId}
+        onSlotSelected={handleSlotSelected}
+      />
     </div>
   );
 }

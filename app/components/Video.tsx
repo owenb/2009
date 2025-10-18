@@ -7,9 +7,13 @@ interface VideoProps {
   sceneId: number | null; // null for genesis/intro scene, number for all other scenes
   isVisible: boolean;
   onVideoEnd: () => void;
+  directUrl?: string; // Optional: if provided, use this URL instead of fetching
+  creatorAddress?: string | null; // Creator info for attribution
+  creatorFid?: number | null;
+  slotLabel?: string | null;
 }
 
-export default function Video({ sceneId, isVisible, onVideoEnd }: VideoProps) {
+export default function Video({ sceneId, isVisible, onVideoEnd, directUrl, creatorAddress, creatorFid, slotLabel: _slotLabel }: VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,11 +44,17 @@ export default function Video({ sceneId, isVisible, onVideoEnd }: VideoProps) {
     }
   };
 
-  // Fetch URL on mount and when sceneId changes
+  // Use direct URL if provided, otherwise fetch
   useEffect(() => {
-    fetchVideoUrl();
+    if (directUrl) {
+      setVideoUrl(directUrl);
+      setIsLoading(false);
+      setError(null);
+    } else {
+      fetchVideoUrl();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sceneId]);
+  }, [sceneId, directUrl]);
 
   // Refresh URL before expiration (at 55-minute mark)
   useEffect(() => {
@@ -108,6 +118,16 @@ export default function Video({ sceneId, isVisible, onVideoEnd }: VideoProps) {
         loop={false}
         onEnded={onVideoEnd}
       />
+
+      {/* Creator attribution */}
+      {isVisible && creatorAddress && (
+        <div className={styles.attribution}>
+          <p className={styles.attributionText}>
+            Created by {creatorAddress.slice(0, 6)}...{creatorAddress.slice(-4)}
+            {creatorFid && ` (FID: ${creatorFid})`}
+          </p>
+        </div>
+      )}
     </>
   );
 }

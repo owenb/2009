@@ -20,12 +20,22 @@ interface SlotInfo {
   lockedUntil: Date | null;
 }
 
+interface SceneData {
+  sceneId: number;
+  videoUrl: string;
+  slotLabel: string | null;
+  creatorAddress: string | null;
+  creatorFid: number | null;
+  createdAt: string;
+}
+
 interface SlotChoiceModalProps {
   isVisible: boolean;
   parentSceneId?: number | 'genesis'; // Parent scene ID, default to 'genesis' (intro)
+  onSlotSelected?: (sceneData: SceneData) => void; // Callback when a filled slot is clicked
 }
 
-export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis' }: SlotChoiceModalProps) {
+export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', onSlotSelected }: SlotChoiceModalProps) {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +74,36 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis' }
 
     fetchSlots();
   }, [isVisible, parentSceneId]);
+
+  // Handle clicking a filled slot (to play the scene)
+  const handleFilledSlotClick = async (slot: 'A' | 'B' | 'C') => {
+    try {
+      const response = await fetch('/api/play', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          parentSceneId,
+          slot,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load scene');
+      }
+
+      const sceneData = await response.json();
+
+      // Call the callback with the scene data
+      if (onSlotSelected) {
+        onSlotSelected(sceneData);
+      }
+    } catch (err) {
+      console.error('Error loading scene:', err);
+      alert('Failed to load scene. Please try again.');
+    }
+  };
 
   // Handle slot selection and transaction
   const handleSlotClick = (slotIndex: number) => {
@@ -158,10 +198,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis' }
                   <div
                     key={slotInfo.slot}
                     className={styles.choice}
-                    onClick={() => {
-                      // TODO: Navigate to this scene and play video
-                      alert(`Playing scene ${slotInfo.slot} (not yet implemented)`);
-                    }}
+                    onClick={() => handleFilledSlotClick(slotInfo.slot)}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className={styles.choiceLabel}>{slotInfo.slot}</div>
