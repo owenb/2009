@@ -3,7 +3,7 @@
  * Verifies VideoAdventure contract transactions on Base blockchain
  */
 
-import { createPublicClient, http, decodeEventLog, type Address, type Hash } from 'viem';
+import { createPublicClient, http, type Address, type Hash } from 'viem';
 import { base } from 'viem/chains';
 import VideoAdventureABI from './VideoAdventure.abi.json';
 
@@ -17,13 +17,6 @@ export interface VerificationResult {
   creator: string;
   blockNumber: bigint;
   transactionHash: string;
-}
-
-export interface SceneCreatedEvent {
-  sceneId: bigint;
-  parentId: bigint;
-  slot: number;
-  creator: Address;
 }
 
 /**
@@ -46,53 +39,55 @@ export async function verifySceneCreation(
     transport: http()
   });
 
-  // Get transaction receipt
+  // Step 1: Verify transaction succeeded
   const receipt = await client.getTransactionReceipt({ hash: txHash });
 
-  // Verify transaction succeeded
   if (receipt.status !== 'success') {
     throw new Error('Transaction failed on blockchain');
   }
 
-  // Filter logs from the receipt to find our SceneCreated event
-  const eventLog = receipt.logs.find(log =>
-    log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase()
-  );
-
-  if (!eventLog) {
-    throw new Error('No event found from VideoAdventure contract in transaction logs');
-  }
-
-  // Decode the event log using our ABI
-  const decodedLog = decodeEventLog({
+  // Step 2: Query contract state to verify the slot was actually claimed
+  // Get the child scenes for this parent
+  const childScenes = await client.readContract({
+    address: CONTRACT_ADDRESS,
     abi: VideoAdventureABI,
-    data: eventLog.data,
-    topics: eventLog.topics,
-  });
+    functionName: 'getChildScenes',
+    args: [BigInt(expectedParentId)]
+  }) as [bigint, bigint, bigint];
 
-  // Verify this is the SceneCreated event
-  if (decodedLog.eventName !== 'SceneCreated') {
-    throw new Error(`Expected SceneCreated event, got ${decodedLog.eventName}`);
+  // Check if the expected slot now has a scene ID
+  const claimedSceneId = childScenes[expectedSlot];
+
+  if (claimedSceneId === BigInt(0)) {
+    throw new Error(`Slot ${expectedSlot} was not claimed in this transaction`);
   }
 
-  // Extract event arguments with proper typing
-  const { sceneId, parentId, slot, creator } = decodedLog.args as unknown as SceneCreatedEvent;
+  // Step 3: Verify the scene details match what we expect
+  const sceneDetails = await client.readContract({
+    address: CONTRACT_ADDRESS,
+    abi: VideoAdventureABI,
+    functionName: 'getScene',
+    args: [claimedSceneId]
+  }) as [bigint, number, Address, boolean];
 
-  // Validate creator address
+  const [parentId, slot, creator, exists] = sceneDetails;
+
+  if (!exists) {
+    throw new Error('Scene does not exist on chain');
+  }
+
   if (creator.toLowerCase() !== expectedCreator.toLowerCase()) {
     throw new Error(
-      `Creator mismatch. Expected ${expectedCreator}, got ${creator}`
+      `Scene was claimed by different address. Expected ${expectedCreator}, got ${creator}`
     );
   }
 
-  // Validate parent ID
   if (Number(parentId) !== expectedParentId) {
     throw new Error(
       `Parent ID mismatch. Expected ${expectedParentId}, got ${parentId}`
     );
   }
 
-  // Validate slot
   if (slot !== expectedSlot) {
     throw new Error(
       `Slot mismatch. Expected ${expectedSlot}, got ${slot}`
@@ -102,7 +97,7 @@ export async function verifySceneCreation(
   // All validations passed!
   return {
     verified: true,
-    sceneId: Number(sceneId),
+    sceneId: Number(claimedSceneId),
     parentId: Number(parentId),
     slot: slot,
     creator: creator,
