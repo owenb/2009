@@ -8,7 +8,6 @@ import { base } from 'viem/chains';
 import VideoAdventureABI from './VideoAdventure.abi.json';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as Address;
-const EXPECTED_PRICE = BigInt(56000000000000); // 0.000056 ETH in wei
 
 export interface VerificationResult {
   verified: boolean;
