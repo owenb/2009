@@ -14,7 +14,7 @@ import {
   Address
 } from "@coinbase/onchainkit/identity";
 import Countdown from "./Countdown";
-import IntroVideo from "./IntroVideo";
+import Video from "./Video";
 import SlotChoiceModal from "./SlotChoiceModal";
 import styles from "./YearCountdown.module.css";
 
@@ -50,8 +50,8 @@ export default function YearCountdown() {
         </Wallet>
       </div>
 
-      {/* Intro video */}
-      <IntroVideo isVisible={showVideo} onVideoEnd={handleVideoEnd} />
+      {/* Genesis video (intro) */}
+      <Video sceneId={null} isVisible={showVideo} onVideoEnd={handleVideoEnd} />
 
       {/* Countdown animation */}
       {!showVideo && <Countdown onComplete={handleCountdownComplete} />}

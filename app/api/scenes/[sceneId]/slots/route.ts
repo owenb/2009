@@ -25,19 +25,19 @@ interface SlotInfo {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { parentId: string } }
+  { params }: { params: Promise<{ sceneId: string }> }
 ) {
   try {
-    const { parentId: parentIdParam } = params;
+    const { sceneId: sceneIdParam } = await params;
 
     // Handle "genesis" or "null" as the intro scene (id=1)
-    const parentId = parentIdParam === 'genesis' || parentIdParam === 'null'
+    const parentId = sceneIdParam === 'genesis' || sceneIdParam === 'null'
       ? 1
-      : parseInt(parentIdParam, 10);
+      : parseInt(sceneIdParam, 10);
 
     if (isNaN(parentId)) {
       return NextResponse.json(
-        { error: 'Invalid parent ID' },
+        { error: 'Invalid scene ID' },
         { status: 400 }
       );
     }
@@ -76,7 +76,7 @@ export async function GET(
       }
 
       // Check if slot is currently locked
-      const isLocked = scene.locked_until && new Date(scene.locked_until) > new Date();
+      const isLocked = !!(scene.locked_until && new Date(scene.locked_until) > new Date());
 
       return {
         slot: slotLetter as 'A' | 'B' | 'C',

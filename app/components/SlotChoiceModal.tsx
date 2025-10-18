@@ -149,7 +149,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis' }
           </p>
         ) : (
           <div className={styles.choicesContainer}>
-            {slots.map((slotInfo, index) => {
+            {slots.map((slotInfo) => {
               const slotIndex = slotInfo.slot.charCodeAt(0) - 'A'.charCodeAt(0); // A=0, B=1, C=2
 
               // Filled slot (exists and completed)
