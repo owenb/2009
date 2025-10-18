@@ -34,7 +34,7 @@ export default function YearCountdown() {
   const totalDuration = 4000; // Total animation duration in ms
 
   // Wagmi hooks
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
