@@ -57,4 +57,43 @@
       color-scheme: dark;
     }
   }
+
+  /* OnchainKit Wallet Address Customization */
+
+  /* Style the wallet button */
+  button[data-testid="ockConnectWallet_Connected"] {
+    padding: 0.5rem 0.75rem !important; /* Smaller padding */
+    font-size: 0.75rem !important; /* 12px */
+    background-color: rgba(255, 255, 255, 0.3) !important; /* 30% white */
+  }
+
+  /* Keep subtle background on hover/active states */
+  button[data-testid="ockConnectWallet_Connected"]:hover {
+    background-color: rgba(255, 255, 255, 0.4) !important; /* 40% on hover */
+  }
+
+  button[data-testid="ockConnectWallet_Connected"]:active,
+  button[data-testid="ockConnectWallet_Connected"]:focus {
+    background-color: rgba(255, 255, 255, 0.35) !important; /* 35% on active/focus */
+  }
+
+  /* Style the avatar to be smaller */
+  div[data-testid="ockAvatar_ImageContainer"] {
+    height: 1.25rem !important; /* 20px */
+    width: 1.25rem !important;  /* 20px */
+  }
+
+  /* Remove border and shadow from avatar, add subtle background */
+  div[data-testid="ockAvatar_ImageContainer"] > div {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: rgba(255, 255, 255, 0.2) !important; /* 20% white */
+  }
+
+  /* Style the address text */
+  span[data-testid="ockIdentity_Text"] {
+    font-family: var(--font-roboto-mono), monospace !important;
+    font-size: 0.75rem !important; /* 12px */
+    font-weight: 500 !important; /* Medium weight instead of semibold */
+  }
 }

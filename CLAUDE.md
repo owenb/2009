@@ -134,6 +134,17 @@ Built as a Base mini app following the Base platform specifications: https://doc
 - Hover effects and responsive design
 - Roboto Mono typography throughout
 
+#### Wallet Address Styling
+- OnchainKit wallet address customized via CSS in `app/globals.css`
+- Targets elements using `data-testid` attributes from OnchainKit components
+- Customizations applied:
+  - **Font**: Roboto Mono (matching game aesthetic)
+  - **Size**: Reduced to 0.75rem (12px) for compact display
+  - **Avatar**: Shrunk to 1.25rem (20px) from default 40px
+  - **Background**: 30% white (`rgba(255, 255, 255, 0.3)`) with subtle hover states
+  - **Padding**: Tightened to 0.5rem 0.75rem for minimal footprint
+- Method: Use browser DevTools → Inspect element → Find `data-testid` attributes → Target in CSS with `[data-testid="..."]` selectors
+
 ### Infrastructure Setup (2025-10-18)
 
 #### Video Storage
