@@ -56,33 +56,56 @@ Built as a Base mini app following the Base platform specifications: https://doc
 **NOTE:** Everything is in active development and subject to change. We're figuring this out in realtime.
 
 ### Documentation
-- **`schema.md`** - Database structure and tables
+- **`schema.md`** - Database structure and tables (three-tier architecture)
 - **`GAME_DESIGN.md`** - Game mechanics, user flows, and design decisions
 
 ### Core Principles
 
-1. **Smart Contract as Source of Truth**
+1. **Three-Tier Database Architecture**
+   ```
+   scenes (the slot itself - one row per parent/slot)
+     └── scene_generation_attempts (each paid user session)
+          └── prompts (each prompt submission)
+   ```
+   - Allows multiple users to attempt same slot if previous attempts fail
+   - Complete audit trail of all generation attempts
+   - `UNIQUE(parent_id, slot)` constraint provides atomic lock mechanism
+
+2. **Smart Contract as Source of Truth**
    - Base blockchain smart contract is the ultimate authority for all purchases
    - Database is secondary (for UX and caching)
-   - All transactions verified on-chain
+   - All transactions verified independently on-chain by backend
+   - Payment verification happens before prompt submission
 
-2. **Slot Purchase Flow**
-   - User selects empty slot → 1-minute database lock
-   - User completes Base transaction → verified on-chain
-   - User submits prompt → sent to video API
-   - Video generated → saved to R2 → database updated
-   - Slot now filled for all users
+3. **Slot Purchase Flow**
+   - User clicks empty slot → "Extend the Story" modal with explanation
+   - User clicks "Extend now" → **IMMEDIATE lock acquisition** (1 minute)
+   - Lock successful → Base payment modal appears
+   - Payment submitted → backend verifies tx hash on-chain
+   - Verification succeeds → `scene_generation_attempts` row created
+   - User enters prompt → **GPT-4o-mini** provides refinement suggestions
+   - Refined prompt sent to video API → video generated
+   - Video uploaded to R2 → slot marked completed
 
-3. **Generation & Retry Logic**
-   - Video API may reject prompts (moderation)
-   - Users have **1 hour** to successfully generate after payment
-   - Unlimited retries with different prompts within window
-   - After 1 hour of failures: **50% refund**, slot reopens
+4. **Generation & Retry Logic**
+   - Video API may reject prompts (moderation, rate limits, errors)
+   - Users have **1 hour** from payment confirmation to successfully generate
+   - Unlimited prompt retries within window (each tracked separately)
+   - Each retry creates new `prompts` row under same `scene_generation_attempts`
+   - After 1 hour of failures: **50% refund**, attempt marked failed, slot reopens
+   - GPT-4o-mini assists with prompt refinement on each attempt
 
-4. **Navigation**
+5. **Lock & Expiration Handling**
+   - Locks expire after 1 minute if payment not completed
+   - Expiration handled lazily (no background jobs)
+   - Other users see "Selected by [user]" with countdown during lock
+   - Expired locks can be taken over by next user (row reused, not deleted)
+
+6. **Navigation**
    - No tree map view - users must explore by watching scenes
-   - Each scene displays creator (ENS name), timestamp, and prompt
+   - Each scene displays creator (ENS name), timestamp, and prompt used
    - Users can go back and try different branches
+   - Completed slots show preview text and are immediately playable
 
 ---
 
@@ -124,8 +147,15 @@ Built as a Base mini app following the Base platform specifications: https://doc
 
 #### Database
 - PostgreSQL via Neon
-- See `schema.md` for full schema
-- `scenes` table with parent/child relationships
+- See `schema.md` for full three-tier schema
+- Three core tables:
+  - `scenes` - Slot tree structure with atomic lock via UNIQUE constraint
+  - `scene_generation_attempts` - Each paid user session (1 hour window)
+  - `prompts` - Individual prompt submissions with GPT-4o-mini refinements
+- Migration system: `POSTGRES_URL=xxx npm run db:migrate`
+- Current migrations:
+  - `001_initial_schema.sql` - Legacy two-tier structure
+  - `002_refactor_to_three_tier_architecture.sql` - New three-tier architecture
 
 #### Typography
 - Added Roboto Mono font via Next.js Google Fonts integration
