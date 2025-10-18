@@ -48,3 +48,28 @@ Built as a Base mini app following the Base platform specifications: https://doc
 - **2009 Setting**: Themed around the launch of Bitcoin and that era
 - **AI-Powered Generation**: Uses generative AI to create new scenes from user prompts
 - **Infinite Scalability**: The narrative can grow indefinitely in any direction
+
+---
+
+## Development Progress
+
+### Infrastructure Setup (2025-10-18)
+
+#### AWS S3 Integration
+- Installed official AWS SDK (`@aws-sdk/client-s3`)
+- Configured S3 credentials in `.env.local`:
+  - `AWS_REGION=auto`
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `AWS_S3_BUCKET_NAME=scenes`
+- S3 will be used for storing video scene files
+
+#### Typography
+- Added Roboto Mono font via Next.js Google Fonts integration
+- Font available as CSS variable: `--font-roboto-mono`
+- Configured in `app/layout.tsx` alongside existing Inter and Source Code Pro fonts
+
+#### Development Environment
+- Dev server running on http://localhost:3001
+- Environment variables configured in `.env.local`
+- PostgreSQL database connected via Neon
