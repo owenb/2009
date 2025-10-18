@@ -9,6 +9,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { checkVideoStatus } from '@/lib/sora';
 
+interface PromptRow {
+  id: number;
+  attempt_id: number;
+  video_job_id: string | null;
+  outcome: string;
+  error_message: string | null;
+  submitted_at: Date;
+  last_polled_at: Date | null;
+  scene_id: number;
+  retry_window_expires_at: Date;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -31,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch prompt from database
-    const promptResult = await query(`
+    const promptResult = await query<PromptRow>(`
       SELECT
         p.id,
         p.attempt_id,

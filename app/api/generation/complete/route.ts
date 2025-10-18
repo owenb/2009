@@ -16,6 +16,20 @@ interface CompleteRequest {
   videoJobId: string;
 }
 
+interface PromptRow {
+  id: number;
+  attempt_id: number;
+  video_job_id: string;
+  outcome: string;
+  refined_prompt_text: string | null;
+  prompt_text: string;
+  scene_id: number;
+  creator_address: string;
+  creator_fid: number | null;
+  parent_id: number;
+  slot: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: CompleteRequest = await request.json();
@@ -37,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch prompt and related data
-    const promptResult = await query(`
+    const promptResult = await query<PromptRow>(`
       SELECT
         p.id,
         p.attempt_id,

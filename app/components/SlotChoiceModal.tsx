@@ -37,8 +37,8 @@ interface SlotChoiceModalProps {
 }
 
 export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', onSlotSelected }: SlotChoiceModalProps) {
-  const [selectedSlot, setSelectedSlot] = useState<'A' | 'B' | 'C' | null>(null);
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [_selectedSlot, setSelectedSlot] = useState<'A' | 'B' | 'C' | null>(null);
+  const [_selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);

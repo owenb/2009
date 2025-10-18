@@ -15,12 +15,24 @@ interface LockRequest {
   fid?: number;
 }
 
+interface CurrentLockRow {
+  locked_by_address: string;
+  locked_until: Date;
+  status: string;
+}
+
+interface LockResultRow {
+  id: number;
+  locked_until: Date;
+  status: string;
+}
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { sceneId: string } }
+  { params }: { params: Promise<{ sceneId: string }> }
 ) {
   try {
-    const { sceneId: sceneIdParam } = params;
+    const { sceneId: sceneIdParam } = await params;
     const body: LockRequest = await request.json();
 
     const { slot, userAddress, fid } = body;
@@ -56,7 +68,7 @@ export async function POST(
     // This uses INSERT ... ON CONFLICT to atomically lock the slot
     const lockExpiry = new Date(Date.now() + 60000); // 1 minute from now
 
-    const result = await query(`
+    const result = await query<LockResultRow>(`
       INSERT INTO scenes (
         parent_id,
         slot,
@@ -103,7 +115,7 @@ export async function POST(
     if (result.rowCount === 0) {
       // Lock was not acquired - slot is already locked by someone else
       // Fetch current lock info
-      const currentLock = await query(`
+      const currentLock = await query<CurrentLockRow>(`
         SELECT locked_by_address, locked_until, status
         FROM scenes
         WHERE parent_id = $1 AND slot = $2

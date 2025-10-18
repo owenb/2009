@@ -7,12 +7,22 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { generateVideoWithSora } from '@/lib/sora';
 
 interface SubmitRequest {
   attemptId: number;
   promptText: string;
   refinedPromptText?: string;
+}
+
+interface AttemptRow {
+  id: number;
+  scene_id: number;
+  outcome: string;
+  retry_window_expires_at: Date;
+}
+
+interface PromptInsertRow {
+  id: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -36,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify attempt exists and is still valid
-    const attemptResult = await query(`
+    const attemptResult = await query<AttemptRow>(`
       SELECT id, scene_id, outcome, retry_window_expires_at
       FROM scene_generation_attempts
       WHERE id = $1
@@ -87,7 +97,7 @@ export async function POST(request: NextRequest) {
     const finalPrompt = refinedPromptText || promptText;
 
     // Create prompts table row
-    const promptResult = await query(`
+    const promptResult = await query<PromptInsertRow>(`
       INSERT INTO prompts (
         attempt_id,
         prompt_text,

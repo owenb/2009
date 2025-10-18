@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./generating.module.css";
 
-export default function GeneratingPage() {
+function GeneratingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -15,6 +15,43 @@ export default function GeneratingPage() {
   const [error, setError] = useState<string | null>(null);
   const [canRetry, setCanRetry] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Complete generation function
+  const completeGeneration = useCallback(async (promptIdParam: string, videoJobId: string) => {
+    try {
+      setProgress(95);
+      setStatus('Finalizing...');
+
+      const response = await fetch('/api/generation/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptId: parseInt(promptIdParam),
+          videoJobId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to complete generation');
+      }
+
+      const data = await response.json();
+      console.log('Generation completed:', data);
+
+      setProgress(100);
+      setStatus('Complete!');
+
+      // Redirect to success page or scene viewer
+      setTimeout(() => {
+        router.push(`/scene/${sceneId}?new=true`);
+      }, 2000);
+
+    } catch (err) {
+      console.error('Error completing generation:', err);
+      setError((err as Error).message);
+    }
+  }, [router, sceneId]);
 
   // Poll for status every 5 seconds
   useEffect(() => {
@@ -77,43 +114,7 @@ export default function GeneratingPage() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [promptId]);
-
-  const completeGeneration = async (promptId: string, videoJobId: string) => {
-    try {
-      setProgress(95);
-      setStatus('Finalizing...');
-
-      const response = await fetch('/api/generation/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          promptId: parseInt(promptId),
-          videoJobId
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to complete generation');
-      }
-
-      const data = await response.json();
-      console.log('Generation completed:', data);
-
-      setProgress(100);
-      setStatus('Complete!');
-
-      // Redirect to success page or scene viewer
-      setTimeout(() => {
-        router.push(`/scene/${sceneId}?new=true`);
-      }, 2000);
-
-    } catch (err) {
-      console.error('Error completing generation:', err);
-      setError((err as Error).message);
-    }
-  };
+  }, [promptId, completeGeneration]);
 
   if (error) {
     return (
@@ -178,7 +179,7 @@ export default function GeneratingPage() {
             This usually takes 2-4 minutes. Hang tight!
           </p>
           <p className={styles.infoSubtext}>
-            We're using Sora 2 to generate your 8-second video scene set in 2009.
+            We&apos;re using Sora 2 to generate your 8-second video scene set in 2009.
           </p>
         </div>
 
@@ -186,11 +187,31 @@ export default function GeneratingPage() {
         <div className={styles.funFact}>
           <p className={styles.funFactTitle}>Did you know?</p>
           <p className={styles.funFactText}>
-            In 2009, Bitcoin's first block (the "Genesis Block") was mined on January 3rd,
+            In 2009, Bitcoin&apos;s first block (the &quot;Genesis Block&quot;) was mined on January 3rd,
             marking the birth of cryptocurrency as we know it today.
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GeneratingPage() {
+  return (
+    <Suspense fallback={
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.spinner}>
+            <div className={styles.spinnerRing}></div>
+            <div className={styles.spinnerRing}></div>
+            <div className={styles.spinnerRing}></div>
+            <span className={styles.year}>2009</span>
+          </div>
+          <h1 className={styles.title}>Loading...</h1>
+        </div>
+      </div>
+    }>
+      <GeneratingPageContent />
+    </Suspense>
   );
 }

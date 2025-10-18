@@ -11,7 +11,6 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || 'scenes';
-const AWS_REGION = process.env.AWS_REGION || 'auto';
 const AWS_S3_ENDPOINT = process.env.AWS_S3_ENDPOINT;
 
 // Public URL base (customize based on your R2 public domain setup)
@@ -24,7 +23,6 @@ function getR2Client(): S3Client {
   const endpoint = AWS_S3_ENDPOINT;
   const accessKeyId = AWS_ACCESS_KEY_ID;
   const secretAccessKey = AWS_SECRET_ACCESS_KEY;
-  const region = AWS_REGION || 'auto';
 
   if (!endpoint || !accessKeyId || !secretAccessKey) {
     throw new Error(
@@ -182,7 +180,8 @@ export async function videoExists(sceneId: number): Promise<boolean> {
     await client.send(command);
     return true;
   } catch (error) {
-    if ((error as any).name === 'NotFound' || (error as any).$metadata?.httpStatusCode === 404) {
+    const err = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+    if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
       return false;
     }
     throw error;

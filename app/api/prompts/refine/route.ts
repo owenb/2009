@@ -16,6 +16,13 @@ interface RefineRequest {
   context?: string;
 }
 
+interface AttemptRow {
+  id: number;
+  scene_id: number;
+  outcome: string;
+  retry_window_expires_at: Date;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: RefineRequest = await request.json();
@@ -44,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify attempt exists and is still valid
-    const attemptResult = await query(`
+    const attemptResult = await query<AttemptRow>(`
       SELECT id, scene_id, outcome, retry_window_expires_at
       FROM scene_generation_attempts
       WHERE id = $1

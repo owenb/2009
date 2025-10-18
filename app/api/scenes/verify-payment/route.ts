@@ -17,6 +17,19 @@ interface VerifyPaymentRequest {
   fid?: number;
 }
 
+interface SceneRow {
+  id: number;
+  parent_id: number;
+  slot: string;
+  status: string;
+  locked_by_address: string | null;
+}
+
+interface AttemptInsertRow {
+  id: number;
+  retry_window_expires_at: Date;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: VerifyPaymentRequest = await request.json();
@@ -45,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch scene from database to get parent_id and slot
-    const sceneResult = await query(`
+    const sceneResult = await query<SceneRow>(`
       SELECT id, parent_id, slot, status, locked_by_address
       FROM scenes
       WHERE id = $1
@@ -111,7 +124,7 @@ export async function POST(request: NextRequest) {
     // Create scene_generation_attempts row
     const retryWindowExpires = new Date(Date.now() + 3600000); // 1 hour from now
 
-    const attemptResult = await query(`
+    const attemptResult = await query<AttemptInsertRow>(`
       INSERT INTO scene_generation_attempts (
         scene_id,
         creator_address,
