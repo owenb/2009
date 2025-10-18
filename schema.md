@@ -52,6 +52,9 @@ CREATE TABLE scenes (
   -- Link to successful generation attempt
   current_attempt_id INTEGER, -- FK to scene_generation_attempts(id)
 
+  -- Scene display data
+  slot_label TEXT, -- Preview text shown for completed scenes (e.g., "walk to the bedroom")
+
   -- Video data (URL derived from scene ID: [id].mp4)
   video_job_id TEXT,
   error_message TEXT,
