@@ -20,11 +20,11 @@ export const minikitConfig = {
   miniapp: {
     version: "1",
     name: "2009",
-    subtitle: "An infinite adventure game",
+    subtitle: "An infinite adventure",
     description: "Game",
     screenshotUrls: [`${ROOT_URL}/screenshot-portrait.png`],
     iconUrl: `${ROOT_URL}/blue-icon.png`,
-    splashImageUrl: `${ROOT_URL}/blue-hero.png`,
+    splashImageUrl: `${ROOT_URL}/loading.jpg`,
     splashBackgroundColor: "#000000",
     homeUrl: ROOT_URL,
     webhookUrl: `${ROOT_URL}/api/webhook`,
