@@ -16,6 +16,44 @@ This allows multiple users to attempt the same slot if previous attempts expire/
 
 ## Tables
 
+### scene_views
+
+Tracks individual user view/click events for analytics. Each row represents a single scene view with user identity and session information. This enables analysis of user engagement, popular paths, and drop-off points.
+
+```sql
+CREATE TABLE scene_views (
+  id SERIAL PRIMARY KEY,
+
+  -- Which scene was viewed
+  scene_id INTEGER NOT NULL REFERENCES scenes(id) ON DELETE CASCADE,
+
+  -- Who viewed it
+  viewer_address TEXT,     -- Wallet address (null if not connected)
+  viewer_fid INTEGER,      -- Farcaster ID (null if not available)
+
+  -- Session tracking (client-generated UUID to group user's exploration session)
+  session_id UUID NOT NULL,
+
+  -- When it was viewed
+  viewed_at TIMESTAMP DEFAULT NOW(),
+
+  -- Optional: Track referrer for path analysis
+  referrer_scene_id INTEGER REFERENCES scenes(id) ON DELETE SET NULL,
+
+  -- Timestamps
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for analytics queries
+CREATE INDEX idx_scene_views_scene_id ON scene_views(scene_id);
+CREATE INDEX idx_scene_views_viewer_address ON scene_views(viewer_address);
+CREATE INDEX idx_scene_views_session_id ON scene_views(session_id);
+CREATE INDEX idx_scene_views_viewed_at ON scene_views(viewed_at);
+CREATE INDEX idx_scene_views_referrer_scene_id ON scene_views(referrer_scene_id);
+CREATE INDEX idx_scene_views_scene_viewed ON scene_views(scene_id, viewed_at DESC);
+CREATE INDEX idx_scene_views_session_viewed ON scene_views(session_id, viewed_at);
+```
+
 ### scenes
 
 The definitive tree structure of completed and in-progress scenes. Each row represents a unique slot (parent + slot letter combination). The UNIQUE constraint on (parent_id, slot) provides the atomic lock mechanism.
@@ -54,6 +92,7 @@ CREATE TABLE scenes (
 
   -- Scene display data
   slot_label TEXT, -- Preview text shown for completed scenes (e.g., "walk to the bedroom")
+  view_count INTEGER DEFAULT 0, -- Aggregate view count for quick access
 
   -- Video data (URL derived from scene ID: [id].mp4)
   video_job_id TEXT,
@@ -222,3 +261,12 @@ ALTER TABLE scenes
 - **GPT-4o-mini integration**: User's raw prompt → AI suggestions → refined_prompt_text
 - **Original preserved**: Both `prompt_text` (user input) and `refined_prompt_text` stored
 - **User approval**: User must accept refined version before submission
+
+### Analytics & Engagement Tracking
+- **Individual view tracking**: `scene_views` table records each scene click/view
+- **Session management**: Client-generated UUID groups user exploration within 30-minute window
+- **User identity**: Tracks wallet address and Farcaster ID (if connected)
+- **Path analysis**: `referrer_scene_id` enables tracking user navigation through narrative tree
+- **Aggregate counts**: `scenes.view_count` provides quick access to total views per scene
+- **Privacy**: Views tracked even for non-connected users (anonymous via session_id only)
+- **Use cases**: Identify popular branches, measure engagement depth, analyze drop-off points

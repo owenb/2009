@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import { trackSceneView } from "@/lib/analytics";
 import styles from "./Video.module.css";
 
 interface VideoProps {
@@ -11,14 +12,29 @@ interface VideoProps {
   creatorAddress?: string | null; // Creator info for attribution
   creatorFid?: number | null;
   slotLabel?: string | null;
+  viewerAddress?: string; // Current viewer's wallet address for analytics
+  viewerFid?: number; // Current viewer's Farcaster ID for analytics
+  referrerSceneId?: number; // Previous scene ID for path tracking
 }
 
-export default function Video({ sceneId, isVisible, onVideoEnd, directUrl, creatorAddress, creatorFid, slotLabel: _slotLabel }: VideoProps) {
+export default function Video({
+  sceneId,
+  isVisible,
+  onVideoEnd,
+  directUrl,
+  creatorAddress,
+  creatorFid,
+  slotLabel: _slotLabel,
+  viewerAddress,
+  viewerFid,
+  referrerSceneId
+}: VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [hasTrackedView, setHasTrackedView] = useState(false);
 
   // Fetch signed URL from API
   const fetchVideoUrl = async () => {
@@ -46,6 +62,9 @@ export default function Video({ sceneId, isVisible, onVideoEnd, directUrl, creat
 
   // Use direct URL if provided, otherwise fetch
   useEffect(() => {
+    // Reset tracking flag when scene changes
+    setHasTrackedView(false);
+
     if (directUrl) {
       setVideoUrl(directUrl);
       setIsLoading(false);
@@ -83,14 +102,28 @@ export default function Video({ sceneId, isVisible, onVideoEnd, directUrl, creat
     }
   }, [videoUrl]);
 
-  // Play video when visible
+  // Play video when visible and track view
   useEffect(() => {
     if (isVisible && videoRef.current && videoUrl) {
       videoRef.current.play().catch((err) => {
         console.error('Error playing video:', err);
       });
+
+      // Track view (only once per scene load)
+      if (!hasTrackedView && sceneId !== null) {
+        trackSceneView({
+          sceneId,
+          viewerAddress,
+          viewerFid,
+          referrerSceneId
+        }).then((success) => {
+          if (success) {
+            setHasTrackedView(true);
+          }
+        });
+      }
     }
-  }, [isVisible, videoUrl]);
+  }, [isVisible, videoUrl, hasTrackedView, sceneId, viewerAddress, viewerFid, referrerSceneId]);
 
   return (
     <>

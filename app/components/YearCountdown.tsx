@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import {
   ConnectWallet,
   Wallet,
@@ -28,10 +29,12 @@ interface SceneData {
 }
 
 export default function YearCountdown() {
+  const { address } = useAccount(); // Get connected wallet address
   const [showVideo, setShowVideo] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [currentScene, setCurrentScene] = useState<SceneData | null>(null);
   const [parentSceneId, setParentSceneId] = useState<number | 'genesis'>('genesis');
+  const [previousSceneId, setPreviousSceneId] = useState<number | null>(null);
 
   const handleCountdownComplete = () => {
     setShowVideo(true);
@@ -44,6 +47,9 @@ export default function YearCountdown() {
   const handleSlotSelected = (sceneData: SceneData) => {
     // Hide modal
     setShowPopup(false);
+
+    // Track previous scene for analytics
+    setPreviousSceneId(currentScene?.sceneId ?? null);
 
     // Set current scene data
     setCurrentScene(sceneData);
@@ -84,6 +90,8 @@ export default function YearCountdown() {
         creatorAddress={currentScene?.creatorAddress}
         creatorFid={currentScene?.creatorFid}
         slotLabel={currentScene?.slotLabel}
+        viewerAddress={address}
+        referrerSceneId={previousSceneId ?? undefined}
       />
 
       {/* Countdown animation */}

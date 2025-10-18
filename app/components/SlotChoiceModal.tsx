@@ -86,6 +86,18 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
   // Handle clicking a filled slot (to play the scene)
   const handleFilledSlotClick = async (slot: 'A' | 'B' | 'C') => {
+    // Require wallet connection for Base mini app
+    if (!isConnected || !address) {
+      alert("Please connect your wallet to continue watching!");
+      return;
+    }
+
+    // Check network before proceeding
+    if (isWrongNetwork) {
+      alert(`Wrong network! Please switch to Base Sepolia testnet in your wallet.\n\nCurrent: ${chain?.name}\nRequired: Base Sepolia (Chain ID: 84532)`);
+      return;
+    }
+
     try {
       const response = await fetch('/api/play', {
         method: 'POST',
@@ -241,9 +253,21 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
         <h2 className={styles.popupTitle}>What happens next?</h2>
 
         {!isConnected && (
-          <p style={{ color: '#fff', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
-            Connect your wallet to claim a slot
-          </p>
+          <div style={{
+            background: 'rgba(255, 215, 0, 0.2)',
+            border: '2px solid rgba(255, 215, 0, 0.5)',
+            borderRadius: '10px',
+            padding: '1rem',
+            marginBottom: '1rem',
+            textAlign: 'center'
+          }}>
+            <p style={{ color: '#FFD700', fontWeight: 'bold', marginBottom: '0.5rem', fontFamily: 'var(--font-roboto-mono)' }}>
+              🔒 Wallet Connection Required
+            </p>
+            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontFamily: 'var(--font-roboto-mono)' }}>
+              Please connect your wallet to continue the adventure
+            </p>
+          </div>
         )}
 
         {isConnected && isWrongNetwork && (
@@ -302,15 +326,22 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
               // Filled slot (exists and completed)
               if (slotInfo.exists && slotInfo.status === 'completed') {
+                const canView = isConnected && !isWrongNetwork;
                 return (
                   <div
                     key={slotInfo.slot}
                     className={styles.choice}
                     onClick={() => handleFilledSlotClick(slotInfo.slot)}
-                    style={{ cursor: 'pointer' }}
+                    style={{
+                      cursor: canView ? 'pointer' : 'not-allowed',
+                      opacity: canView ? 1 : 0.6
+                    }}
                   >
                     <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                    <div className={styles.choiceText}>{slotInfo.label || 'view scene'}</div>
+                    <div className={styles.choiceText}>
+                      {slotInfo.label || 'view scene'}
+                      {!canView && <span style={{ fontSize: '0.8rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.7)' }}>🔒 connect wallet</span>}
+                    </div>
                   </div>
                 );
               }
