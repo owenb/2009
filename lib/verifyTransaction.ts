@@ -55,22 +55,7 @@ export async function verifySceneCreation(
     throw new Error('Transaction failed on blockchain');
   }
 
-  // Verify contract address
-  if (receipt.to?.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
-    throw new Error(`Transaction was sent to wrong contract. Expected ${CONTRACT_ADDRESS}, got ${receipt.to}`);
-  }
-
-  // Get transaction details to verify value
-  const transaction = await client.getTransaction({ hash: txHash });
-
-  // Verify payment amount (must be at least SCENE_PRICE)
-  if (transaction.value < EXPECTED_PRICE) {
-    throw new Error(
-      `Insufficient payment. Expected at least ${EXPECTED_PRICE} wei, got ${transaction.value} wei`
-    );
-  }
-
-  // Parse SceneCreated event from logs
+  // Parse SceneCreated event from logs (supports both direct calls and smart wallet transactions)
   const sceneCreatedEvent = parseAbiItem(
     'event SceneCreated(uint256 indexed sceneId, uint256 indexed parentId, uint8 slot, address indexed creator)'
   );
@@ -87,6 +72,11 @@ export async function verifySceneCreation(
 
   if (!eventLog) {
     throw new Error('SceneCreated event not found in transaction logs');
+  }
+
+  // Verify the event came from the correct contract
+  if (eventLog.address.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
+    throw new Error(`Event came from wrong contract. Expected ${CONTRACT_ADDRESS}, got ${eventLog.address}`);
   }
 
   // Extract event arguments
