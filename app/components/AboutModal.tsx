@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef } from "react";
 import styles from "./AboutModal.module.css";
 
 interface AboutModalProps {
@@ -11,11 +12,54 @@ export default function AboutModal({
   isVisible,
   onClose
 }: AboutModalProps) {
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - startY.current;
+    // Only allow dragging down
+    if (diff > 0) {
+      setDragY(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    // If dragged more than 100px, close the modal
+    if (dragY > 100) {
+      onClose();
+    }
+    setDragY(0);
+  };
+
   if (!isVisible) return null;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: `translateY(${dragY}px)`,
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+        }}
+      >
+        {/* Drag handle indicator */}
+        <div className={styles.dragHandle}>
+          <div className={styles.dragBar}></div>
+        </div>
+
         <h2 className={styles.title}>About 2009</h2>
 
         <div className={styles.content}>
