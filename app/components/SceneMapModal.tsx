@@ -73,42 +73,28 @@ export default function SceneMapModal({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isVisible, onClose]);
 
-  // Render a scene node and its children recursively
-  const renderNode = (node: SceneNode, depth: number = 0, _isLast: boolean = false) => {
+  // Render a scene node and its children recursively as Merkle tree
+  const renderNode = (node: SceneNode) => {
     const isCurrent = currentSceneId === node.id;
     const isGenesis = node.id === 0;
     const hasChildren = node.children.length > 0;
 
     return (
       <div key={node.id} className={styles.nodeContainer}>
-        {/* Current node */}
+        {/* Current node - circular */}
         <div
-          className={`${styles.node} ${isCurrent ? styles.nodeCurrent : ''}`}
+          className={`${styles.node} ${isCurrent ? styles.nodeCurrent : ''} ${isGenesis ? styles.nodeGenesis : ''}`}
           onClick={() => onSceneSelect(node.id)}
-          style={{
-            marginLeft: `${depth * 30}px`
-          }}
+          title={isGenesis ? 'Genesis - Intro' : `Slot ${node.slot}: ${node.slotLabel || 'Scene'}`}
         >
-          {/* Slot indicator */}
-          {!isGenesis && (
+          {/* Slot indicator or emoji for genesis */}
+          {isGenesis ? (
+            <span>🎬</span>
+          ) : (
             <div className={styles.nodeSlot}>
               {node.slot}
             </div>
           )}
-
-          {/* Node content */}
-          <div className={styles.nodeContent}>
-            <div className={styles.nodeLabel}>
-              {isGenesis ? '🎬 Intro' : (node.slotLabel || 'Scene')}
-            </div>
-            <div className={styles.nodeStats}>
-              {node.viewCount > 0 && (
-                <span className={styles.nodeStat}>
-                  👁 {node.viewCount}
-                </span>
-              )}
-            </div>
-          </div>
 
           {/* Current indicator */}
           {isCurrent && (
@@ -118,12 +104,14 @@ export default function SceneMapModal({
           )}
         </div>
 
-        {/* Children */}
+        {/* Children - horizontal layout below */}
         {hasChildren && (
           <div className={styles.nodeChildren}>
-            {node.children.map((child, index) =>
-              renderNode(child, depth + 1, index === node.children.length - 1)
-            )}
+            {node.children.map((child) => (
+              <div key={child.id} className={styles.childWrapper}>
+                {renderNode(child)}
+              </div>
+            ))}
           </div>
         )}
       </div>
