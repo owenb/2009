@@ -35,9 +35,10 @@ interface SlotChoiceModalProps {
   isVisible: boolean;
   parentSceneId?: number | 'genesis'; // Parent scene ID, default to 'genesis' (intro)
   onSlotSelected?: (sceneData: SceneData) => void; // Callback when a filled slot is clicked
+  preloadedData?: { slots: SlotInfo[] } | null; // Preloaded slot data from parent
 }
 
-export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', onSlotSelected }: SlotChoiceModalProps) {
+export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', onSlotSelected, preloadedData }: SlotChoiceModalProps) {
   const [_selectedSlot, setSelectedSlot] = useState<'A' | 'B' | 'C' | null>(null);
   const [_selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
@@ -57,11 +58,22 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
     hash,
   });
 
-  // Fetch slots when modal becomes visible
+  // Fetch slots when modal becomes visible (or use preloaded data)
   useEffect(() => {
     if (!isVisible) return;
 
+    // Check if we have preloaded data - instant display!
+    if (preloadedData?.slots) {
+      console.log('🚀 Using preloaded slots - instant display!');
+      setSlots(preloadedData.slots);
+      setIsLoading(false);
+      setLoadError(null);
+      return;
+    }
+
+    // Fallback: fetch if no preload (shouldn't happen in normal flow, but defensive)
     const fetchSlots = async () => {
+      console.log('⚠️ No preloaded data - fetching slots (fallback)');
       setIsLoading(true);
       setLoadError(null);
 
@@ -83,7 +95,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
     };
 
     fetchSlots();
-  }, [isVisible, parentSceneId]);
+  }, [isVisible, parentSceneId, preloadedData]);
 
   // Handle clicking a filled slot (to play the scene)
   const handleFilledSlotClick = async (slot: 'A' | 'B' | 'C') => {

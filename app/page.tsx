@@ -1,6 +1,6 @@
 "use client";
 
-import YearCountdown from "./components/YearCountdown";
+import MainGame from "./components/MainGame";
 
 export default function Home() {
   return (
@@ -14,7 +14,7 @@ export default function Home() {
       justifyContent: 'center',
       alignItems: 'center'
     }}>
-      <YearCountdown />
+      <MainGame />
     </div>
   );
 }

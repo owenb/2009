@@ -8,17 +8,23 @@ interface CountdownProps {
 }
 
 export default function Countdown({ onComplete }: CountdownProps) {
-  const [currentYear, setCurrentYear] = useState(2025);
+  // ===== TIMING VARIABLES - EASY TO ADJUST =====
+  const TOTAL_DURATION = 2500; // Total time for countdown + scale (ms)
+  const START_YEAR = 2025;
+  const END_YEAR = 2009;
+  const START_SCALE = 0.1;
+  const END_SCALE = 1.1;
+  // =============================================
+
+  const [currentYear, setCurrentYear] = useState(START_YEAR);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
-  const [scale, setScale] = useState(0.1);
-  const startTimeRef = useRef<number>(0);
-  const totalDuration = 4000; // Total animation duration in ms
-
-  // Initialize start time once on mount
-  useEffect(() => {
-    startTimeRef.current = Date.now();
-  }, []);
+  const [scale, setScale] = useState(START_SCALE);
+  const animationFrameRef = useRef<number>();
+  const flipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const explosionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasTriggeredExplosionRef = useRef(false);
+  const currentYearRef = useRef(START_YEAR);
 
   // Ease-in-out function (cubic)
   const easeInOutCubic = (t: number): number => {
@@ -27,63 +33,70 @@ export default function Countdown({ onComplete }: CountdownProps) {
       : 1 - Math.pow(-2 * t + 2, 3) / 2;
   };
 
-  // Smooth scale animation based on elapsed time
+  // Combined countdown, scaling, and easing loop
   useEffect(() => {
-    let animationFrameId: number;
+    const totalSteps = START_YEAR - END_YEAR;
+    const animationStart = performance.now();
 
-    const updateScale = () => {
-      const elapsed = Date.now() - startTimeRef.current;
-      const progress = Math.min(elapsed / totalDuration, 1);
-      const newScale = 0.1 + (progress * 0.9); // 0.1 to 1.0
-      setScale(newScale);
+    currentYearRef.current = START_YEAR;
+    hasTriggeredExplosionRef.current = false;
+    setCurrentYear(START_YEAR);
+    setScale(START_SCALE);
+    setIsAnimating(false);
+    setIsExploding(false);
 
-      if (progress < 1) {
-        animationFrameId = requestAnimationFrame(updateScale);
+    const step = (now: number) => {
+      const elapsed = now - animationStart;
+      const linearProgress = Math.min(elapsed / TOTAL_DURATION, 1);
+      const easedProgress = easeInOutCubic(linearProgress);
+
+      const nextScale = START_SCALE + easedProgress * (END_SCALE - START_SCALE);
+      setScale(nextScale);
+
+      const yearOffset = Math.floor(easedProgress * totalSteps);
+      const nextYear = Math.max(END_YEAR, START_YEAR - yearOffset);
+
+      if (nextYear !== currentYearRef.current) {
+        currentYearRef.current = nextYear;
+        setIsAnimating(true);
+        setCurrentYear(nextYear);
+
+        if (flipTimeoutRef.current) {
+          clearTimeout(flipTimeoutRef.current);
+        }
+        flipTimeoutRef.current = setTimeout(() => {
+          setIsAnimating(false);
+        }, 40);
       }
+
+      if (linearProgress >= 1) {
+        if (!hasTriggeredExplosionRef.current) {
+          hasTriggeredExplosionRef.current = true;
+          setIsExploding(true);
+          explosionTimeoutRef.current = setTimeout(() => {
+            onComplete();
+          }, 400);
+        }
+        return;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(step);
     };
 
-    animationFrameId = requestAnimationFrame(updateScale);
+    animationFrameRef.current = requestAnimationFrame(step);
 
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
-
-  // Number countdown logic
-  useEffect(() => {
-    if (currentYear < 2009) return;
-
-    if (currentYear === 2009) {
-      // Trigger explosion effect
-      const explosionTimer = setTimeout(() => {
-        setIsExploding(true);
-        // Notify parent that countdown is complete
-        setTimeout(() => {
-          onComplete();
-        }, 600); // Wait for explosion animation to finish
-      }, 500);
-      return () => clearTimeout(explosionTimer);
-    }
-
-    // Calculate delay based on position in countdown with easing
-    const progress = (2025 - currentYear) / (2025 - 2009);
-    const easedSpeed = easeInOutCubic(progress);
-
-    // Invert the easing so slower at beginning/end, faster in middle
-    const minDelay = 20; // Fastest (middle)
-    const maxDelay = 400; // Slowest (start/end)
-
-    const delay = maxDelay - (easedSpeed * (maxDelay - minDelay));
-
-    const timer = setTimeout(() => {
-      setIsAnimating(true);
-      // Change the number after a brief moment to allow animation
-      setTimeout(() => {
-        setCurrentYear(prev => prev - 1);
-        setIsAnimating(false);
-      }, 40);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [currentYear, onComplete]);
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (flipTimeoutRef.current) {
+        clearTimeout(flipTimeoutRef.current);
+      }
+      if (explosionTimeoutRef.current) {
+        clearTimeout(explosionTimeoutRef.current);
+      }
+    };
+  }, [END_SCALE, START_SCALE, START_YEAR, END_YEAR, TOTAL_DURATION, onComplete]);
 
   return (
     <div
