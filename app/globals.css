@@ -60,7 +60,31 @@
 
   /* OnchainKit Wallet Address Customization */
 
-  /* Style the wallet button */
+  /* Style the DISCONNECTED wallet button (before connection) - match glass button design */
+  button[data-testid="ockConnectWallet"] {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 1rem !important;
+    color: #fff !important;
+    font-family: var(--font-source-code-pro), monospace !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    text-transform: uppercase !important;
+  }
+
+  button[data-testid="ockConnectWallet"]:hover {
+    background: rgba(255, 255, 255, 0.4) !important;
+    transform: scale(1.05) !important;
+  }
+
+  button[data-testid="ockConnectWallet"]:active {
+    transform: scale(0.95) !important;
+  }
+
+  /* Style the CONNECTED wallet button */
   button[data-testid="ockConnectWallet_Connected"] {
     padding: 0.5rem 0.75rem !important; /* Smaller padding */
     font-size: 0.75rem !important; /* 12px */
