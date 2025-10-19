@@ -2,7 +2,7 @@
 
 import styles from "./ExtendStoryModal.module.css";
 
-const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.00056";
+const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.007";
 
 interface ExtendStoryModalProps {
   isVisible: boolean;
@@ -30,21 +30,27 @@ export default function ExtendStoryModal({
           </p>
 
           <ul className={styles.features}>
-            <li>
-              <span className={styles.icon}>🎬</span>
-              <span>Your video will <strong>live forever</strong> in the game</span>
-            </li>
+
             <li>
               <span className={styles.icon}>🌍</span>
               <span>Other players will <strong>discover &amp; explore</strong> your creation</span>
             </li>
+             <li>
+              <span className={styles.icon}>🎬</span>
+              <span>We will deposit money to your wallet if other players choose to <strong>build on this scene</strong></span>
+            </li>
+     
+            <li>
+              <span className={styles.icon}>📝</span>
+              <span>We'll combine your ideas with our own to ensure a good plot</span>
+            </li>
             <li>
               <span className={styles.icon}>🤖</span>
-              <span>You&apos;ll have <strong>1 hour</strong> to craft the perfect scene with AI help</span>
+              <span>You&apos;ll have <strong>1 hour</strong> enter your ideas</span>
             </li>
             <li>
               <span className={styles.icon}>💰</span>
-              <span>If generation fails, you get a <strong>50% refund</strong></span>
+              <span>If generation fails, you can apply for a <strong>50% refund</strong></span>
             </li>
           </ul>
 

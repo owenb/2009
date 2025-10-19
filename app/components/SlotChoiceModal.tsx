@@ -209,7 +209,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
     setSelectedSlot(slot);
     setSelectedSlotIndex(slotIndex);
-    setStatusMessage('Acquiring lock...');
+    setStatusMessage('Reserving slot...');
 
     // Step 1: Acquire 1-minute lock
     try {
