@@ -26,7 +26,7 @@ export default function Video({
   onVideoEnd,
   directUrl,
   creatorAddress,
-  creatorFid,
+  creatorFid: _creatorFid,
   slotLabel: _slotLabel,
   viewerAddress,
   viewerFid,
