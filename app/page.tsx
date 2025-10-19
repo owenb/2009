@@ -12,7 +12,8 @@ export default function Home() {
       padding: 0,
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'center'
+      alignItems: 'center',
+      overflow: 'hidden'
     }}>
       <MainGame />
     </div>

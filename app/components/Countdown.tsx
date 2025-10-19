@@ -25,6 +25,11 @@ export default function Countdown({ onComplete }: CountdownProps) {
   const explosionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasTriggeredExplosionRef = useRef(false);
   const currentYearRef = useRef(START_YEAR);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Ease-in-out function (cubic)
   const easeInOutCubic = (t: number): number => {
@@ -74,7 +79,7 @@ export default function Countdown({ onComplete }: CountdownProps) {
           hasTriggeredExplosionRef.current = true;
           setIsExploding(true);
           explosionTimeoutRef.current = setTimeout(() => {
-            onComplete();
+            onCompleteRef.current?.();
           }, 400);
         }
         return;
@@ -96,7 +101,7 @@ export default function Countdown({ onComplete }: CountdownProps) {
         clearTimeout(explosionTimeoutRef.current);
       }
     };
-  }, [END_SCALE, START_SCALE, START_YEAR, END_YEAR, TOTAL_DURATION, onComplete]);
+  }, [END_SCALE, START_SCALE, START_YEAR, END_YEAR, TOTAL_DURATION]);
 
   return (
     <div

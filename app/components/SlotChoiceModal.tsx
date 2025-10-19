@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
 import styles from "./SlotChoiceModal.module.css";
 import ExtendStoryModal from "./ExtendStoryModal";
+import AboutModal from "./AboutModal";
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.000056";
@@ -50,6 +51,9 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   // ExtendStoryModal state
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [pendingSlot, setPendingSlot] = useState<{ slot: 'A' | 'B' | 'C', index: number } | null>(null);
+
+  // AboutModal state
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   const router = useRouter();
   const { address, isConnected } = useAccount();
@@ -381,6 +385,32 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
             })}
           </div>
         )}
+
+        {/* About link */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '1.5rem',
+          paddingTop: '1rem',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          <button
+            onClick={() => setShowAboutModal(true)}
+            style={{
+              fontFamily: 'var(--font-roboto-mono)',
+              fontSize: '0.85rem',
+              color: 'rgba(255, 255, 255, 0.6)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              textDecoration: 'none',
+              transition: 'color 0.2s ease',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
+          >
+            About this game
+          </button>
+        </div>
       </div>
 
       {/* ExtendStoryModal - shown before lock/payment */}
@@ -392,6 +422,12 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
           onClose={handleCloseExtendModal}
         />
       )}
+
+      {/* AboutModal - explains the game */}
+      <AboutModal
+        isVisible={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+      />
     </div>
   );
 }
