@@ -21,6 +21,9 @@ interface SlotInfo {
   isLocked: boolean;
   lockedBy: string | null;
   lockedUntil: Date | null;
+  attemptId: number | null;
+  attemptCreator: string | null;
+  expiresAt: Date | null;
 }
 
 interface SceneData {
@@ -135,6 +138,11 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       console.error('Error loading scene:', err);
       alert('Failed to load scene. Please try again.');
     }
+  };
+
+  // Handle clicking own paid slot (resume generation)
+  const handleResumeSlot = (attemptId: number, sceneId: number) => {
+    router.push(`/create?attemptId=${attemptId}&sceneId=${sceneId}`);
   };
 
   // Handle empty slot click - show ExtendStoryModal first
@@ -329,6 +337,38 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
             {slots.map((slotInfo) => {
               const slotIndex = slotInfo.slot.charCodeAt(0) - 'A'.charCodeAt(0); // A=0, B=1, C=2
 
+              // Check if this slot has an active attempt by the current user
+              const isOwnAttempt = !!(
+                slotInfo.attemptId &&
+                slotInfo.attemptCreator &&
+                address &&
+                slotInfo.attemptCreator.toLowerCase() === address.toLowerCase()
+              );
+
+              // Own paid slot - show resume option
+              if (isOwnAttempt) {
+                return (
+                  <div
+                    key={slotInfo.slot}
+                    className={styles.choice}
+                    onClick={() => handleResumeSlot(slotInfo.attemptId!, slotInfo.sceneId!)}
+                    style={{
+                      cursor: 'pointer',
+                      background: 'rgba(0, 255, 0, 0.1)',
+                      borderColor: 'rgba(0, 255, 0, 0.5)'
+                    }}
+                  >
+                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
+                    <div className={styles.choiceText}>
+                      ✨ resume your scene
+                      <span style={{ fontSize: '0.7rem', display: 'block', marginTop: '0.25rem', color: 'rgba(0, 255, 0, 0.7)' }}>
+                        (you paid for this)
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
               // Filled slot (exists and completed)
               if (slotInfo.exists && slotInfo.status === 'completed') {
                 const canView = isConnected;
@@ -351,7 +391,26 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                 );
               }
 
-              // Locked slot (someone else is claiming it)
+              // Slot with active attempt by someone else (reserved)
+              if (slotInfo.attemptId && slotInfo.attemptCreator) {
+                return (
+                  <div
+                    key={slotInfo.slot}
+                    className={styles.choice}
+                    style={{ cursor: 'not-allowed', opacity: 0.5 }}
+                  >
+                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
+                    <div className={styles.choiceText}>
+                      Reserved by {slotInfo.attemptCreator.slice(0, 6)}...
+                      <span style={{ fontSize: '0.7rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                        (paid, generating)
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Locked slot (someone is acquiring it, before payment)
               if (slotInfo.isLocked) {
                 return (
                   <div

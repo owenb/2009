@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { useRouter } from "next/navigation";
 import {
   ConnectWallet,
   Wallet,
@@ -38,21 +39,36 @@ interface SlotInfo {
   isLocked: boolean;
   lockedBy: string | null;
   lockedUntil: Date | null;
+  attemptId: number | null;
+  attemptCreator: string | null;
+  expiresAt: Date | null;
 }
 
 interface PreloadedSlotsData {
   slots: SlotInfo[];
 }
 
+interface ActiveAttempt {
+  attemptId: number;
+  sceneId: number;
+  parentId: number | null;
+  slot: string;
+  expiresAt: string;
+  timeRemainingMs: number;
+}
+
 export default function MainGame() {
   const { address } = useAccount(); // Get connected wallet address
   const { isFrameReady, setFrameReady } = useMiniKit(); // Base mini app initialization
+  const router = useRouter();
   const [showVideo, setShowVideo] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [currentScene, setCurrentScene] = useState<SceneData | null>(null);
   const [parentSceneId, setParentSceneId] = useState<number | 'genesis'>('genesis');
   const [previousSceneId, setPreviousSceneId] = useState<number | null>(null);
   const [preloadedSlots, setPreloadedSlots] = useState<PreloadedSlotsData | null>(null);
+  const [activeAttempts, setActiveAttempts] = useState<ActiveAttempt[]>([]);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
 
   // Background animation state
   const [bgScale, setBgScale] = useState(1);
@@ -66,6 +82,39 @@ export default function MainGame() {
       setFrameReady();
     }
   }, [setFrameReady, isFrameReady]);
+
+  // Check for active attempts when user connects wallet
+  useEffect(() => {
+    if (!address) {
+      setActiveAttempts([]);
+      setShowResumeBanner(false);
+      return;
+    }
+
+    const checkActiveAttempts = async () => {
+      try {
+        const response = await fetch(`/api/user/active-attempts?address=${address}`);
+        if (!response.ok) {
+          console.error('Failed to fetch active attempts');
+          return;
+        }
+
+        const data = await response.json();
+        if (data.hasActiveAttempts && data.attempts.length > 0) {
+          setActiveAttempts(data.attempts);
+          setShowResumeBanner(true);
+          console.log('✨ Found active attempts:', data.attempts);
+        } else {
+          setActiveAttempts([]);
+          setShowResumeBanner(false);
+        }
+      } catch (err) {
+        console.error('Error checking active attempts:', err);
+      }
+    };
+
+    checkActiveAttempts();
+  }, [address]);
 
   // Initialize start time for background animation
   useEffect(() => {
@@ -177,6 +226,101 @@ export default function MainGame() {
             zIndex: 0,
           }}
         />
+      )}
+
+      {/* Resume banner - shown when user has active attempts */}
+      {showResumeBanner && activeAttempts.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1001,
+          background: 'rgba(0, 255, 0, 0.15)',
+          border: '2px solid rgba(0, 255, 0, 0.6)',
+          borderRadius: '12px',
+          padding: '1rem 1.5rem',
+          backdropFilter: 'blur(10px)',
+          maxWidth: '500px',
+          animation: 'slideDown 0.3s ease-out'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem'
+          }}>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                color: '#0f0',
+                fontFamily: 'var(--font-roboto-mono)',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                margin: 0,
+                marginBottom: '0.25rem'
+              }}>
+                ✨ You have {activeAttempts.length} active scene{activeAttempts.length > 1 ? 's' : ''}
+              </p>
+              <p style={{
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontFamily: 'var(--font-roboto-mono)',
+                fontSize: '0.75rem',
+                margin: 0
+              }}>
+                Slot {activeAttempts[0].slot} - Click to resume generation
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => router.push(`/create?attemptId=${activeAttempts[0].attemptId}&sceneId=${activeAttempts[0].sceneId}`)}
+                style={{
+                  fontFamily: 'var(--font-roboto-mono)',
+                  fontSize: '0.85rem',
+                  padding: '0.5rem 1rem',
+                  background: 'rgba(0, 255, 0, 0.2)',
+                  border: '1px solid rgba(0, 255, 0, 0.8)',
+                  borderRadius: '6px',
+                  color: '#0f0',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 255, 0, 0.3)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 255, 0, 0.2)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                Resume
+              </button>
+              <button
+                onClick={() => setShowResumeBanner(false)}
+                style={{
+                  fontFamily: 'var(--font-roboto-mono)',
+                  fontSize: '0.75rem',
+                  padding: '0.5rem 0.75rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '6px',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Wallet connection in top right */}

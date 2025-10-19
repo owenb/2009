@@ -10,6 +10,9 @@ interface Scene {
   creator_address: string | null;
   locked_until: Date | null;
   locked_by_address: string | null;
+  current_attempt_id: number | null;
+  attempt_creator_address: string | null;
+  retry_window_expires_at: Date | null;
 }
 
 interface SlotInfo {
@@ -21,6 +24,9 @@ interface SlotInfo {
   isLocked: boolean;
   lockedBy: string | null;
   lockedUntil: Date | null;
+  attemptId: number | null;
+  attemptCreator: string | null;
+  expiresAt: Date | null;
 }
 
 export async function GET(
@@ -42,13 +48,24 @@ export async function GET(
       );
     }
 
-    // Query all slots for this parent scene
+    // Query all slots for this parent scene, including active attempt info
     const result = await query<Scene>(
-      `SELECT id, parent_id, slot, slot_label, status, creator_address,
-              locked_until, locked_by_address
-       FROM scenes
-       WHERE parent_id = $1
-       ORDER BY slot`,
+      `SELECT
+        s.id,
+        s.parent_id,
+        s.slot,
+        s.slot_label,
+        s.status,
+        s.creator_address,
+        s.locked_until,
+        s.locked_by_address,
+        s.current_attempt_id,
+        sga.creator_address as attempt_creator_address,
+        sga.retry_window_expires_at
+       FROM scenes s
+       LEFT JOIN scene_generation_attempts sga ON s.current_attempt_id = sga.id
+       WHERE s.parent_id = $1
+       ORDER BY s.slot`,
       [parentId]
     );
 
@@ -72,11 +89,22 @@ export async function GET(
           isLocked: false,
           lockedBy: null,
           lockedUntil: null,
+          attemptId: null,
+          attemptCreator: null,
+          expiresAt: null,
         };
       }
 
-      // Check if slot is currently locked
+      // Check if slot is currently locked (1-minute lock before payment)
       const isLocked = !!(scene.locked_until && new Date(scene.locked_until) > new Date());
+
+      // Check if slot has an active attempt (after payment, before completion)
+      const hasActiveAttempt = !!(
+        scene.current_attempt_id &&
+        scene.attempt_creator_address &&
+        scene.retry_window_expires_at &&
+        new Date(scene.retry_window_expires_at) > new Date()
+      );
 
       return {
         slot: slotLetter as 'A' | 'B' | 'C',
@@ -87,6 +115,9 @@ export async function GET(
         isLocked,
         lockedBy: isLocked ? scene.locked_by_address : null,
         lockedUntil: isLocked ? scene.locked_until : null,
+        attemptId: hasActiveAttempt ? scene.current_attempt_id : null,
+        attemptCreator: hasActiveAttempt ? scene.attempt_creator_address : null,
+        expiresAt: hasActiveAttempt ? scene.retry_window_expires_at : null,
       };
     });
 
