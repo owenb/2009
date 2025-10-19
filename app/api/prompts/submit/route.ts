@@ -103,11 +103,9 @@ export async function POST(request: NextRequest) {
         prompt_text,
         refined_prompt_text,
         outcome,
-        submitted_at,
-        created_at,
-        updated_at
+        submitted_at
       )
-      VALUES ($1, $2, $3, 'pending', NOW(), NOW(), NOW())
+      VALUES ($1, $2, $3, 'pending', NOW())
       RETURNING id
     `, [attemptId, promptText, refinedPromptText || null]);
 
@@ -159,8 +157,7 @@ export async function POST(request: NextRequest) {
           UPDATE prompts
           SET
             outcome = $1,
-            error_message = $2,
-            updated_at = NOW()
+            error_message = $2
           WHERE id = $3
         `, [outcome, error.error?.message || 'Unknown error', promptRow.id]);
 
@@ -194,8 +191,7 @@ export async function POST(request: NextRequest) {
         UPDATE prompts
         SET
           video_job_id = $1,
-          outcome = 'generating',
-          updated_at = NOW()
+          outcome = 'generating'
         WHERE id = $2
       `, [videoJobId, promptRow.id]);
 
@@ -214,8 +210,7 @@ export async function POST(request: NextRequest) {
         UPDATE prompts
         SET
           outcome = 'api_error',
-          error_message = $1,
-          updated_at = NOW()
+          error_message = $1
         WHERE id = $2
       `, [(error as Error).message, promptRow.id]);
 
