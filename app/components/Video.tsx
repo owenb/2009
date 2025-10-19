@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import { useViewProfile, useComposeCast } from "@coinbase/onchainkit/minikit";
 import { trackSceneView } from "@/lib/analytics";
 import styles from "./Video.module.css";
 
@@ -36,6 +37,22 @@ export default function Video({
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+
+  // Profile viewing hook - only if creator has FID
+  const viewCreatorProfile = useViewProfile(creatorFid ? String(creatorFid) : undefined);
+
+  // Share hook
+  const { composeCast } = useComposeCast();
+
+  // Handle sharing the scene
+  const handleShare = () => {
+    if (!sceneId) return; // Don't share genesis/intro
+    const sceneUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/scene/${sceneId}`;
+    composeCast({
+      text: `Check out this alternate 2009 timeline! 🎬✨`,
+      embeds: [sceneUrl]
+    });
+  };
 
   // Fetch signed URL from API
   const fetchVideoUrl = async () => {
@@ -173,13 +190,34 @@ export default function Video({
         </button>
       )}
 
+      {/* Share button - only show for non-genesis scenes */}
+      {isVisible && videoUrl && sceneId !== null && (
+        <button
+          onClick={handleShare}
+          className={styles.shareButton}
+          aria-label="Share this scene"
+        >
+          🔗 SHARE
+        </button>
+      )}
+
       {/* Creator attribution */}
       {isVisible && creatorAddress && (
         <div className={styles.attribution}>
-          <p className={styles.attributionText}>
-            Created by {creatorAddress.slice(0, 6)}...{creatorAddress.slice(-4)}
-            {creatorFid && ` (FID: ${creatorFid})`}
-          </p>
+          {creatorFid ? (
+            <button
+              onClick={() => viewCreatorProfile()}
+              className={styles.attributionButton}
+              aria-label="View creator profile"
+            >
+              Created by {creatorAddress.slice(0, 6)}...{creatorAddress.slice(-4)}
+              <span className={styles.fidBadge}>FID: {creatorFid}</span>
+            </button>
+          ) : (
+            <p className={styles.attributionText}>
+              Created by {creatorAddress.slice(0, 6)}...{creatorAddress.slice(-4)}
+            </p>
+          )}
         </div>
       )}
     </>

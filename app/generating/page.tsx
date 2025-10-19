@@ -2,11 +2,13 @@
 
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useComposeCast } from "@coinbase/onchainkit/minikit";
 import styles from "./generating.module.css";
 
 function GeneratingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { composeCast } = useComposeCast();
 
   const promptId = searchParams.get('promptId');
   const sceneId = searchParams.get('sceneId');
@@ -15,6 +17,8 @@ function GeneratingPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [canRetry, setCanRetry] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showSharePrompt, setShowSharePrompt] = useState(false);
+  const [completedSceneId, setCompletedSceneId] = useState<string | null>(null);
 
   // Complete generation function
   const completeGeneration = useCallback(async (promptIdParam: string, videoJobId: string) => {
@@ -41,11 +45,12 @@ function GeneratingPageContent() {
 
       setProgress(100);
       setStatus('Complete!');
+      setCompletedSceneId(data.sceneId);
 
-      // Redirect back to home - user can click their completed scene
+      // Show share prompt after a brief moment
       setTimeout(() => {
-        router.push('/');
-      }, 2000);
+        setShowSharePrompt(true);
+      }, 1000);
 
     } catch (err) {
       console.error('Error completing generation:', err);
@@ -115,6 +120,55 @@ function GeneratingPageContent() {
       clearInterval(interval);
     };
   }, [promptId, completeGeneration]);
+
+  // Handle sharing the completed scene
+  const handleShare = () => {
+    const sceneUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/scene/${completedSceneId}`;
+    composeCast({
+      text: `Just created a new timeline in 2009! What happens when Bitcoin's story changes? 🎬✨`,
+      embeds: [sceneUrl]
+    });
+    // Redirect to home after sharing
+    setTimeout(() => router.push('/'), 500);
+  };
+
+  const handleSkipShare = () => {
+    router.push('/');
+  };
+
+  // Show share prompt modal
+  if (showSharePrompt) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.successIcon}>🎉</div>
+          <h1 className={styles.title}>Scene Created!</h1>
+          <p className={styles.status} style={{ marginBottom: '1.5rem' }}>
+            Your scene is ready to share with the world
+          </p>
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              className={styles.button}
+              onClick={handleShare}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none'
+              }}
+            >
+              Share Your Creation
+            </button>
+            <button
+              className={styles.secondaryButton}
+              onClick={handleSkipShare}
+            >
+              Skip for Now
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
