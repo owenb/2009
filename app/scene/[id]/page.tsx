@@ -231,6 +231,7 @@ export default function ScenePage() {
         creatorFid={currentScene?.creatorFid}
         slotLabel={currentScene?.slotLabel}
         viewerAddress={address}
+        createdAt={currentScene?.createdAt}
       />
 
       {/* Slot choice modal */}

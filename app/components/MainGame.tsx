@@ -431,6 +431,7 @@ export default function MainGame() {
         slotLabel={currentScene?.slotLabel}
         viewerAddress={address}
         referrerSceneId={previousSceneId ?? undefined}
+        createdAt={currentScene?.createdAt}
       />
 
       {/* Countdown animation */}

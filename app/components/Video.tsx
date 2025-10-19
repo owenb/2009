@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { useViewProfile, useComposeCast } from "@coinbase/onchainkit/minikit";
-import { Name } from "@coinbase/onchainkit/identity";
+import { useEnsName } from "wagmi";
+import { useComposeCast } from "@coinbase/onchainkit/minikit";
 import { trackSceneView } from "@/lib/analytics";
 import styles from "./Video.module.css";
 
@@ -17,6 +17,7 @@ interface VideoProps {
   viewerAddress?: string; // Current viewer's wallet address for analytics
   viewerFid?: number; // Current viewer's Farcaster ID for analytics
   referrerSceneId?: number; // Previous scene ID for path tracking
+  createdAt?: string; // Timestamp when the scene was created
 }
 
 export default function Video({
@@ -29,7 +30,8 @@ export default function Video({
   slotLabel: _slotLabel,
   viewerAddress,
   viewerFid,
-  referrerSceneId
+  referrerSceneId,
+  createdAt
 }: VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -39,8 +41,11 @@ export default function Video({
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
-  // Profile viewing hook - only if creator has FID
-  const viewCreatorProfile = useViewProfile();
+  // ENS name resolution
+  const { data: ensName } = useEnsName({
+    address: creatorAddress as `0x${string}` | undefined,
+    chainId: 1, // Ethereum mainnet for ENS
+  });
 
   // Share hook
   const { composeCast } = useComposeCast();
@@ -187,7 +192,20 @@ export default function Video({
           className={styles.muteButton}
           aria-label={isMuted ? "Unmute video" : "Mute video"}
         >
-          {isMuted ? "🔇 UNMUTE" : "🔊 MUTE"}
+          {isMuted ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <line x1="23" y1="9" x2="17" y2="15" />
+              <line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+            </svg>
+          )}
+          <span>{isMuted ? "UNMUTE" : "MUTE"}</span>
         </button>
       )}
 
@@ -198,27 +216,30 @@ export default function Video({
           className={styles.shareButton}
           aria-label="Share this scene"
         >
-          🔗 SHARE
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          <span>SHARE</span>
         </button>
       )}
 
       {/* Creator attribution */}
       {isVisible && creatorAddress && (
         <div className={styles.attribution}>
-          {creatorFid ? (
-            <button
-              onClick={() => viewCreatorProfile(creatorFid)}
-              className={styles.attributionButton}
-              aria-label="View creator profile"
-            >
-              Created by <Name address={creatorAddress as `0x${string}`} />
-              <span className={styles.fidBadge}>FID: {creatorFid}</span>
-            </button>
-          ) : (
-            <p className={styles.attributionText}>
-              Created by <Name address={creatorAddress as `0x${string}`} />
-            </p>
-          )}
+          <div className={styles.attributionText}>
+            <div className={styles.creatorLine}>
+              Created by {ensName || creatorAddress}
+            </div>
+            {createdAt && (
+              <div className={styles.timestampLine}>
+                {new Date(createdAt).toLocaleString()}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>

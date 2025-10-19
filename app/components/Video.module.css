@@ -56,52 +56,27 @@
 .attributionText {
   color: rgba(255, 255, 255, 0.9);
   font-family: var(--font-source-code-pro);
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   margin: 0;
 }
 
-.attributionButton {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.9);
-  font-family: var(--font-source-code-pro);
-  font-size: 0.8rem;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.creatorLine {
+  margin-bottom: 0.25rem;
 }
 
-.attributionButton:hover {
-  color: #FFD700;
-}
-
-.fidBadge {
-  background: rgba(102, 126, 234, 0.3);
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  color: #667eea;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.attributionButton:hover .fidBadge {
-  background: rgba(102, 126, 234, 0.5);
-  color: #8aa0ff;
+.timestampLine {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
 }
 
 .muteButton {
   position: absolute;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: none;
   border-radius: 8px;
   padding: 0.5rem 1rem;
   color: #fff;
@@ -112,11 +87,13 @@
   z-index: 3;
   transition: all 0.2s ease;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .muteButton:hover {
-  background: rgba(0, 0, 0, 0.85);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
 }
 
@@ -126,11 +103,11 @@
 
 .shareButton {
   position: absolute;
-  bottom: 20px;
+  top: 20px;
   right: 140px;
-  background: rgba(102, 126, 234, 0.7);
+  background: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(102, 126, 234, 0.9);
+  border: none;
   border-radius: 8px;
   padding: 0.5rem 1rem;
   color: #fff;
@@ -141,11 +118,13 @@
   z-index: 3;
   transition: all 0.2s ease;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .shareButton:hover {
-  background: rgba(102, 126, 234, 0.9);
-  border-color: rgba(102, 126, 234, 1);
+  background: rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
 }
 
@@ -157,6 +136,6 @@
 @media (max-width: 480px) {
   .shareButton {
     right: 20px;
-    bottom: 70px;
+    top: 70px;
   }
 }
