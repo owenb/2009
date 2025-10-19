@@ -64,12 +64,9 @@ export default function AboutModal({
 
         <div className={styles.content}>
           <p className={styles.subtitle}>
-            Bitcoin didn&apos;t turn out as we hoped. Instead of replacing fiat currency, it got co-opted by the very banks we hoped it would replace.
+            The first Bitcoin block was mined on 3 January 2009. If we could go back and create an alternative timeline, what would we do differently?
           </p>
-          <p className={styles.subtitle}>
-            Now we can travel back to 3 January 2009 and generate a new timeline, scene by scene.
-          </p>
-
+          
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>How It Works</h3>
             <ul className={styles.features}>
