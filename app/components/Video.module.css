@@ -21,7 +21,7 @@
   transform: translate(-50%, -50%);
   text-align: center;
   color: #fff;
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   z-index: 2;
 }
 
@@ -32,7 +32,7 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   color: #fff;
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -55,7 +55,7 @@
 
 .attributionText {
   color: rgba(255, 255, 255, 0.9);
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 0.8rem;
   margin: 0;
 }
@@ -70,7 +70,7 @@
   border-radius: 8px;
   padding: 0.5rem 1rem;
   color: #fff;
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;

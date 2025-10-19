@@ -23,11 +23,10 @@
 }
 
 .popupContent {
+  position: relative;
   width: 100%;
   max-width: 600px;
   background: rgba(0, 0, 0, 0.85);
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-bottom: none;
   border-radius: 20px 20px 0 0;
   padding: 2rem;
   padding-bottom: max(2rem, env(safe-area-inset-bottom));
@@ -35,7 +34,7 @@
   box-shadow:
     0 -10px 40px rgba(255, 255, 255, 0.1),
     inset 0 0 40px rgba(255, 255, 255, 0.05);
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUp 0.4s ease-in-out;
   pointer-events: auto;
 }
 
@@ -49,7 +48,7 @@
 }
 
 .popupTitle {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 2rem;
   font-weight: 700;
   color: #ffffff;
@@ -90,7 +89,7 @@
 }
 
 .choiceLabel {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 1.5rem;
   font-weight: 700;
   color: #ffffff;
@@ -106,7 +105,7 @@
 }
 
 .choiceText {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.9);
   flex: 1;
@@ -157,4 +156,137 @@
   .choiceText {
     font-size: 0.95rem;
   }
+}
+
+/* Loading state animations */
+.choiceLoading {
+  position: relative;
+  overflow: visible;
+}
+
+.choiceLoading::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 10px;
+  background: linear-gradient(45deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.4) 25%,
+    rgba(255, 215, 0, 0.8) 50%,
+    rgba(255, 215, 0, 0.4) 75%,
+    transparent 100%
+  );
+  background-size: 400% 400%;
+  animation: borderPulse 2s ease-in-out infinite;
+  z-index: -1;
+  filter: blur(8px);
+}
+
+.choiceLoading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  pointer-events: none;
+}
+
+.choiceLoadingLabel {
+  position: relative;
+  animation: labelGlow 1s ease-in-out infinite alternate;
+}
+
+.choiceLoadingLabel::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  border-radius: 6px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%);
+  animation: radiateGlow 1.2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes borderPulse {
+  0%, 100% {
+    background-position: 0% 50%;
+    opacity: 0.6;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes labelGlow {
+  0% {
+    color: #FFD700;
+    text-shadow:
+      0 0 10px rgba(255, 215, 0, 0.8),
+      0 0 20px rgba(255, 215, 0, 0.6),
+      0 0 30px rgba(255, 215, 0, 0.4);
+  }
+  100% {
+    color: #FFF;
+    text-shadow:
+      0 0 20px rgba(255, 215, 0, 1),
+      0 0 30px rgba(255, 215, 0, 0.8),
+      0 0 40px rgba(255, 215, 0, 0.6),
+      0 0 50px rgba(255, 215, 0, 0.4);
+  }
+}
+
+@keyframes radiateGlow {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+/* Disabled slot state */
+.choiceDisabled {
+  filter: grayscale(0.5);
+  pointer-events: none;
+}
+
+.choiceDisabled .choiceLabel {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.choiceDisabled .choiceText {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
 }

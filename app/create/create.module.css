@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  font-family: var(--font-roboto-mono), monospace;
+  font-family: var(--font-source-code-pro), monospace;
 }
 
 .card {
@@ -102,7 +102,7 @@
   border-radius: 10px;
   padding: 1rem;
   color: #fff;
-  font-family: var(--font-roboto-mono), monospace;
+  font-family: var(--font-source-code-pro), monospace;
   font-size: 1rem;
   resize: vertical;
   transition: all 0.3s ease;
@@ -125,7 +125,7 @@
   border: none;
   border-radius: 10px;
   padding: 0.9rem 2rem;
-  font-family: var(--font-roboto-mono), monospace;
+  font-family: var(--font-source-code-pro), monospace;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
@@ -150,7 +150,7 @@
   border: none;
   border-radius: 10px;
   padding: 1.2rem 2rem;
-  font-family: var(--font-roboto-mono), monospace;
+  font-family: var(--font-source-code-pro), monospace;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
@@ -177,7 +177,7 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 10px;
   padding: 0.75rem 1.5rem;
-  font-family: var(--font-roboto-mono), monospace;
+  font-family: var(--font-source-code-pro), monospace;
   font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
@@ -200,7 +200,7 @@
   background: none;
   border: none;
   color: #667eea;
-  font-family: var(--font-roboto-mono), monospace;
+  font-family: var(--font-source-code-pro), monospace;
   font-size: 0.85rem;
   cursor: pointer;
   text-decoration: underline;

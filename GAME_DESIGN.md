@@ -6,7 +6,7 @@
 
 ## Core Concept
 
-A "create your own adventure" game set in 2009 where users collaboratively build an infinite branching narrative by purchasing slots to generate new 8-second video scenes.
+A "create your own adventure" game set in 2009 where users travel back to the moment Bitcoin was launched to generate new timelines. The game is framed around the idea that Bitcoin didn't turn out as we hoped—instead of replacing fiat currency, it got co-opted by the very banks we hoped it would replace. Now players can collaboratively build an infinite branching narrative by purchasing slots to generate new 8-second video scenes, creating alternate possibilities from this pivotal moment.
 
 ---
 
@@ -42,11 +42,19 @@ User clicks on an empty slot → "Extend the Story" modal appears
 - **Title**: "Extend the Story"
 - **Explanation**: Fun, exciting copy explaining how it works:
   - You're about to create the next scene in this story
-  - Your 8-second video will live forever in the game
+  - Your 8-second video will live in the game world
   - Other players will discover and explore your creation
-  - You'll have 1 hour to craft the perfect scene (with AI help)
+  - You'll have 1 hour to generate your scene (with AI help)
   - If generation fails, you get a 50% refund
-- **Price Display**: Prominent "Extend now for 0.00056 ETH" button
+- **Revenue Sharing Model**:
+  - Each scene costs **0.007 ETH** to generate
+  - Earn as others build on your branch:
+    - **20%** back from each direct child scene (0.0014 ETH each)
+    - **10%** back from each grandchild scene (0.0007 ETH each)
+    - **5%** back from each great-grandchild scene (0.00035 ETH each)
+  - Break even after ~7 follow-on scenes as your timeline evolves
+  - Fully active branch can generate ongoing revenue as the adventure expands
+- **Price Display**: Prominent "Extend now for 0.007 ETH" button
 - **Design**: Glassmorphism, mobile-friendly, same aesthetic as rest of app
 
 ### 2. Lock Acquisition (1 Minute)

@@ -42,9 +42,11 @@ interface SlotChoiceModalProps {
   parentSceneId?: number | 'genesis'; // Parent scene ID, default to 'genesis' (intro)
   onSlotSelected?: (sceneData: SceneData) => void; // Callback when a filled slot is clicked
   preloadedData?: { slots: SlotInfo[] } | null; // Preloaded slot data from parent
+  onBack?: () => void; // Callback to go back to previous scene
+  canGoBack?: boolean; // Whether back button should be shown
 }
 
-export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', onSlotSelected, preloadedData }: SlotChoiceModalProps) {
+export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', onSlotSelected, preloadedData, onBack, canGoBack = false }: SlotChoiceModalProps) {
   const [_selectedSlot, setSelectedSlot] = useState<'A' | 'B' | 'C' | null>(null);
   const [_selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
@@ -52,6 +54,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lockSceneId, setLockSceneId] = useState<number | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [loadingSlot, setLoadingSlot] = useState<'A' | 'B' | 'C' | null>(null);
 
   // ExtendStoryModal state
   const [showExtendModal, setShowExtendModal] = useState(false);
@@ -66,6 +69,13 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
+
+  // Reset loading state when modal is hidden
+  useEffect(() => {
+    if (!isVisible) {
+      setLoadingSlot(null);
+    }
+  }, [isVisible]);
 
   // Fetch slots when modal becomes visible (or use preloaded data)
   useEffect(() => {
@@ -114,6 +124,9 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       return;
     }
 
+    // Set loading state for this slot
+    setLoadingSlot(slot);
+
     try {
       const response = await fetch('/api/play', {
         method: 'POST',
@@ -139,6 +152,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
     } catch (err) {
       console.error('Error loading scene:', err);
       alert('Failed to load scene. Please try again.');
+      setLoadingSlot(null); // Clear loading state on error
     }
   };
 
@@ -311,65 +325,76 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
             marginBottom: '1rem',
             textAlign: 'center'
           }}>
-            <p style={{ color: '#FFD700', fontWeight: 'bold', marginBottom: '0.5rem', fontFamily: 'var(--font-roboto-mono)' }}>
+            <p style={{ color: '#FFD700', fontWeight: 'bold', marginBottom: '0.5rem', fontFamily: 'var(--font-source-code-pro)' }}>
               🔒 Wallet Connection Required
             </p>
-            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontFamily: 'var(--font-roboto-mono)' }}>
+            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontFamily: 'var(--font-source-code-pro)' }}>
               Please connect your wallet to continue the adventure
             </p>
           </div>
         )}
 
         {statusMessage && (
-          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
+          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
             {statusMessage}
           </p>
         )}
 
         {isPending && (
-          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
+          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
             Waiting for wallet confirmation...
           </p>
         )}
 
         {isConfirming && (
-          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
+          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
             Transaction pending on Base...
           </p>
         )}
 
         {loadError && (
-          <p style={{ color: '#FF6B6B', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-roboto-mono)' }}>
+          <p style={{ color: '#FF6B6B', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
             {loadError}
           </p>
         )}
 
         {isLoading ? (
-          <p style={{ color: '#fff', textAlign: 'center', fontFamily: 'var(--font-roboto-mono)' }}>
+          <p style={{ color: '#fff', textAlign: 'center', fontFamily: 'var(--font-source-code-pro)' }}>
             Loading slots...
           </p>
         ) : (
           <div className={styles.choicesContainer}>
-            {slots.map((slotInfo) => {
-              const slotIndex = slotInfo.slot.charCodeAt(0) - 'A'.charCodeAt(0); // A=0, B=1, C=2
+            {(() => {
+              // Find the first available slot (not filled, not locked, no attempt)
+              const firstAvailableSlot = slots.find(slot =>
+                !slot.exists && // Not a completed scene
+                !slot.isLocked && // Not locked by someone
+                !slot.attemptId // No active attempt
+              )?.slot || null;
+
+              return slots.map((slotInfo) => {
+                const slotIndex = slotInfo.slot.charCodeAt(0) - 'A'.charCodeAt(0); // A=0, B=1, C=2
 
               // Filled slot (exists and completed) - CHECK THIS FIRST!
               if (slotInfo.exists && slotInfo.status === 'completed') {
                 const canView = isConnected;
+                const isSlotLoading = loadingSlot === slotInfo.slot;
                 return (
                   <div
                     key={slotInfo.slot}
-                    className={styles.choice}
-                    onClick={() => handleFilledSlotClick(slotInfo.slot)}
+                    className={`${styles.choice} ${isSlotLoading ? styles.choiceLoading : ''}`}
+                    onClick={() => !isSlotLoading && handleFilledSlotClick(slotInfo.slot)}
                     style={{
-                      cursor: canView ? 'pointer' : 'not-allowed',
+                      cursor: isSlotLoading ? 'wait' : (canView ? 'pointer' : 'not-allowed'),
                       opacity: canView ? 1 : 0.6
                     }}
                   >
-                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
+                    <div className={`${styles.choiceLabel} ${isSlotLoading ? styles.choiceLoadingLabel : ''}`}>
+                      {slotInfo.slot}
+                    </div>
                     <div className={styles.choiceText}>
-                      {slotInfo.label || 'view scene'}
-                      {!canView && <span style={{ fontSize: '0.8rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.7)' }}>🔒 connect wallet</span>}
+                      {isSlotLoading ? 'loading...' : (slotInfo.label || 'view scene')}
+                      {!canView && !isSlotLoading && <span style={{ fontSize: '0.8rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.7)' }}>🔒 connect wallet</span>}
                     </div>
                   </div>
                 );
@@ -451,35 +476,79 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
               }
 
               // Empty/available slot
+              const isFirstAvailable = slotInfo.slot === firstAvailableSlot;
+              const isDisabled = !isFirstAvailable || isPending || isConfirming;
+
               return (
                 <div
                   key={slotInfo.slot}
-                  className={styles.choice}
-                  onClick={() => handleSlotClick(slotInfo.slot, slotIndex)}
+                  className={`${styles.choice} ${isDisabled ? styles.choiceDisabled : ''}`}
+                  onClick={() => !isDisabled && handleSlotClick(slotInfo.slot, slotIndex)}
                   style={{
-                    cursor: isPending || isConfirming ? 'not-allowed' : 'pointer',
-                    opacity: isPending || isConfirming ? 0.5 : 1
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    opacity: isDisabled ? 0.4 : 1,
+                    borderColor: isFirstAvailable ? '#FFD700' : 'rgba(255, 255, 255, 0.15)'
                   }}
                 >
                   <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                  <div className={styles.choiceText}>claim this slot</div>
+                  <div className={styles.choiceText}>
+                    {isFirstAvailable ? 'extend this story' : 'available soon'}
+                  </div>
                 </div>
               );
-            })}
+              });
+            })()}
           </div>
         )}
 
-        {/* About link */}
+        {/* Footer with Back button and About link */}
         <div style={{
-          textAlign: 'center',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginTop: '1.5rem',
           paddingTop: '1rem',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
+          {/* Back button - left side */}
+          {onBack && (
+            <button
+              onClick={onBack}
+              disabled={!canGoBack}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: canGoBack ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.3)',
+                fontFamily: 'var(--font-source-code-pro)',
+                fontSize: '0.85rem',
+                cursor: canGoBack ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0',
+                transition: 'color 0.2s ease',
+                opacity: canGoBack ? 1 : 0.5
+              }}
+              onMouseEnter={(e) => {
+                if (canGoBack) e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
+              }}
+              onMouseLeave={(e) => {
+                if (canGoBack) e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+              }}
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
+          )}
+
+          {/* Spacer if no back button */}
+          {!onBack && <div />}
+
+          {/* About link - right side */}
           <button
             onClick={() => setShowAboutModal(true)}
             style={{
-              fontFamily: 'var(--font-roboto-mono)',
+              fontFamily: 'var(--font-source-code-pro)',
               fontSize: '0.85rem',
               color: 'rgba(255, 255, 255, 0.6)',
               background: 'transparent',
@@ -487,6 +556,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
               cursor: 'pointer',
               textDecoration: 'none',
               transition: 'color 0.2s ease',
+              padding: '0'
             }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}

@@ -75,6 +75,7 @@ export default function MainGame() {
   const [preloadedSlots, setPreloadedSlots] = useState<PreloadedSlotsData | null>(null);
   const [activeAttempts, setActiveAttempts] = useState<ActiveAttempt[]>([]);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [sceneHistory, setSceneHistory] = useState<SceneData[]>([]);
 
   // Background animation state
   const [bgScale, setBgScale] = useState(1);
@@ -202,6 +203,11 @@ export default function MainGame() {
     // Track previous scene for analytics
     setPreviousSceneId(currentScene?.sceneId ?? null);
 
+    // Push current scene to history before moving to new scene
+    if (currentScene) {
+      setSceneHistory(prev => [...prev, currentScene]);
+    }
+
     // Set current scene data
     setCurrentScene(sceneData);
 
@@ -210,6 +216,32 @@ export default function MainGame() {
 
     // Update parent scene ID for next modal (this triggers preload effect)
     setParentSceneId(sceneData.sceneId);
+  };
+
+  const handleBack = () => {
+    // Pop the last scene from history
+    if (sceneHistory.length === 0) return;
+
+    const previousScene = sceneHistory[sceneHistory.length - 1];
+    const newHistory = sceneHistory.slice(0, -1);
+
+    // Hide modal
+    setShowPopup(false);
+
+    // Clear preloaded slots
+    setPreloadedSlots(null);
+
+    // Update scene history
+    setSceneHistory(newHistory);
+
+    // Set the previous scene as current
+    setCurrentScene(previousScene);
+
+    // Update parent scene ID
+    setParentSceneId(previousScene.sceneId);
+
+    // Show video
+    setShowVideo(true);
   };
 
   return (
@@ -259,7 +291,7 @@ export default function MainGame() {
             <div style={{ flex: 1 }}>
               <p style={{
                 color: '#0f0',
-                fontFamily: 'var(--font-roboto-mono)',
+                fontFamily: 'var(--font-source-code-pro)',
                 fontSize: '0.9rem',
                 fontWeight: 'bold',
                 margin: 0,
@@ -269,7 +301,7 @@ export default function MainGame() {
               </p>
               <p style={{
                 color: 'rgba(255, 255, 255, 0.8)',
-                fontFamily: 'var(--font-roboto-mono)',
+                fontFamily: 'var(--font-source-code-pro)',
                 fontSize: '0.75rem',
                 margin: 0
               }}>
@@ -280,7 +312,7 @@ export default function MainGame() {
               <button
                 onClick={() => router.push(activeAttempts[0].resumeUrl)}
                 style={{
-                  fontFamily: 'var(--font-roboto-mono)',
+                  fontFamily: 'var(--font-source-code-pro)',
                   fontSize: '0.85rem',
                   padding: '0.5rem 1rem',
                   background: 'rgba(0, 255, 0, 0.2)',
@@ -305,7 +337,7 @@ export default function MainGame() {
               <button
                 onClick={() => setShowResumeBanner(false)}
                 style={{
-                  fontFamily: 'var(--font-roboto-mono)',
+                  fontFamily: 'var(--font-source-code-pro)',
                   fontSize: '0.75rem',
                   padding: '0.5rem 0.75rem',
                   background: 'rgba(255, 255, 255, 0.1)',
@@ -369,6 +401,8 @@ export default function MainGame() {
         parentSceneId={parentSceneId}
         onSlotSelected={handleSlotSelected}
         preloadedData={preloadedSlots}
+        onBack={handleBack}
+        canGoBack={sceneHistory.length > 0}
       />
     </div>
   );

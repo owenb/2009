@@ -64,7 +64,10 @@ export default function AboutModal({
 
         <div className={styles.content}>
           <p className={styles.subtitle}>
-            A collaborative <strong>create-your-own-adventure</strong> game where every player shapes the story.
+            Bitcoin didn&apos;t turn out as we hoped. Instead of replacing fiat currency, it got co-opted by the very banks we hoped it would replace.
+          </p>
+          <p className={styles.subtitle}>
+            Now we can travel back to 3 January 2009 and generate a new timeline, scene by scene.
           </p>
 
           <div className={styles.section}>
@@ -84,7 +87,15 @@ export default function AboutModal({
               </li>
               <li>
                 <span className={styles.icon}>🤖</span>
-                <span>Write a prompt — <strong>AI generates your 8-second scene</strong></span>
+                <span>We inject <strong>your ideas</strong> into the story arc</span>
+              </li>
+              <li>
+                <span className={styles.icon}>⏱️</span>
+                <span><strong>1 hour to generate</strong> your scene</span>
+              </li>
+              <li>
+                <span className={styles.icon}>💰</span>
+                <span>Apply for a <strong>50% refund</strong> if you fail to generate</span>
               </li>
               <li>
                 <span className={styles.icon}>🌳</span>
@@ -94,32 +105,72 @@ export default function AboutModal({
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>The Story</h3>
-            <p className={styles.description}>
-              It&apos;s <strong>2009</strong>. Bitcoin has just been launched. Navigate this pivotal moment in history and help shape an infinite timeline of possibilities.
-            </p>
-          </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Your Creations</h3>
+            <h3 className={styles.sectionTitle}>Game Mechanics</h3>
             <ul className={styles.features}>
               <li>
-                <span className={styles.icon}>♾️</span>
-                <span><strong>Live forever</strong> in the game world</span>
-              </li>
-              <li>
-                <span className={styles.icon}>🌍</span>
-                <span><strong>Discovered by other players</strong> exploring different paths</span>
-              </li>
-              <li>
-                <span className={styles.icon}>⏱️</span>
-                <span><strong>1 hour to generate</strong> with unlimited retries</span>
-              </li>
-              <li>
-                <span className={styles.icon}>💰</span>
-                <span><strong>50% refund</strong> if generation fails</span>
+                <span className={styles.icon}>💎</span>
+                <span>Each scene costs <strong>0.007 ETH</strong> to generate</span>
               </li>
             </ul>
+
+            <div className={styles.revenueModel}>
+              <p className={styles.revenueIntro}>
+                <strong>Earn as others build on your branch:</strong>
+              </p>
+
+              <div className={styles.revenueTree}>
+                <div className={styles.revenueNode}>
+                  <div className={styles.nodeBox} data-level="you">
+                    <div className={styles.nodeLabel}>Your Scene</div>
+                    <div className={styles.nodeCost}>-0.007 ETH</div>
+                  </div>
+                </div>
+
+                <div className={styles.revenueLevel}>
+                  <div className={styles.levelLabel}>Direct children (20% each)</div>
+                  <div className={styles.nodeRow}>
+                    {[1, 2, 3].map(i => (
+                      <div key={`child-${i}`} className={styles.nodeBox} data-level="child">
+                        <div className={styles.nodeReward}>+0.0014 ETH</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.revenueLevel}>
+                  <div className={styles.levelLabel}>Grandchildren (10% each)</div>
+                  <div className={styles.nodeGrid}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
+                      <div key={`grandchild-${i}`} className={styles.nodeBox} data-level="grandchild">
+                        <div className={styles.nodeReward}>+0.0007</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.revenueLevel}>
+                  <div className={styles.levelLabel}>Great-grandchildren (5% each)</div>
+                  <div className={styles.dotIndicator}>• • •</div>
+                  <div className={styles.nodeSmallText}>+0.00035 ETH each</div>
+                </div>
+              </div>
+
+              <div className={styles.breakEvenNote}>
+                <strong>Break even after ~7 follow-on scenes</strong> as your timeline evolves
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.attribution}>
+            Credits: 2009 is inspired by{' '}
+            <a
+              href="https://github.com/mshumer/interactive-sora"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.attributionLink}
+            >
+              Interactive Sora
+            </a>
           </div>
 
           <button

@@ -51,7 +51,7 @@ function GeneratingPageContent() {
       console.error('Error completing generation:', err);
       setError((err as Error).message);
     }
-  }, [router, sceneId]);
+  }, [router]);
 
   // Poll for status every 5 seconds
   useEffect(() => {

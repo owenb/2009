@@ -87,7 +87,7 @@
 
 /* Title */
 .title {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 2rem;
   font-weight: 700;
   color: #ffffff;
@@ -106,7 +106,7 @@
 }
 
 .subtitle {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.9);
   text-align: center;
@@ -127,7 +127,7 @@
 }
 
 .sectionTitle {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 1.1rem;
   font-weight: 700;
   color: #FFD700;
@@ -139,7 +139,7 @@
 }
 
 .description {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.6;
@@ -165,7 +165,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.5;
@@ -186,9 +186,157 @@
   height: 28px;
 }
 
+/* Revenue Model Visualization */
+.revenueModel {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 215, 0, 0.05);
+  border: 2px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+}
+
+.revenueIntro {
+  font-family: var(--font-source-code-pro);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  margin: 0 0 1.5rem 0;
+}
+
+.revenueTree {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.revenueNode {
+  display: flex;
+  justify-content: center;
+}
+
+.revenueLevel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.levelLabel {
+  font-family: var(--font-source-code-pro);
+  font-size: 0.75rem;
+  color: rgba(255, 215, 0, 0.8);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.nodeBox {
+  font-family: var(--font-source-code-pro);
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  text-align: center;
+  min-width: 80px;
+  transition: all 0.2s ease;
+}
+
+.nodeBox[data-level="you"] {
+  background: rgba(255, 100, 100, 0.2);
+  border: 2px solid rgba(255, 100, 100, 0.5);
+  color: #ffcccc;
+}
+
+.nodeBox[data-level="child"] {
+  background: rgba(100, 255, 100, 0.15);
+  border: 1px solid rgba(100, 255, 100, 0.4);
+  color: #ccffcc;
+}
+
+.nodeBox[data-level="grandchild"] {
+  background: rgba(100, 200, 255, 0.15);
+  border: 1px solid rgba(100, 200, 255, 0.3);
+  color: #cce6ff;
+  font-size: 0.7rem;
+  padding: 0.4rem 0.5rem;
+  min-width: 60px;
+}
+
+.nodeLabel {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.nodeCost {
+  font-weight: 700;
+  color: #ff8888;
+}
+
+.nodeReward {
+  font-weight: 700;
+  color: #88ff88;
+}
+
+.nodeRow {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nodeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  max-width: 280px;
+}
+
+.dotIndicator {
+  font-size: 1.5rem;
+  color: rgba(255, 215, 0, 0.4);
+  letter-spacing: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.nodeSmallText {
+  font-family: var(--font-source-code-pro);
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.breakEvenNote {
+  font-family: var(--font-source-code-pro);
+  font-size: 0.85rem;
+  color: #FFD700;
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* Attribution */
+.attribution {
+  font-family: var(--font-source-code-pro);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.attributionLink {
+  color: rgba(255, 215, 0, 0.7);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.attributionLink:hover {
+  color: rgba(255, 215, 0, 1);
+  text-decoration: underline;
+}
+
 /* Close Button */
 .closeButton {
-  font-family: var(--font-roboto-mono);
+  font-family: var(--font-source-code-pro);
   font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -222,6 +370,8 @@
 
   .subtitle {
     font-size: 0.9rem;
+    text-wrap: text-balance;
+    line-height: normal;
   }
 
   .sectionTitle {
@@ -240,6 +390,20 @@
     font-size: 0.95rem;
     padding: 0.9rem 1.5rem;
   }
+
+  .revenueModel {
+    padding: 1rem;
+  }
+
+  .nodeGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    max-width: 240px;
+  }
+
+  .levelLabel {
+    font-size: 0.7rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -255,6 +419,7 @@
 
   .subtitle {
     font-size: 0.85rem;
+    text-wrap: text-balance;
   }
 
   .section {
@@ -286,5 +451,43 @@
   .closeButton {
     font-size: 0.9rem;
     padding: 0.85rem 1.25rem;
+  }
+
+  .revenueModel {
+    padding: 0.75rem;
+  }
+
+  .revenueIntro {
+    font-size: 0.8rem;
+  }
+
+  .nodeGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+    max-width: 200px;
+  }
+
+  .nodeBox {
+    font-size: 0.65rem;
+    padding: 0.35rem 0.4rem;
+    min-width: 50px;
+  }
+
+  .nodeBox[data-level="grandchild"] {
+    font-size: 0.6rem;
+    padding: 0.3rem 0.35rem;
+    min-width: 45px;
+  }
+
+  .levelLabel {
+    font-size: 0.65rem;
+  }
+
+  .breakEvenNote {
+    font-size: 0.75rem;
+  }
+
+  .attribution {
+    font-size: 0.7rem;
   }
 }

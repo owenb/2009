@@ -10,9 +10,11 @@ This document defines the visual language and design system for the 2009 create-
 
 ### Primary Colors
 
+**Standard Accent Color:** `#FFD700` (Gold) - This is the primary accent color used throughout the app for borders, highlights, and emphasis.
+
 | Color | Value | Usage |
 |-------|-------|-------|
-| **Gold** | `#FFD700` | Accent color, highlights, important text |
+| **Gold** | `#FFD700` | **PRIMARY ACCENT** - borders, highlights, important text, slot borders |
 | **Orange** | `#FFA500` | Gradient stops, warm accents |
 | **Light Gold** | `#FFE44D` | Hover states, lighter gradients |
 | **Light Orange** | `#FFB84D` | Hover states, lighter gradients |
@@ -49,9 +51,9 @@ This document defines the visual language and design system for the 2009 create-
 
 ### Font Family
 
-**Primary:** Roboto Mono (monospace)
+**Primary:** Source Code Pro (monospace)
 ```css
-font-family: var(--font-roboto-mono);
+font-family: var(--font-source-code-pro);
 ```
 
 ### Type Scale
@@ -75,7 +77,7 @@ font-family: var(--font-roboto-mono);
 
 #### Titles
 ```css
-font-family: var(--font-roboto-mono);
+font-family: var(--font-source-code-pro);
 font-size: 2rem;
 font-weight: 700;
 color: #ffffff;
@@ -87,7 +89,7 @@ line-height: 1.2;
 
 #### Section Headers
 ```css
-font-family: var(--font-roboto-mono);
+font-family: var(--font-source-code-pro);
 font-size: 1.1rem;
 font-weight: 700;
 color: #FFD700;
@@ -97,7 +99,7 @@ letter-spacing: 0.05em;
 
 #### Body Text
 ```css
-font-family: var(--font-roboto-mono);
+font-family: var(--font-source-code-pro);
 font-size: 1rem;
 color: rgba(255, 255, 255, 0.9);
 line-height: 1.5;
@@ -148,7 +150,7 @@ font-weight: 700;
 
 #### Primary CTA Button
 ```css
-font-family: var(--font-roboto-mono);
+font-family: var(--font-source-code-pro);
 font-size: 1.1rem;
 font-weight: 700;
 text-transform: uppercase;
@@ -176,7 +178,7 @@ transform: translateY(0);
 
 #### Secondary/Cancel Button
 ```css
-font-family: var(--font-roboto-mono);
+font-family: var(--font-source-code-pro);
 font-size: 0.9rem;
 color: rgba(255, 255, 255, 0.6);
 background: transparent;
@@ -475,7 +477,7 @@ button:focus-visible {
 1. Copy structure from `ExtendStoryModal.tsx` / `AboutModal.tsx`
 2. Use standard overlay with `z-index: 100` (or `200` if stacking)
 3. Apply glassmorphism to modal container
-4. Use Roboto Mono for all text
+4. Use Source Code Pro for all text
 5. Follow spacing system (`1.5rem` gaps, `2rem` padding)
 6. Add fly-in animation
 7. Ensure responsive breakpoints
@@ -515,7 +517,7 @@ box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 
 1. **Glassmorphism First** - All overlays use semi-transparent dark glass with blur
 2. **Gold for Emphasis** - Use sparingly for important actions and highlights
-3. **Monospace Typography** - Roboto Mono everywhere for retro-tech feel
+3. **Monospace Typography** - Source Code Pro everywhere for retro-tech feel
 4. **Smooth Animations** - Everything transitions, nothing pops
 5. **Mobile-First Interactions** - Large tap targets, bottom sheets, safe areas
 6. **Dark Theme Only** - Pure black backgrounds, white text, no light mode
@@ -534,7 +536,7 @@ box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
   --color-white: #FFFFFF;
   --color-black: #000000;
 
-  --font-primary: var(--font-roboto-mono);
+  --font-primary: var(--font-source-code-pro);
 
   --radius-sm: 6px;
   --radius-md: 8px;

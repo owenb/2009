@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Source_Code_Pro, Roboto_Mono } from "next/font/google";
+import { Inter, Source_Code_Pro, Saira } from "next/font/google";
 import { SafeArea } from "@coinbase/onchainkit/minikit";
 import { minikitConfig } from "../minikit.config";
 import { RootProvider } from "./rootProvider";
@@ -35,8 +35,8 @@ const sourceCodePro = Source_Code_Pro({
   subsets: ["latin"],
 });
 
-const robotoMono = Roboto_Mono({
-  variable: "--font-roboto-mono",
+const saira = Saira({
+  variable: "--font-saira",
   subsets: ["latin"],
 });
 
@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <RootProvider>
       <html lang="en">
-        <body className={`${inter.variable} ${sourceCodePro.variable} ${robotoMono.variable}`}>
+        <body className={`${inter.variable} ${sourceCodePro.variable} ${saira.variable}`}>
           <SafeArea>{children}</SafeArea>
         </body>
       </html>

@@ -2,7 +2,7 @@
 
 ## Concept
 
-A first-of-its-kind "create your own adventure" game set in the year 2009 when Bitcoin has just been launched. This interactive experience combines video storytelling with generative AI to create an infinitely extensible world/movie/game.
+A first-of-its-kind "create your own adventure" game set in the year 2009 when Bitcoin has just been launched. The game is framed around the idea that Bitcoin didn't turn out as we hoped—instead of replacing fiat currency, it got co-opted by the very banks we hoped it would replace. Now players can travel back to 2009 and generate new timelines. This interactive experience combines video storytelling with generative AI to create an infinitely extensible world/movie/game where players inject their ideas into the story arc.
 
 ## How It Works
 
@@ -36,8 +36,8 @@ Built as a Base mini app following the Base platform specifications: https://doc
 1. Watch intro video (8 seconds)
 2. See 3 available extension slots
 3. Purchase a slot (if available)
-4. Submit a generative AI prompt to extend the story
-5. AI generates the next scene based on the prompt
+4. Submit ideas to be injected into the story arc
+5. AI generates the next scene (1 hour with unlimited retries, 50% refund if fails)
 6. New scene appears with its own 3 extension slots
 7. Repeat infinitely
 
@@ -132,13 +132,25 @@ Built as a Base mini app following the Base platform specifications: https://doc
 - Glassmorphism design with blur effects
 - Fly-in animation with bounce easing
 - Hover effects and responsive design
-- Roboto Mono typography throughout
+- Source Code Pro typography throughout
+
+#### About Modal
+- Narrative framing: Bitcoin didn't turn out as hoped, travel back to 2009 to generate new timelines
+- How It Works section explains the flow including generation time (1 hour) and refund policy (50%)
+- "We inject your ideas into the story arc" replaces traditional prompt submission language
+- Game Mechanics section with visual revenue sharing model:
+  - 0.007 ETH per scene
+  - 20% back from direct children, 10% from grandchildren, 5% from great-grandchildren
+  - Visual tree diagram showing revenue flow
+  - Break-even calculation displayed
+- Your Creations section emphasizes permanence and discovery by other players
+- Drag-to-dismiss functionality for mobile UX
 
 #### Wallet Address Styling
 - OnchainKit wallet address customized via CSS in `app/globals.css`
 - Targets elements using `data-testid` attributes from OnchainKit components
 - Customizations applied:
-  - **Font**: Roboto Mono (matching game aesthetic)
+  - **Font**: Source Code Pro (matching game aesthetic)
   - **Size**: Reduced to 0.75rem (12px) for compact display
   - **Avatar**: Shrunk to 1.25rem (20px) from default 40px
   - **Background**: 30% white (`rgba(255, 255, 255, 0.3)`) with subtle hover states
@@ -169,9 +181,9 @@ Built as a Base mini app following the Base platform specifications: https://doc
   - `002_refactor_to_three_tier_architecture.sql` - New three-tier architecture
 
 #### Typography
-- Added Roboto Mono font via Next.js Google Fonts integration
-- Font available as CSS variable: `--font-roboto-mono`
-- Configured in `app/layout.tsx` alongside existing Inter and Source Code Pro fonts
+- Using Source Code Pro font via Next.js Google Fonts integration
+- Font available as CSS variable: `--font-source-code-pro`
+- Configured in `app/layout.tsx` alongside existing Inter and Saira fonts
 
 #### Development Environment
 - Dev server running on http://localhost:3001

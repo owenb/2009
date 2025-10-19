@@ -20,7 +20,7 @@
   body {
     color: var(--foreground);
     background: var(--background);
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-saira), sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -92,7 +92,7 @@
 
   /* Style the address text */
   span[data-testid="ockIdentity_Text"] {
-    font-family: var(--font-roboto-mono), monospace !important;
+    font-family: var(--font-source-code-pro), monospace !important;
     font-size: 0.75rem !important; /* 12px */
     font-weight: 500 !important; /* Medium weight instead of semibold */
   }
