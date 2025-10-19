@@ -16,6 +16,9 @@ interface LockRequest {
 }
 
 interface CurrentLockRow {
+  id: number;
+  parent_id: number;
+  slot: string;
   locked_by_address: string;
   locked_until: Date;
   status: string;
@@ -67,7 +70,7 @@ export async function POST(
 
     // Check if user already has an active lock on ANY slot globally
     const existingLock = await query<CurrentLockRow>(`
-      SELECT locked_by_address, locked_until, status
+      SELECT id, parent_id, slot, locked_by_address, locked_until, status
       FROM scenes
       WHERE locked_by_address = $1
         AND (
@@ -83,7 +86,28 @@ export async function POST(
       const lock = existingLock.rows[0];
       const now = new Date();
 
-      // Calculate time remaining (only relevant for 'locked' status)
+      // Check if the existing lock is for the SAME slot being requested
+      const isSameSlot = lock.parent_id === parentId && lock.slot === slot;
+
+      if (isSameSlot) {
+        // User is trying to re-lock the same slot (e.g., after failed payment)
+        // Return success with existing sceneId (idempotent operation)
+        let expiresIn: number | undefined;
+        if (lock.status === 'locked' && lock.locked_until) {
+          const lockExpiry = new Date(lock.locked_until);
+          expiresIn = Math.max(0, Math.ceil((lockExpiry.getTime() - now.getTime()) / 1000));
+        }
+
+        return NextResponse.json({
+          success: true,
+          sceneId: lock.id,
+          lockExpires: lock.locked_until,
+          expiresIn: expiresIn || 60, // Default to 60 for post-payment statuses
+          message: 'Using existing lock for this slot'
+        });
+      }
+
+      // Different slot - block the request
       let expiresIn: number | undefined;
       if (lock.status === 'locked' && lock.locked_until) {
         const lockExpiry = new Date(lock.locked_until);
