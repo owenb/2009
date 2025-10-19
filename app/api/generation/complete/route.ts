@@ -158,8 +158,7 @@ export async function POST(request: NextRequest) {
         UPDATE prompts
         SET
           outcome = 'success',
-          completed_at = NOW(),
-          updated_at = NOW()
+          completed_at = NOW()
         WHERE id = $1
       `, [promptId]);
 
@@ -181,16 +180,13 @@ export async function POST(request: NextRequest) {
           creator_fid = $2,
           current_attempt_id = $3,
           slot_label = $4,
-          video_url = $5,
-          completed_at = NOW(),
           updated_at = NOW()
-        WHERE id = $6
+        WHERE id = $5
       `, [
         promptRow.creator_address,
         promptRow.creator_fid,
         promptRow.attempt_id,
         slotLabel,
-        r2Url,
         sceneId
       ]);
 
