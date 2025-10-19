@@ -77,14 +77,19 @@ export async function verifySceneCreation(
 
       if (decoded.eventName === 'SceneCreated') {
         // TypeScript doesn't narrow the type well, so we need to be explicit
-        const args = decoded.args as any;
+        const args = decoded.args as {
+          sceneId: bigint;
+          parentId: bigint;
+          slot: number;
+          creator: string;
+        };
         sceneId = BigInt(args.sceneId);
         parentId = BigInt(args.parentId);
         slot = Number(args.slot);
         creator = String(args.creator);
         break;
       }
-    } catch (e) {
+    } catch {
       // Skip logs that don't match our ABI
       continue;
     }
