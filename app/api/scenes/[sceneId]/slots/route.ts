@@ -30,9 +30,9 @@ export async function GET(
   try {
     const { sceneId: sceneIdParam } = await params;
 
-    // Handle "genesis" or "null" as the intro scene (id=1)
+    // Handle "genesis" or "null" as the intro scene (id=0 to match smart contract)
     const parentId = sceneIdParam === 'genesis' || sceneIdParam === 'null'
-      ? 1
+      ? 0
       : parseInt(sceneIdParam, 10);
 
     if (isNaN(parentId)) {

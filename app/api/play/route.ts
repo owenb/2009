@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle "genesis" as scene ID 1
-    const parentId = parentSceneId === 'genesis' ? 1 : parentSceneId;
+    // Handle "genesis" as scene ID 0 (matches smart contract)
+    const parentId = parentSceneId === 'genesis' ? 0 : parentSceneId;
 
     if (typeof parentId !== 'number' || isNaN(parentId)) {
       return NextResponse.json(

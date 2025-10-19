@@ -90,13 +90,68 @@ contract VideoAdventure {
         // Mark slot as taken
         slotTaken[_parentId][_slot] = sceneId;
 
-        // Send payment to treasury
-        (bool success, ) = treasury.call{value: msg.value}("");
-        require(success, "Payment transfer failed");
+        // Distribute payments to creators and treasury
+        _distributePayment(_parentId);
 
         emit SceneCreated(sceneId, _parentId, _slot, msg.sender);
 
         return sceneId;
+    }
+
+    /**
+     * @dev Distribute payment to parent/grandparent/great-grandparent creators and treasury
+     * Parent gets 50%, grandparent 25%, great-grandparent 12.5%, treasury 12.5%
+     * If any creator is address(0), their share goes to treasury
+     */
+    function _distributePayment(uint256 _parentId) private {
+        uint256 payment = msg.value;
+
+        // Calculate splits (using basis points to avoid rounding issues)
+        uint256 parentShare = (payment * 50) / 100;           // 50%
+        uint256 grandparentShare = (payment * 25) / 100;      // 25%
+        uint256 greatGrandparentShare = (payment * 125) / 1000; // 12.5%
+        uint256 treasuryBase = payment - parentShare - grandparentShare - greatGrandparentShare; // 12.5% (handles rounding)
+
+        uint256 treasuryTotal = treasuryBase;
+
+        // Parent creator (Generation 1)
+        address parentCreator = scenes[_parentId].creator;
+        if (parentCreator == address(0)) {
+            treasuryTotal += parentShare;
+        } else {
+            _sendPayment(parentCreator, parentShare);
+        }
+
+        // Grandparent creator (Generation 2)
+        uint256 grandparentId = scenes[_parentId].parentId;
+        address grandparentCreator = scenes[grandparentId].creator;
+        if (grandparentCreator == address(0)) {
+            treasuryTotal += grandparentShare;
+        } else {
+            _sendPayment(grandparentCreator, grandparentShare);
+        }
+
+        // Great-grandparent creator (Generation 3)
+        uint256 greatGrandparentId = scenes[grandparentId].parentId;
+        address greatGrandparentCreator = scenes[greatGrandparentId].creator;
+        if (greatGrandparentCreator == address(0)) {
+            treasuryTotal += greatGrandparentShare;
+        } else {
+            _sendPayment(greatGrandparentCreator, greatGrandparentShare);
+        }
+
+        // Send accumulated treasury amount
+        _sendPayment(treasury, treasuryTotal);
+    }
+
+    /**
+     * @dev Send payment to recipient
+     */
+    function _sendPayment(address recipient, uint256 amount) private {
+        if (amount > 0) {
+            (bool success, ) = recipient.call{value: amount}("");
+            require(success, "Payment transfer failed");
+        }
     }
 
     /**

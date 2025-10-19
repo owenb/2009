@@ -53,8 +53,9 @@ export async function POST(
     }
 
     // Parse parent ID (sceneId in route context is the parent scene)
+    // Genesis scene is ID 0 in the smart contract
     const parentId = sceneIdParam === 'genesis' || sceneIdParam === 'null'
-      ? 1
+      ? 0
       : parseInt(sceneIdParam, 10);
 
     if (isNaN(parentId)) {
