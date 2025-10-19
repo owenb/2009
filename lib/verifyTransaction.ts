@@ -77,7 +77,7 @@ export async function verifySceneCreation(
 
       if (decoded.eventName === 'SceneCreated') {
         // TypeScript doesn't narrow the type well, so we need to be explicit
-        const args = decoded.args as {
+        const args = decoded.args as unknown as {
           sceneId: bigint;
           parentId: bigint;
           slot: number;
