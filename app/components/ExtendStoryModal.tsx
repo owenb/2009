@@ -13,7 +13,7 @@ interface ExtendStoryModalProps {
 
 export default function ExtendStoryModal({
   isVisible,
-  slot,
+  slot: _slot,
   onExtendClick,
   onClose
 }: ExtendStoryModalProps) {
