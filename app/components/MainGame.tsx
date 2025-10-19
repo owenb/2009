@@ -452,47 +452,6 @@ export default function MainGame() {
         </div>
       )}
 
-      {/* Map icon in top left */}
-      {showVideo && (
-        <button
-          onClick={() => setShowMapModal(true)}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            left: '20px',
-            zIndex: 1000,
-            width: '50px',
-            height: '50px',
-            background: 'rgba(0, 0, 0, 0.7)',
-            border: '2px solid rgba(255, 215, 0, 0.5)',
-            borderRadius: '10px',
-            backdropFilter: 'blur(10px)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.5rem',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.85)';
-            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.8)';
-            e.currentTarget.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.4)';
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
-            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-            e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.2)';
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          aria-label="Open story map"
-        >
-          🗺️
-        </button>
-      )}
-
       {/* Wallet connection in top right */}
       {walletVisible && (
         <div style={{

@@ -8,6 +8,7 @@ import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
 import styles from "./SlotChoiceModal.module.css";
 import ExtendStoryModal from "./ExtendStoryModal";
 import AboutModal from "./AboutModal";
+import SceneMapModal from "./SceneMapModal";
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.000056";
@@ -62,6 +63,9 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
   // AboutModal state
   const [showAboutModal, setShowAboutModal] = useState(false);
+
+  // SceneMapModal state
+  const [showMapModal, setShowMapModal] = useState(false);
 
   const router = useRouter();
   const { address, isConnected } = useAccount();
@@ -503,7 +507,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
           </div>
         )}
 
-        {/* Footer with Back button and About link */}
+        {/* Footer with Back button, Map, and About link */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -546,25 +550,56 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
           {/* Spacer if no back button */}
           {!onBack && <div />}
 
-          {/* About link - right side */}
-          <button
-            onClick={() => setShowAboutModal(true)}
-            style={{
-              fontFamily: 'var(--font-source-code-pro)',
-              fontSize: '0.85rem',
-              color: 'rgba(255, 255, 255, 0.6)',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              transition: 'color 0.2s ease',
-              padding: '0'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
-          >
-            About this game
-          </button>
+          {/* Right side - Map and About */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>
+            {/* Map button */}
+            <button
+              onClick={() => setShowMapModal(true)}
+              style={{
+                fontFamily: 'var(--font-source-code-pro)',
+                fontSize: '0.85rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                transition: 'color 0.2s ease',
+                padding: '0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
+            >
+              <span>🗺️</span>
+              <span>Story Map</span>
+            </button>
+
+            {/* About link */}
+            <button
+              onClick={() => setShowAboutModal(true)}
+              style={{
+                fontFamily: 'var(--font-source-code-pro)',
+                fontSize: '0.85rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                transition: 'color 0.2s ease',
+                padding: '0'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
+            >
+              About this game
+            </button>
+          </div>
         </div>
       </div>
 
@@ -582,6 +617,24 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       <AboutModal
         isVisible={showAboutModal}
         onClose={() => setShowAboutModal(false)}
+      />
+
+      {/* SceneMapModal - navigate the tree */}
+      <SceneMapModal
+        isVisible={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        onSceneSelect={(sceneId) => {
+          setShowMapModal(false);
+          // Navigate to scene page
+          if (sceneId === 0) {
+            // Reload to genesis - user can use the actual game flow
+            window.location.reload();
+          } else {
+            // Navigate to scene
+            window.location.href = `/scene/${sceneId}`;
+          }
+        }}
+        currentSceneId={null}
       />
     </div>
   );

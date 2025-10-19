@@ -20,9 +20,9 @@ export async function GET(
     const { sceneId } = await params;
 
     // Handle genesis scene
-    if (sceneId === 'genesis') {
+    if (sceneId === 'genesis' || sceneId === '0') {
       return NextResponse.json({
-        id: 1,
+        sceneId: 0,
         videoUrl: '/intro/intro.mp4',
         slotLabel: 'Genesis Scene',
         creatorAddress: null,
@@ -62,7 +62,7 @@ export async function GET(
     const videoUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.r2.cloudflarestorage.com/${scene.scene_id}.mp4`;
 
     return NextResponse.json({
-      id: scene.scene_id,
+      sceneId: scene.scene_id,
       videoUrl,
       slotLabel: scene.slot_label || `Slot ${scene.slot}`,
       creatorAddress: scene.creator_address,

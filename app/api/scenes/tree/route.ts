@@ -36,7 +36,7 @@ export async function GET(_request: NextRequest) {
         view_count as "viewCount",
         created_at as "createdAt"
       FROM scenes
-      WHERE status = 'completed' OR id = 1
+      WHERE status = 'completed'
       ORDER BY created_at ASC
     `);
 
@@ -45,7 +45,7 @@ export async function GET(_request: NextRequest) {
     if (scenes.length === 0) {
       return NextResponse.json({
         tree: {
-          id: 1,
+          id: 0,
           parentId: null,
           slot: null,
           slotLabel: 'Intro',
@@ -106,7 +106,7 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({
       tree: rootNode || {
-        id: 1,
+        id: 0,
         parentId: null,
         slot: null,
         slotLabel: 'Intro',

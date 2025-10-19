@@ -69,15 +69,24 @@ export async function POST(
     }
 
     // Check if user already has an active lock on ANY slot globally
+    // IMPORTANT: We check BOTH scene status AND active attempts to avoid stuck states
     const existingLock = await query<CurrentLockRow>(`
-      SELECT id, parent_id, slot, locked_by_address, locked_until, status
-      FROM scenes
-      WHERE locked_by_address = $1
+      SELECT s.id, s.parent_id, s.slot, s.locked_by_address, s.locked_until, s.status
+      FROM scenes s
+      WHERE s.locked_by_address = $1
         AND (
           -- For 'locked' status, check if lock hasn't expired
-          (status = 'locked' AND locked_until > NOW())
-          -- For post-payment statuses, always block (user is actively working)
-          OR status IN ('verifying_payment', 'awaiting_prompt', 'generating')
+          (s.status = 'locked' AND s.locked_until > NOW())
+          -- For post-payment statuses, verify there's an ACTIVE attempt
+          OR (
+            s.status IN ('verifying_payment', 'awaiting_prompt', 'generating')
+            AND EXISTS (
+              SELECT 1 FROM scene_generation_attempts sga
+              WHERE sga.scene_id = s.id
+                AND sga.outcome = 'in_progress'
+                AND sga.retry_window_expires_at > NOW()
+            )
+          )
         )
       LIMIT 1
     `, [userAddress.toLowerCase()]);

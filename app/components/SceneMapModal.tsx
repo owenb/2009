@@ -76,7 +76,7 @@ export default function SceneMapModal({
   // Render a scene node and its children recursively
   const renderNode = (node: SceneNode, depth: number = 0, _isLast: boolean = false) => {
     const isCurrent = currentSceneId === node.id;
-    const isGenesis = node.id === 1;
+    const isGenesis = node.id === 0;
     const hasChildren = node.children.length > 0;
 
     return (
