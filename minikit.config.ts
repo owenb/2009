@@ -30,11 +30,11 @@ export const minikitConfig = {
     webhookUrl: `${ROOT_URL}/api/webhook`,
     primaryCategory: "games",
     tags: ["game", "2009", "bitcoin", "ai"],
-    heroImageUrl: `${ROOT_URL}/blue-hero.png`,
+    heroImageUrl: `${ROOT_URL}/hero.png`,
     tagline: "",
     ogTitle: "",
     ogDescription: "",
-    ogImageUrl: `${ROOT_URL}/blue-hero.png`,
+    ogImageUrl: `${ROOT_URL}/hero.png`,
   },
   baseBuilder: {
     ownerAddress: "0xf2c0Ca3BDD2CD9eBE90d8354f50306fB93B0b799",

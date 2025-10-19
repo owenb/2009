@@ -70,10 +70,16 @@
   font-style: italic;
 }
 
-.muteButton {
+.controlsContainer {
   position: absolute;
   top: 20px;
   left: 20px;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 3;
+}
+
+.muteButton, .shareButton {
   background: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
   border: none;
@@ -84,7 +90,6 @@
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  z-index: 3;
   transition: all 0.2s ease;
   text-transform: uppercase;
   display: flex;
@@ -92,50 +97,11 @@
   gap: 0.5rem;
 }
 
-.muteButton:hover {
+.muteButton:hover, .shareButton:hover {
   background: rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
 }
 
-.muteButton:active {
+.muteButton:active, .shareButton:active {
   transform: scale(0.95);
-}
-
-.shareButton {
-  position: absolute;
-  top: 20px;
-  left: 140px;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  color: #fff;
-  font-family: var(--font-source-code-pro);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  z-index: 3;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.shareButton:hover {
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(1.05);
-}
-
-.shareButton:active {
-  transform: scale(0.95);
-}
-
-/* Mobile: Stack buttons vertically on smaller screens */
-@media (max-width: 480px) {
-  .shareButton {
-    left: 20px;
-    top: 70px;
-  }
 }
