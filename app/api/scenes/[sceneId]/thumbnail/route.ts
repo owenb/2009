@@ -1,11 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { minikitConfig } from "@/minikit.config";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { sceneId: string } }
+  _request: Request,
+  { params }: { params: Promise<{ sceneId: string }> }
 ) {
   try {
+    // Await params for Next.js 15 compatibility
+    await params;
     // For now, redirect to the hero image as thumbnail
     // In the future, you could:
     // 1. Generate video thumbnails during upload

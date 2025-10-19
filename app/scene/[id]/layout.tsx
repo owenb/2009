@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { minikitConfig } from "../../../minikit.config";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   children: React.ReactNode;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const sceneId = params.id;
+  const { id: sceneId } = await params;
 
   // Fetch scene data for metadata
   let sceneData = null;

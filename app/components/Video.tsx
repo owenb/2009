@@ -39,7 +39,7 @@ export default function Video({
   const [isMuted, setIsMuted] = useState(true);
 
   // Profile viewing hook - only if creator has FID
-  const viewCreatorProfile = useViewProfile(creatorFid ? String(creatorFid) : undefined);
+  const viewCreatorProfile = useViewProfile();
 
   // Share hook
   const { composeCast } = useComposeCast();
@@ -206,7 +206,7 @@ export default function Video({
         <div className={styles.attribution}>
           {creatorFid ? (
             <button
-              onClick={() => viewCreatorProfile()}
+              onClick={() => viewCreatorProfile(creatorFid)}
               className={styles.attributionButton}
               aria-label="View creator profile"
             >

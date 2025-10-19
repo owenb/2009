@@ -42,7 +42,7 @@ export default function ExtendStoryModal({
      
             <li>
               <span className={styles.icon}>📝</span>
-              <span>We'll combine your ideas with our own to ensure a good plot</span>
+              <span>We&apos;ll combine your ideas with our own to ensure a good plot</span>
             </li>
             <li>
               <span className={styles.icon}>🤖</span>

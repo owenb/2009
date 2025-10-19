@@ -1,14 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
 
-const sql = neon(process.env.POSTGRES_URL!);
+interface SceneRow {
+  scene_id: number;
+  parent_id: number | null;
+  slot: string;
+  video_r2_key: string | null;
+  status: string;
+  created_at: Date;
+  creator_address: string | null;
+  creator_fid: number | null;
+  refined_prompt: string | null;
+}
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { sceneId: string } }
+  _request: Request,
+  { params }: { params: Promise<{ sceneId: string }> }
 ) {
   try {
-    const { sceneId } = params;
+    const { sceneId } = await params;
 
     // Handle genesis scene
     if (sceneId === 'genesis') {
@@ -23,8 +33,8 @@ export async function GET(
     }
 
     // Fetch scene from database
-    const scenes = await sql`
-      SELECT
+    const result = await query<SceneRow>(
+      `SELECT
         s.id as scene_id,
         s.parent_id,
         s.slot,
@@ -37,19 +47,20 @@ export async function GET(
       FROM scenes s
       LEFT JOIN scene_generation_attempts sga ON s.latest_attempt_id = sga.id
       LEFT JOIN prompts p ON sga.latest_prompt_id = p.id
-      WHERE s.id = ${sceneId}
+      WHERE s.id = $1
         AND s.status = 'completed'
-      LIMIT 1
-    `;
+      LIMIT 1`,
+      [sceneId]
+    );
 
-    if (scenes.length === 0) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'Scene not found or not yet completed' },
         { status: 404 }
       );
     }
 
-    const scene = scenes[0];
+    const scene = result.rows[0];
 
     // Construct R2 URL for the video
     const videoUrl = scene.video_r2_key
