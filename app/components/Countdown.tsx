@@ -20,7 +20,7 @@ export default function Countdown({ onComplete }: CountdownProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const [scale, setScale] = useState(START_SCALE);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
   const flipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const explosionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasTriggeredExplosionRef = useRef(false);
