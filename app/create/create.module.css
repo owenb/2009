@@ -16,11 +16,11 @@
   max-width: 600px;
   background: rgba(0, 0, 0, 0.85);
   border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
+  border-radius: 12px;
   padding: 2rem;
   backdrop-filter: blur(10px);
   box-shadow:
-    0 10px 40px rgba(255, 255, 255, 0.1),
+    0 0 40px rgba(255, 255, 255, 0.1),
     inset 0 0 40px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
@@ -63,7 +63,7 @@
 .context {
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 1rem;
   color: #fff;
   font-family: var(--font-source-code-pro), monospace;
@@ -117,25 +117,24 @@
 /* Generate button - deep orange gradient */
 .generateButton {
   font-family: var(--font-source-code-pro);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #000000;
   background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
   border: none;
-  border-radius: 10px;
-  padding: 1.2rem 2rem;
-  font-size: 1.1rem;
-  font-weight: bold;
+  border-radius: 8px;
+  padding: 1.25rem 2rem;
   cursor: pointer;
   transition: all 0.2s ease;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
 .generateButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, #FFE44D 0%, #FFB84D 100%);
 }
 
 .generateButton:active:not(:disabled) {
