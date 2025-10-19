@@ -42,9 +42,9 @@ function GeneratingPageContent() {
       setProgress(100);
       setStatus('Complete!');
 
-      // Redirect to success page or scene viewer
+      // Redirect back to home - user can click their completed scene
       setTimeout(() => {
-        router.push(`/scene/${sceneId}?new=true`);
+        router.push('/');
       }, 2000);
 
     } catch (err) {

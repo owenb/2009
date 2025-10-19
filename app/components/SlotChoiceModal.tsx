@@ -353,7 +353,29 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
             {slots.map((slotInfo) => {
               const slotIndex = slotInfo.slot.charCodeAt(0) - 'A'.charCodeAt(0); // A=0, B=1, C=2
 
-              // Check if this slot has an active attempt by the current user
+              // Filled slot (exists and completed) - CHECK THIS FIRST!
+              if (slotInfo.exists && slotInfo.status === 'completed') {
+                const canView = isConnected;
+                return (
+                  <div
+                    key={slotInfo.slot}
+                    className={styles.choice}
+                    onClick={() => handleFilledSlotClick(slotInfo.slot)}
+                    style={{
+                      cursor: canView ? 'pointer' : 'not-allowed',
+                      opacity: canView ? 1 : 0.6
+                    }}
+                  >
+                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
+                    <div className={styles.choiceText}>
+                      {slotInfo.label || 'view scene'}
+                      {!canView && <span style={{ fontSize: '0.8rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.7)' }}>🔒 connect wallet</span>}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Check if this slot has an active attempt by the current user (NOT completed)
               const isOwnAttempt = !!(
                 slotInfo.attemptId &&
                 slotInfo.attemptCreator &&
@@ -361,7 +383,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                 slotInfo.attemptCreator.toLowerCase() === address.toLowerCase()
               );
 
-              // Own paid slot - show resume option
+              // Own paid slot - show resume option (only if not completed)
               if (isOwnAttempt) {
                 const hasActivePrompt = slotInfo.latestPromptId &&
                   (slotInfo.latestPromptOutcome === 'pending' || slotInfo.latestPromptOutcome === 'generating');
@@ -388,28 +410,6 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                       <span style={{ fontSize: '0.7rem', display: 'block', marginTop: '0.25rem', color: 'rgba(0, 255, 0, 0.7)' }}>
                         ({hasActivePrompt ? 'video generating...' : 'you paid for this'})
                       </span>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Filled slot (exists and completed)
-              if (slotInfo.exists && slotInfo.status === 'completed') {
-                const canView = isConnected;
-                return (
-                  <div
-                    key={slotInfo.slot}
-                    className={styles.choice}
-                    onClick={() => handleFilledSlotClick(slotInfo.slot)}
-                    style={{
-                      cursor: canView ? 'pointer' : 'not-allowed',
-                      opacity: canView ? 1 : 0.6
-                    }}
-                  >
-                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                    <div className={styles.choiceText}>
-                      {slotInfo.label || 'view scene'}
-                      {!canView && <span style={{ fontSize: '0.8rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.7)' }}>🔒 connect wallet</span>}
                     </div>
                   </div>
                 );
