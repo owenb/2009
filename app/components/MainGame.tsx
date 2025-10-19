@@ -19,6 +19,7 @@ import {
 import Countdown from "./Countdown";
 import Video from "./Video";
 import SlotChoiceModal from "./SlotChoiceModal";
+import SceneMapModal from "./SceneMapModal";
 import styles from "./MainGame.module.css";
 
 interface SceneData {
@@ -76,6 +77,7 @@ export default function MainGame() {
   const [activeAttempts, setActiveAttempts] = useState<ActiveAttempt[]>([]);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   const [sceneHistory, setSceneHistory] = useState<SceneData[]>([]);
+  const [showMapModal, setShowMapModal] = useState(false);
 
   // Background animation state
   const [bgScale, setBgScale] = useState(1);
@@ -275,6 +277,64 @@ export default function MainGame() {
     setShowVideo(true);
   };
 
+  const handleSceneSelectFromMap = async (sceneId: number) => {
+    // Close map modal
+    setShowMapModal(false);
+
+    // Close slot choice modal if open
+    setShowPopup(false);
+
+    // Special case: sceneId 1 is genesis, restart from beginning
+    if (sceneId === 1) {
+      // Reset to genesis state
+      setCurrentScene(null);
+      setParentSceneId('genesis');
+      setSceneHistory([]);
+      setPreviousSceneId(null);
+      setPreloadedSlots(null);
+      setShowVideo(true);
+      return;
+    }
+
+    try {
+      // Fetch scene data
+      const response = await fetch(`/api/scenes/${sceneId}`);
+      if (!response.ok) {
+        throw new Error('Failed to load scene');
+      }
+
+      const sceneData = await response.json();
+
+      // Clear history (we're jumping, not navigating linearly)
+      setSceneHistory([]);
+
+      // Track previous scene for analytics
+      setPreviousSceneId(currentScene?.sceneId ?? null);
+
+      // Set current scene data
+      setCurrentScene({
+        sceneId: sceneData.id,
+        videoUrl: sceneData.videoUrl,
+        slotLabel: sceneData.slotLabel,
+        creatorAddress: sceneData.creatorAddress,
+        creatorFid: sceneData.creatorFid,
+        createdAt: sceneData.createdAt
+      });
+
+      // Update parent scene ID for next modal
+      setParentSceneId(sceneData.id);
+
+      // Clear preloaded slots
+      setPreloadedSlots(null);
+
+      // Show video
+      setShowVideo(true);
+    } catch (err) {
+      console.error('Error loading scene from map:', err);
+      alert('Failed to load scene. Please try again.');
+    }
+  };
+
   return (
     <div className={styles.container}>
       {/* Animated background image */}
@@ -392,6 +452,47 @@ export default function MainGame() {
         </div>
       )}
 
+      {/* Map icon in top left */}
+      {showVideo && (
+        <button
+          onClick={() => setShowMapModal(true)}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            zIndex: 1000,
+            width: '50px',
+            height: '50px',
+            background: 'rgba(0, 0, 0, 0.7)',
+            border: '2px solid rgba(255, 215, 0, 0.5)',
+            borderRadius: '10px',
+            backdropFilter: 'blur(10px)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.5rem',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.85)';
+            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.8)';
+            e.currentTarget.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.4)';
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
+            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.2)';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          aria-label="Open story map"
+        >
+          🗺️
+        </button>
+      )}
+
       {/* Wallet connection in top right */}
       {walletVisible && (
         <div style={{
@@ -445,6 +546,14 @@ export default function MainGame() {
         preloadedData={preloadedSlots}
         onBack={handleBack}
         canGoBack={sceneHistory.length > 0}
+      />
+
+      {/* Scene map modal */}
+      <SceneMapModal
+        isVisible={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        onSceneSelect={handleSceneSelectFromMap}
+        currentSceneId={currentScene?.sceneId ?? null}
       />
     </div>
   );

@@ -5,12 +5,11 @@ interface SceneRow {
   scene_id: number;
   parent_id: number | null;
   slot: string;
-  video_r2_key: string | null;
+  slot_label: string | null;
   status: string;
   created_at: Date;
   creator_address: string | null;
   creator_fid: number | null;
-  refined_prompt: string | null;
 }
 
 export async function GET(
@@ -23,7 +22,7 @@ export async function GET(
     // Handle genesis scene
     if (sceneId === 'genesis') {
       return NextResponse.json({
-        sceneId: null,
+        id: 1,
         videoUrl: '/intro/intro.mp4',
         slotLabel: 'Genesis Scene',
         creatorAddress: null,
@@ -38,15 +37,12 @@ export async function GET(
         s.id as scene_id,
         s.parent_id,
         s.slot,
-        s.video_r2_key,
+        s.slot_label,
         s.status,
         s.created_at,
-        sga.creator_address,
-        sga.creator_fid,
-        p.refined_prompt
+        s.creator_address,
+        s.creator_fid
       FROM scenes s
-      LEFT JOIN scene_generation_attempts sga ON s.latest_attempt_id = sga.id
-      LEFT JOIN prompts p ON sga.latest_prompt_id = p.id
       WHERE s.id = $1
         AND s.status = 'completed'
       LIMIT 1`,
@@ -62,15 +58,13 @@ export async function GET(
 
     const scene = result.rows[0];
 
-    // Construct R2 URL for the video
-    const videoUrl = scene.video_r2_key
-      ? `https://${process.env.AWS_S3_BUCKET_NAME}.r2.cloudflarestorage.com/${scene.video_r2_key}`
-      : null;
+    // Video files are stored as {scene_id}.mp4
+    const videoUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.r2.cloudflarestorage.com/${scene.scene_id}.mp4`;
 
     return NextResponse.json({
-      sceneId: scene.scene_id,
+      id: scene.scene_id,
       videoUrl,
-      slotLabel: scene.refined_prompt ? scene.refined_prompt.slice(0, 50) + '...' : `Slot ${scene.slot}`,
+      slotLabel: scene.slot_label || `Slot ${scene.slot}`,
       creatorAddress: scene.creator_address,
       creatorFid: scene.creator_fid,
       createdAt: scene.created_at
