@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useViewProfile, useComposeCast } from "@coinbase/onchainkit/minikit";
+import { Name } from "@coinbase/onchainkit/identity";
 import { trackSceneView } from "@/lib/analytics";
 import styles from "./Video.module.css";
 
@@ -210,12 +211,12 @@ export default function Video({
               className={styles.attributionButton}
               aria-label="View creator profile"
             >
-              Created by {creatorAddress.slice(0, 6)}...{creatorAddress.slice(-4)}
+              Created by <Name address={creatorAddress as `0x${string}`} />
               <span className={styles.fidBadge}>FID: {creatorFid}</span>
             </button>
           ) : (
             <p className={styles.attributionText}>
-              Created by {creatorAddress.slice(0, 6)}...{creatorAddress.slice(-4)}
+              Created by <Name address={creatorAddress as `0x${string}`} />
             </p>
           )}
         </div>

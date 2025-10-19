@@ -83,12 +83,43 @@ export default function MainGame() {
   const startTimeRef = useRef<number>(0);
   const TOTAL_DURATION = 2500; // Match countdown duration (must match Countdown.tsx)
 
+  // Wallet visibility state
+  const [walletVisible, setWalletVisible] = useState(true);
+  const [walletOpacity, setWalletOpacity] = useState(1);
+
   // Signal to Base mini app that we're ready to display
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
     }
   }, [setFrameReady, isFrameReady]);
+
+  // Fade out wallet after connection
+  useEffect(() => {
+    if (!address) {
+      // User not connected - keep wallet visible
+      setWalletVisible(true);
+      setWalletOpacity(1);
+      return;
+    }
+
+    // User just connected - show for 3 seconds then fade out
+    setWalletVisible(true);
+    setWalletOpacity(1);
+
+    const fadeTimer = setTimeout(() => {
+      setWalletOpacity(0);
+    }, 3000);
+
+    const hideTimer = setTimeout(() => {
+      setWalletVisible(false);
+    }, 4000); // Extra 1 second for fade transition
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [address]);
 
   // Check for active attempts when user connects wallet
   useEffect(() => {
@@ -362,22 +393,32 @@ export default function MainGame() {
       )}
 
       {/* Wallet connection in top right */}
-      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000 }}>
-        <Wallet>
-          <ConnectWallet>
-            <Avatar className="h-6 w-6" />
-            <Name />
-          </ConnectWallet>
-          <WalletDropdown>
-            <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-              <Avatar />
+      {walletVisible && (
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          zIndex: 1000,
+          opacity: walletOpacity,
+          transition: 'opacity 1s ease-out',
+          pointerEvents: walletOpacity === 0 ? 'none' : 'auto'
+        }}>
+          <Wallet>
+            <ConnectWallet>
+              <Avatar className="h-6 w-6" />
               <Name />
-              <Address />
-            </Identity>
-            <WalletDropdownDisconnect />
-          </WalletDropdown>
-        </Wallet>
-      </div>
+            </ConnectWallet>
+            <WalletDropdown>
+              <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
+                <Avatar />
+                <Name />
+                <Address />
+              </Identity>
+              <WalletDropdownDisconnect />
+            </WalletDropdown>
+          </Wallet>
+        </div>
+      )}
 
       {/* Video player */}
       <Video
