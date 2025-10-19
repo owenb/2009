@@ -26,7 +26,7 @@ export default function ExtendStoryModal({
 
         <div className={styles.content}>
           <p className={styles.subtitle}>
-            You&apos;re about to create slot <strong>{slot}</strong> — the next 8 seconds of this adventure.
+            Want to create the next 8 seconds of this story?
           </p>
 
           <ul className={styles.features}>
