@@ -13,6 +13,8 @@ interface Scene {
   current_attempt_id: number | null;
   attempt_creator_address: string | null;
   retry_window_expires_at: Date | null;
+  latest_prompt_id: number | null;
+  latest_prompt_outcome: string | null;
 }
 
 interface SlotInfo {
@@ -27,6 +29,8 @@ interface SlotInfo {
   attemptId: number | null;
   attemptCreator: string | null;
   expiresAt: Date | null;
+  latestPromptId: number | null;
+  latestPromptOutcome: string | null;
 }
 
 export async function GET(
@@ -48,7 +52,7 @@ export async function GET(
       );
     }
 
-    // Query all slots for this parent scene, including active attempt info
+    // Query all slots for this parent scene, including active attempt and prompt info
     const result = await query<Scene>(
       `SELECT
         s.id,
@@ -61,9 +65,18 @@ export async function GET(
         s.locked_by_address,
         s.current_attempt_id,
         sga.creator_address as attempt_creator_address,
-        sga.retry_window_expires_at
+        sga.retry_window_expires_at,
+        p.id as latest_prompt_id,
+        p.outcome as latest_prompt_outcome
        FROM scenes s
        LEFT JOIN scene_generation_attempts sga ON s.current_attempt_id = sga.id
+       LEFT JOIN LATERAL (
+         SELECT id, outcome
+         FROM prompts
+         WHERE attempt_id = sga.id
+         ORDER BY submitted_at DESC
+         LIMIT 1
+       ) p ON sga.id IS NOT NULL
        WHERE s.parent_id = $1
        ORDER BY s.slot`,
       [parentId]
@@ -92,6 +105,8 @@ export async function GET(
           attemptId: null,
           attemptCreator: null,
           expiresAt: null,
+          latestPromptId: null,
+          latestPromptOutcome: null,
         };
       }
 
@@ -118,6 +133,8 @@ export async function GET(
         attemptId: hasActiveAttempt ? scene.current_attempt_id : null,
         attemptCreator: hasActiveAttempt ? scene.attempt_creator_address : null,
         expiresAt: hasActiveAttempt ? scene.retry_window_expires_at : null,
+        latestPromptId: hasActiveAttempt ? scene.latest_prompt_id : null,
+        latestPromptOutcome: hasActiveAttempt ? scene.latest_prompt_outcome : null,
       };
     });
 

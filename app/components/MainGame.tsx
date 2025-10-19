@@ -42,6 +42,8 @@ interface SlotInfo {
   attemptId: number | null;
   attemptCreator: string | null;
   expiresAt: Date | null;
+  latestPromptId: number | null;
+  latestPromptOutcome: string | null;
 }
 
 interface PreloadedSlotsData {
@@ -55,6 +57,10 @@ interface ActiveAttempt {
   slot: string;
   expiresAt: string;
   timeRemainingMs: number;
+  latestPromptId: number | null;
+  latestPromptOutcome: string | null;
+  resumePage: 'create' | 'generating';
+  resumeUrl: string;
 }
 
 export default function MainGame() {
@@ -267,12 +273,12 @@ export default function MainGame() {
                 fontSize: '0.75rem',
                 margin: 0
               }}>
-                Slot {activeAttempts[0].slot} - Click to resume generation
+                Slot {activeAttempts[0].slot} - {activeAttempts[0].resumePage === 'generating' ? 'Video generating...' : 'Enter your prompt'}
               </p>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => router.push(`/create?attemptId=${activeAttempts[0].attemptId}&sceneId=${activeAttempts[0].sceneId}`)}
+                onClick={() => router.push(activeAttempts[0].resumeUrl)}
                 style={{
                   fontFamily: 'var(--font-roboto-mono)',
                   fontSize: '0.85rem',

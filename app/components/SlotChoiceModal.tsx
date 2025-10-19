@@ -24,6 +24,8 @@ interface SlotInfo {
   attemptId: number | null;
   attemptCreator: string | null;
   expiresAt: Date | null;
+  latestPromptId: number | null;
+  latestPromptOutcome: string | null;
 }
 
 interface SceneData {
@@ -141,8 +143,22 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   };
 
   // Handle clicking own paid slot (resume generation)
-  const handleResumeSlot = (attemptId: number, sceneId: number) => {
-    router.push(`/create?attemptId=${attemptId}&sceneId=${sceneId}`);
+  const handleResumeSlot = (
+    attemptId: number,
+    sceneId: number,
+    promptId: number | null,
+    promptOutcome: string | null
+  ) => {
+    // Check if there's an active prompt (pending or generating)
+    const hasActivePrompt = promptId && (promptOutcome === 'pending' || promptOutcome === 'generating');
+
+    if (hasActivePrompt) {
+      // Redirect to generating page (polling status)
+      router.push(`/generating?promptId=${promptId}&sceneId=${sceneId}`);
+    } else {
+      // Redirect to create page (enter prompt)
+      router.push(`/create?attemptId=${attemptId}&sceneId=${sceneId}`);
+    }
   };
 
   // Handle empty slot click - show ExtendStoryModal first
@@ -347,11 +363,19 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
               // Own paid slot - show resume option
               if (isOwnAttempt) {
+                const hasActivePrompt = slotInfo.latestPromptId &&
+                  (slotInfo.latestPromptOutcome === 'pending' || slotInfo.latestPromptOutcome === 'generating');
+
                 return (
                   <div
                     key={slotInfo.slot}
                     className={styles.choice}
-                    onClick={() => handleResumeSlot(slotInfo.attemptId!, slotInfo.sceneId!)}
+                    onClick={() => handleResumeSlot(
+                      slotInfo.attemptId!,
+                      slotInfo.sceneId!,
+                      slotInfo.latestPromptId,
+                      slotInfo.latestPromptOutcome
+                    )}
                     style={{
                       cursor: 'pointer',
                       background: 'rgba(0, 255, 0, 0.1)',
@@ -360,9 +384,9 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                   >
                     <div className={styles.choiceLabel}>{slotInfo.slot}</div>
                     <div className={styles.choiceText}>
-                      ✨ resume your scene
+                      ✨ {hasActivePrompt ? 'view generation' : 'resume your scene'}
                       <span style={{ fontSize: '0.7rem', display: 'block', marginTop: '0.25rem', color: 'rgba(0, 255, 0, 0.7)' }}>
-                        (you paid for this)
+                        ({hasActivePrompt ? 'video generating...' : 'you paid for this'})
                       </span>
                     </div>
                   </div>
