@@ -162,7 +162,7 @@ export default function AboutModal({
           </div>
 
           <div className={styles.attribution}>
-            Credits: 2009 is inspired by{' '}
+            Credit: 2009 is inspired by{' '}
             <a
               href="https://github.com/mshumer/interactive-sora"
               target="_blank"

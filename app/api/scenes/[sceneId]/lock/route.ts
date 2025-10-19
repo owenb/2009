@@ -65,6 +65,41 @@ export async function POST(
       );
     }
 
+    // Check if user already has an active lock on ANY slot globally
+    const existingLock = await query<CurrentLockRow>(`
+      SELECT locked_by_address, locked_until, status
+      FROM scenes
+      WHERE locked_by_address = $1
+        AND (
+          -- For 'locked' status, check if lock hasn't expired
+          (status = 'locked' AND locked_until > NOW())
+          -- For post-payment statuses, always block (user is actively working)
+          OR status IN ('verifying_payment', 'awaiting_prompt', 'generating')
+        )
+      LIMIT 1
+    `, [userAddress.toLowerCase()]);
+
+    if (existingLock.rows.length > 0) {
+      const lock = existingLock.rows[0];
+      const now = new Date();
+
+      // Calculate time remaining (only relevant for 'locked' status)
+      let expiresIn: number | undefined;
+      if (lock.status === 'locked' && lock.locked_until) {
+        const lockExpiry = new Date(lock.locked_until);
+        expiresIn = Math.max(0, Math.ceil((lockExpiry.getTime() - now.getTime()) / 1000));
+      }
+
+      return NextResponse.json(
+        {
+          error: 'You already have an active lock on another slot. Please complete or wait for your current lock to expire.',
+          currentLockStatus: lock.status,
+          ...(expiresIn !== undefined && { expiresIn })
+        },
+        { status: 409 }
+      );
+    }
+
     // Attempt to acquire lock
     // This uses INSERT ... ON CONFLICT to atomically lock the slot
     const lockExpiry = new Date(Date.now() + 60000); // 1 minute from now

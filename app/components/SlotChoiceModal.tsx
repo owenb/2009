@@ -450,17 +450,19 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                   >
                     <div className={styles.choiceLabel}>{slotInfo.slot}</div>
                     <div className={styles.choiceText}>
-                      Reserved by {slotInfo.attemptCreator.slice(0, 6)}...
-                      <span style={{ fontSize: '0.7rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                        (paid, generating)
-                      </span>
+                      being created...
                     </div>
                   </div>
                 );
               }
 
-              // Locked slot (someone is acquiring it, before payment)
-              if (slotInfo.isLocked) {
+              // Locked slot or in-progress states (someone is acquiring/creating it)
+              // Check both isLocked flag AND status field to catch all creation states
+              if (slotInfo.isLocked ||
+                  slotInfo.status === 'locked' ||
+                  slotInfo.status === 'verifying_payment' ||
+                  slotInfo.status === 'awaiting_prompt' ||
+                  slotInfo.status === 'generating') {
                 return (
                   <div
                     key={slotInfo.slot}
@@ -469,7 +471,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                   >
                     <div className={styles.choiceLabel}>{slotInfo.slot}</div>
                     <div className={styles.choiceText}>
-                      Selected by {slotInfo.lockedBy?.slice(0, 6)}...
+                      being created...
                     </div>
                   </div>
                 );
