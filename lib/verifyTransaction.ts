@@ -3,7 +3,7 @@
  * Verifies VideoAdventure contract transactions on Base blockchain
  */
 
-import { createPublicClient, http, type Address, type Hash } from 'viem';
+import { createPublicClient, http, type Address, type Hash, decodeEventLog } from 'viem';
 import { base } from 'viem/chains';
 import VideoAdventureABI from './VideoAdventure.abi.json';
 
@@ -46,36 +46,55 @@ export async function verifySceneCreation(
     throw new Error('Transaction failed on blockchain');
   }
 
-  // Step 2: Query contract state to verify the slot was actually claimed
-  // Get the child scenes for this parent
-  const childScenes = await client.readContract({
-    address: CONTRACT_ADDRESS,
-    abi: VideoAdventureABI,
-    functionName: 'getChildScenes',
-    args: [BigInt(expectedParentId)]
-  }) as [bigint, bigint, bigint];
+  // Step 2: Parse SceneCreated event from transaction logs
+  // This is more reliable than querying contract state which may lag behind
+  const sceneCreatedEvent = VideoAdventureABI.find(
+    (item) => item.type === 'event' && item.name === 'SceneCreated'
+  );
 
-  // Check if the expected slot now has a scene ID
-  const claimedSceneId = childScenes[expectedSlot];
-
-  if (claimedSceneId === BigInt(0)) {
-    throw new Error(`Slot ${expectedSlot} was not claimed in this transaction`);
+  if (!sceneCreatedEvent) {
+    throw new Error('SceneCreated event not found in ABI');
   }
 
-  // Step 3: Verify the scene details match what we expect
-  const sceneDetails = await client.readContract({
-    address: CONTRACT_ADDRESS,
-    abi: VideoAdventureABI,
-    functionName: 'getScene',
-    args: [claimedSceneId]
-  }) as [bigint, number, Address, boolean];
+  // Find SceneCreated event in transaction logs
+  let sceneId: bigint | null = null;
+  let parentId: bigint | null = null;
+  let slot: number | null = null;
+  let creator: string | null = null;
 
-  const [parentId, slot, creator, exists] = sceneDetails;
+  for (const log of receipt.logs) {
+    // Check if log is from our contract
+    if (log.address.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
+      continue;
+    }
 
-  if (!exists) {
-    throw new Error('Scene does not exist on chain');
+    try {
+      const decoded = decodeEventLog({
+        abi: VideoAdventureABI,
+        data: log.data,
+        topics: log.topics
+      });
+
+      if (decoded.eventName === 'SceneCreated') {
+        // TypeScript doesn't narrow the type well, so we need to be explicit
+        const args = decoded.args as any;
+        sceneId = BigInt(args.sceneId);
+        parentId = BigInt(args.parentId);
+        slot = Number(args.slot);
+        creator = String(args.creator);
+        break;
+      }
+    } catch (e) {
+      // Skip logs that don't match our ABI
+      continue;
+    }
   }
 
+  if (sceneId === null || parentId === null || slot === null || creator === null) {
+    throw new Error('SceneCreated event not found in transaction logs');
+  }
+
+  // Step 3: Verify the event details match what we expect
   if (creator.toLowerCase() !== expectedCreator.toLowerCase()) {
     throw new Error(
       `Scene was claimed by different address. Expected ${expectedCreator}, got ${creator}`
@@ -97,7 +116,7 @@ export async function verifySceneCreation(
   // All validations passed!
   return {
     verified: true,
-    sceneId: Number(claimedSceneId),
+    sceneId: Number(sceneId),
     parentId: Number(parentId),
     slot: slot,
     creator: creator,
