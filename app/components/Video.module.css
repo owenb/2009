@@ -59,3 +59,32 @@
   font-size: 0.8rem;
   margin: 0;
 }
+
+.muteButton {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  font-family: var(--font-roboto-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 3;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.muteButton:hover {
+  background: rgba(0, 0, 0, 0.85);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.muteButton:active {
+  transform: scale(0.95);
+}

@@ -35,6 +35,7 @@ export default function Video({
   const [error, setError] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   // Fetch signed URL from API
   const fetchVideoUrl = async () => {
@@ -125,6 +126,15 @@ export default function Video({
     }
   }, [isVisible, videoUrl, hasTrackedView, sceneId, viewerAddress, viewerFid, referrerSceneId]);
 
+  // Toggle mute/unmute
+  const toggleMute = () => {
+    if (videoRef.current) {
+      const newMutedState = !isMuted;
+      setIsMuted(newMutedState);
+      videoRef.current.muted = newMutedState;
+    }
+  };
+
   return (
     <>
       {/* Show loading spinner for non-intro videos */}
@@ -147,10 +157,21 @@ export default function Video({
         src={videoUrl || undefined}
         preload="auto"
         playsInline
-        muted
+        muted={isMuted}
         loop={false}
         onEnded={onVideoEnd}
       />
+
+      {/* Unmute button */}
+      {isVisible && videoUrl && (
+        <button
+          onClick={toggleMute}
+          className={styles.muteButton}
+          aria-label={isMuted ? "Unmute video" : "Mute video"}
+        >
+          {isMuted ? "🔇 UNMUTE" : "🔊 MUTE"}
+        </button>
+      )}
 
       {/* Creator attribution */}
       {isVisible && creatorAddress && (
