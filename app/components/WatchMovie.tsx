@@ -21,49 +21,7 @@ import Video from "./Video";
 import SlotChoiceModal from "./SlotChoiceModal";
 import SceneMapModal from "./SceneMapModal";
 import styles from "./WatchMovie.module.css";
-
-interface SceneData {
-  sceneId: number;
-  videoUrl: string;
-  slotLabel: string | null;
-  creatorAddress: string | null;
-  creatorFid: number | null;
-  createdAt: string;
-}
-
-interface SlotInfo {
-  slot: 'A' | 'B' | 'C';
-  exists: boolean;
-  sceneId: number | null;
-  label: string | null;
-  status: string | null;
-  isLocked: boolean;
-  lockedBy: string | null;
-  lockedUntil: Date | null;
-  attemptId: number | null;
-  attemptCreator: string | null;
-  expiresAt: Date | null;
-  latestPromptId: number | null;
-  latestPromptOutcome: string | null;
-  videoUrl?: string;
-}
-
-interface PreloadedSlotsData {
-  slots: SlotInfo[];
-}
-
-interface ActiveAttempt {
-  attemptId: number;
-  sceneId: number;
-  parentId: number | null;
-  slot: string;
-  expiresAt: string;
-  timeRemainingMs: number;
-  latestPromptId: number | null;
-  latestPromptOutcome: string | null;
-  resumePage: 'create' | 'generating';
-  resumeUrl: string;
-}
+import type { SceneData, PreloadedSlotsData, ActiveAttempt } from "@/lib/types";
 
 export default function WatchMovie() {
   const { address } = useAccount(); // Get connected wallet address
@@ -203,8 +161,8 @@ export default function WatchMovie() {
     // Video is now playing - preload slots AND video URLs for instant playback
     const preloadSlots = async () => {
       try {
-        // Request slots with video URLs for pre-caching
-        const response = await fetch(`/api/scenes/${parentSceneId}/slots?includeVideoUrls=true`);
+        // Fetch slots (always includes video URLs for completed slots)
+        const response = await fetch(`/api/scenes/${parentSceneId}/slots`);
         if (!response.ok) {
           console.error('Failed to preload slots');
           return;

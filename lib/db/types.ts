@@ -145,6 +145,7 @@ export interface SlotInfo {
   expiresAt: Date | null;
   latestPromptId: number | null;
   latestPromptOutcome: string | null;
+  videoUrl?: string; // Optional signed URL for pre-caching completed slots
 }
 
 // ============================================================================

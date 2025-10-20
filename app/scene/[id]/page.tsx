@@ -18,36 +18,7 @@ import {
 import Video from "../../components/Video";
 import SlotChoiceModal from "../../components/SlotChoiceModal";
 import styles from "../../components/WatchMovie.module.css";
-
-interface SceneData {
-  sceneId: number;
-  videoUrl: string;
-  slotLabel: string | null;
-  creatorAddress: string | null;
-  creatorFid: number | null;
-  createdAt: string;
-}
-
-interface SlotInfo {
-  slot: 'A' | 'B' | 'C';
-  exists: boolean;
-  sceneId: number | null;
-  label: string | null;
-  status: string | null;
-  isLocked: boolean;
-  lockedBy: string | null;
-  lockedUntil: Date | null;
-  attemptId: number | null;
-  attemptCreator: string | null;
-  expiresAt: Date | null;
-  latestPromptId: number | null;
-  latestPromptOutcome: string | null;
-  videoUrl?: string;
-}
-
-interface PreloadedSlotsData {
-  slots: SlotInfo[];
-}
+import type { SceneData, PreloadedSlotsData } from "@/lib/types";
 
 export default function ScenePage() {
   const params = useParams();

@@ -1,6 +1,6 @@
 "use client";
 
-import MainGame from "./components/MainGame";
+import WatchMovie from "./components/WatchMovie";
 
 export default function Home() {
   return (
@@ -15,7 +15,7 @@ export default function Home() {
       alignItems: 'center',
       overflow: 'hidden'
     }}>
-      <MainGame />
+      <WatchMovie />
     </div>
   );
 }

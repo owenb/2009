@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSlotsForScene } from '@/lib/db/scenes';
+import { getSignedVideoUrl } from '@/lib/r2';
 
 export async function GET(
   request: NextRequest,
@@ -22,6 +23,19 @@ export async function GET(
 
     // Get all slots using helper function
     const slots = await getSlotsForScene(parentId);
+
+    // ALWAYS generate signed URLs for completed slots (for pre-caching)
+    for (const slot of slots) {
+      if (slot.exists && slot.status === 'completed' && slot.sceneId) {
+        try {
+          // Generate 1-hour signed URL for this video
+          slot.videoUrl = await getSignedVideoUrl(slot.sceneId, 3600);
+        } catch (error) {
+          console.error(`Failed to generate video URL for scene ${slot.sceneId}:`, error);
+          // Don't fail the entire request if one video URL fails
+        }
+      }
+    }
 
     return NextResponse.json({
       parentId,

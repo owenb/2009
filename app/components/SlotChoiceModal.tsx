@@ -9,34 +9,11 @@ import styles from "./SlotChoiceModal.module.css";
 import ExtendStoryModal from "./ExtendStoryModal";
 import AboutModal from "./AboutModal";
 import SceneMapModal from "./SceneMapModal";
+import type { SlotInfo } from "@/lib/db/types";
+import type { SceneData } from "@/lib/types";
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.000056";
-
-interface SlotInfo {
-  slot: 'A' | 'B' | 'C';
-  exists: boolean;
-  sceneId: number | null;
-  label: string | null;
-  status: string | null;
-  isLocked: boolean;
-  lockedBy: string | null;
-  lockedUntil: Date | null;
-  attemptId: number | null;
-  attemptCreator: string | null;
-  expiresAt: Date | null;
-  latestPromptId: number | null;
-  latestPromptOutcome: string | null;
-}
-
-interface SceneData {
-  sceneId: number;
-  videoUrl: string;
-  slotLabel: string | null;
-  creatorAddress: string | null;
-  creatorFid: number | null;
-  createdAt: string;
-}
 
 interface SlotChoiceModalProps {
   isVisible: boolean;
@@ -128,10 +105,19 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       return;
     }
 
-    // Set loading state for this slot
-    setLoadingSlot(slot);
-
     try {
+      // Check if we have cached video URL for instant playback
+      const cachedSlot = slots.find(s => s.slot === slot);
+      const hasCachedVideo = !!cachedSlot?.videoUrl;
+
+      // Only show loading state if we DON'T have cached video
+      // If cached, transition will be instant (no loading UI)
+      if (!hasCachedVideo) {
+        setLoadingSlot(slot);
+      } else {
+        console.log(`✅ Using pre-cached video for slot ${slot} - instant playback!`);
+      }
+
       const response = await fetch('/api/play', {
         method: 'POST',
         headers: {
@@ -148,6 +134,12 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
       }
 
       const sceneData = await response.json();
+
+      // If we have a cached video URL, use it instead of the API response
+      // This enables instant playback from browser cache
+      if (hasCachedVideo && cachedSlot) {
+        sceneData.videoUrl = cachedSlot.videoUrl;
+      }
 
       // Call the callback with the scene data
       if (onSlotSelected) {
