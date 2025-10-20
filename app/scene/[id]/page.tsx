@@ -17,7 +17,7 @@ import {
 } from "@coinbase/onchainkit/identity";
 import Video from "../../components/Video";
 import SlotChoiceModal from "../../components/SlotChoiceModal";
-import styles from "../../components/MainGame.module.css";
+import styles from "../../components/WatchMovie.module.css";
 
 interface SceneData {
   sceneId: number;
@@ -42,6 +42,7 @@ interface SlotInfo {
   expiresAt: Date | null;
   latestPromptId: number | null;
   latestPromptOutcome: string | null;
+  videoUrl?: string;
 }
 
 interface PreloadedSlotsData {

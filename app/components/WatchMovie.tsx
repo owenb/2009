@@ -20,7 +20,7 @@ import Countdown from "./Countdown";
 import Video from "./Video";
 import SlotChoiceModal from "./SlotChoiceModal";
 import SceneMapModal from "./SceneMapModal";
-import styles from "./MainGame.module.css";
+import styles from "./WatchMovie.module.css";
 
 interface SceneData {
   sceneId: number;
@@ -45,6 +45,7 @@ interface SlotInfo {
   expiresAt: Date | null;
   latestPromptId: number | null;
   latestPromptOutcome: string | null;
+  videoUrl?: string;
 }
 
 interface PreloadedSlotsData {
@@ -64,7 +65,7 @@ interface ActiveAttempt {
   resumeUrl: string;
 }
 
-export default function MainGame() {
+export default function WatchMovie() {
   const { address } = useAccount(); // Get connected wallet address
   const { isFrameReady, setFrameReady } = useMiniKit(); // Base mini app initialization
   const router = useRouter();
@@ -199,17 +200,18 @@ export default function MainGame() {
       return;
     }
 
-    // Video is now playing - preload slots for the modal that will appear when video ends
+    // Video is now playing - preload slots AND video URLs for instant playback
     const preloadSlots = async () => {
       try {
-        const response = await fetch(`/api/scenes/${parentSceneId}/slots`);
+        // Request slots with video URLs for pre-caching
+        const response = await fetch(`/api/scenes/${parentSceneId}/slots?includeVideoUrls=true`);
         if (!response.ok) {
           console.error('Failed to preload slots');
           return;
         }
         const data = await response.json();
         setPreloadedSlots(data);
-        console.log('✅ Slots preloaded during video playback', data);
+        console.log('✅ Slots and video URLs preloaded during video playback', data);
       } catch (err) {
         console.error('Error preloading slots:', err);
       }
@@ -493,6 +495,31 @@ export default function MainGame() {
         referrerSceneId={previousSceneId ?? undefined}
         createdAt={currentScene?.createdAt}
       />
+
+      {/* Hidden video elements for pre-caching next scenes */}
+      {showVideo && preloadedSlots?.slots && preloadedSlots.slots.map((slot) => {
+        // Only pre-cache completed slots with video URLs
+        if (slot.videoUrl && slot.status === 'completed') {
+          return (
+            <video
+              key={`precache-${parentSceneId}-${slot.slot}`}
+              src={slot.videoUrl}
+              preload="auto"
+              muted
+              playsInline
+              style={{
+                position: 'absolute',
+                opacity: 0,
+                pointerEvents: 'none',
+                width: 1,
+                height: 1,
+                zIndex: -1
+              }}
+            />
+          );
+        }
+        return null;
+      })}
 
       {/* Countdown animation */}
       {!showVideo && <Countdown onComplete={handleCountdownComplete} />}
