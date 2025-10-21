@@ -5,7 +5,6 @@ import { parseEther } from "viem";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
-import styles from "./SlotChoiceModal.module.css";
 import ExtendStoryModal from "./ExtendStoryModal";
 import AboutModal from "./AboutModal";
 import SceneMapModal from "./SceneMapModal";
@@ -308,58 +307,56 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   if (!isVisible) return null;
 
   return (
-    <div className={styles.popup}>
-      <div className={styles.popupContent}>
-        <h2 className={styles.popupTitle}>What happens next?</h2>
+    <div className="absolute top-0 left-0 w-full h-full flex items-end justify-center z-10 animate-fade-in pointer-events-none">
+      <div className="relative w-full max-w-[600px] bg-black/85 rounded-t-[20px] p-8 pb-[max(2rem,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-10px_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] animate-slide-up pointer-events-auto sm:p-6 sm:pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] sm:max-w-full">
+        <h2 className="font-source-code text-[1.5rem] font-bold text-white text-center m-0 mb-8 sm:mb-6 uppercase tracking-[0.1em]" style={{textShadow: '0 0 20px rgba(255, 255, 255, 0.5)'}}>
+          What happens next?
+        </h2>
 
         {!isConnected && (
-          <div style={{
+          <div className="rounded-[10px] p-4 mb-4 text-center" style={{
             background: 'rgba(255, 215, 0, 0.2)',
             border: '2px solid rgba(255, 215, 0, 0.5)',
-            borderRadius: '10px',
-            padding: '1rem',
-            marginBottom: '1rem',
-            textAlign: 'center'
           }}>
-            <p style={{ color: '#FFD700', fontWeight: 'bold', marginBottom: '0.5rem', fontFamily: 'var(--font-source-code-pro)' }}>
+            <p className="text-[#FFD700] font-bold mb-2 font-source-code">
               🔒 Wallet Connection Required
             </p>
-            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontFamily: 'var(--font-source-code-pro)' }}>
+            <p className="text-white text-sm m-0 font-source-code">
               Please connect your wallet to continue the adventure
             </p>
           </div>
         )}
 
         {statusMessage && (
-          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
+          <p className="text-[#FFD700] text-center mb-4 font-source-code">
             {statusMessage}
           </p>
         )}
 
         {isPending && (
-          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
+          <p className="text-[#FFD700] text-center mb-4 font-source-code">
             Waiting for wallet confirmation...
           </p>
         )}
 
         {isConfirming && (
-          <p style={{ color: '#FFD700', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
+          <p className="text-[#FFD700] text-center mb-4 font-source-code">
             Transaction pending on Base...
           </p>
         )}
 
         {loadError && (
-          <p style={{ color: '#FF6B6B', textAlign: 'center', marginBottom: '1rem', fontFamily: 'var(--font-source-code-pro)' }}>
+          <p className="text-[#FF6B6B] text-center mb-4 font-source-code">
             {loadError}
           </p>
         )}
 
         {isLoading ? (
-          <p style={{ color: '#fff', textAlign: 'center', fontFamily: 'var(--font-source-code-pro)' }}>
+          <p className="text-white text-center font-source-code">
             Loading slots...
           </p>
         ) : (
-          <div className={styles.choicesContainer}>
+          <div className="flex flex-col gap-4">
             {(() => {
               // Find the first available slot (not filled, not locked, no attempt)
               const firstAvailableSlot = slots.find(slot =>
@@ -378,19 +375,30 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                 return (
                   <div
                     key={slotInfo.slot}
-                    className={`${styles.choice} ${isSlotLoading ? styles.choiceLoading : ''}`}
+                    className={`flex items-center w-full bg-white/5 border-2 border-white/20 rounded-lg px-6 py-4 sm:px-4 sm:py-[0.9rem] cursor-pointer transition-all duration-200 relative overflow-visible min-h-[60px] hover:bg-white/10 hover:border-white/40 hover:translate-x-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] ${isSlotLoading ? 'slot-loading' : ''}`}
                     onClick={() => !isSlotLoading && handleFilledSlotClick(slotInfo.slot)}
                     style={{
                       cursor: isSlotLoading ? 'wait' : (canView ? 'pointer' : 'not-allowed'),
-                      opacity: canView ? 1 : 0.6
+                      opacity: canView ? 1 : 0.6,
+                      WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'
                     }}
                   >
-                    <div className={`${styles.choiceLabel} ${isSlotLoading ? styles.choiceLoadingLabel : ''}`}>
+                    {isSlotLoading && (
+                      <>
+                        <div className="absolute -top-[3px] -left-[3px] -right-[3px] -bottom-[3px] rounded-[10px] -z-10 blur-[8px] bg-[length:400%_400%] animate-border-pulse" style={{
+                          background: 'linear-gradient(45deg, transparent 0%, rgba(255, 215, 0, 0.4) 25%, rgba(255, 215, 0, 0.8) 50%, rgba(255, 215, 0, 0.4) 75%, transparent 100%)'
+                        }} />
+                        <div className="absolute top-0 left-0 right-0 bottom-0 rounded-lg pointer-events-none bg-[length:200%_100%] animate-shimmer" style={{
+                          background: 'linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.1) 50%, transparent 100%)'
+                        }} />
+                      </>
+                    )}
+                    <div className={`font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0 ${isSlotLoading ? 'slot-label-loading' : ''}`}>
                       {slotInfo.slot}
                     </div>
-                    <div className={styles.choiceText}>
+                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       {isSlotLoading ? 'loading...' : (slotInfo.label || 'view scene')}
-                      {!canView && !isSlotLoading && <span style={{ fontSize: '0.8rem', display: 'block', marginTop: '0.25rem', color: 'rgba(255, 255, 255, 0.7)' }}>🔒 connect wallet</span>}
+                      {!canView && !isSlotLoading && <span className="text-xs block mt-1 text-white/70">🔒 connect wallet</span>}
                     </div>
                   </div>
                 );
@@ -412,7 +420,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                 return (
                   <div
                     key={slotInfo.slot}
-                    className={styles.choice}
+                    className="flex items-center w-full border-2 rounded-lg px-6 py-4 sm:px-4 sm:py-[0.9rem] cursor-pointer transition-all duration-200 relative overflow-hidden min-h-[60px] hover:bg-white/10 hover:border-white/40 hover:translate-x-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                     onClick={() => handleResumeSlot(
                       slotInfo.attemptId!,
                       slotInfo.sceneId!,
@@ -420,15 +428,17 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                       slotInfo.latestPromptOutcome
                     )}
                     style={{
-                      cursor: 'pointer',
                       background: 'rgba(0, 255, 0, 0.1)',
-                      borderColor: 'rgba(0, 255, 0, 0.5)'
+                      borderColor: 'rgba(0, 255, 0, 0.5)',
+                      WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'
                     }}
                   >
-                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                    <div className={styles.choiceText}>
+                    <div className="font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
+                      {slotInfo.slot}
+                    </div>
+                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       ✨ {hasActivePrompt ? 'view generation' : 'resume your scene'}
-                      <span style={{ fontSize: '0.7rem', display: 'block', marginTop: '0.25rem', color: 'rgba(0, 255, 0, 0.7)' }}>
+                      <span className="text-[0.7rem] block mt-1" style={{color: 'rgba(0, 255, 0, 0.7)'}}>
                         ({hasActivePrompt ? 'video generating...' : 'you paid for this'})
                       </span>
                     </div>
@@ -441,11 +451,13 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                 return (
                   <div
                     key={slotInfo.slot}
-                    className={styles.choice}
-                    style={{ cursor: 'not-allowed', opacity: 0.5 }}
+                    className="flex items-center w-full bg-white/5 border-2 border-white/20 rounded-lg px-6 py-4 sm:px-4 sm:py-[0.9rem] transition-all duration-200 relative overflow-hidden min-h-[60px] cursor-not-allowed opacity-50"
+                    style={{WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'}}
                   >
-                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                    <div className={styles.choiceText}>
+                    <div className="font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
+                      {slotInfo.slot}
+                    </div>
+                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       being created...
                     </div>
                   </div>
@@ -462,11 +474,13 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                 return (
                   <div
                     key={slotInfo.slot}
-                    className={styles.choice}
-                    style={{ cursor: 'not-allowed', opacity: 0.5 }}
+                    className="flex items-center w-full bg-white/5 border-2 border-white/20 rounded-lg px-6 py-4 sm:px-4 sm:py-[0.9rem] transition-all duration-200 relative overflow-hidden min-h-[60px] cursor-not-allowed opacity-50"
+                    style={{WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'}}
                   >
-                    <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                    <div className={styles.choiceText}>
+                    <div className="font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
+                      {slotInfo.slot}
+                    </div>
+                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       being created...
                     </div>
                   </div>
@@ -480,16 +494,18 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
               return (
                 <div
                   key={slotInfo.slot}
-                  className={`${styles.choice} ${isDisabled ? styles.choiceDisabled : ''}`}
+                  className={`flex items-center w-full bg-white/5 border-2 rounded-lg px-6 py-4 sm:px-4 sm:py-[0.9rem] transition-all duration-200 relative overflow-hidden min-h-[60px] hover:bg-white/10 hover:border-white/40 hover:translate-x-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] ${isDisabled ? 'grayscale-[0.5] pointer-events-none' : 'cursor-pointer'}`}
                   onClick={() => !isDisabled && handleSlotClick(slotInfo.slot, slotIndex)}
                   style={{
-                    cursor: isDisabled ? 'not-allowed' : 'pointer',
                     opacity: isDisabled ? 0.4 : 1,
-                    borderColor: isFirstAvailable ? '#FFD700' : 'rgba(255, 255, 255, 0.15)'
+                    borderColor: isFirstAvailable ? '#FFD700' : 'rgba(255, 255, 255, 0.15)',
+                    WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'
                   }}
                 >
-                  <div className={styles.choiceLabel}>{slotInfo.slot}</div>
-                  <div className={styles.choiceText}>
+                  <div className={`font-source-code text-2xl md:text-xl sm:text-base font-bold w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center rounded-md mr-4 sm:mr-3 flex-shrink-0 ${isDisabled ? 'bg-white/5 text-white/40' : 'bg-white/10 text-white'}`}>
+                    {slotInfo.slot}
+                  </div>
+                  <div className={`font-source-code text-lg md:text-base sm:text-[0.95rem] flex-1 ${isDisabled ? 'text-white/40 italic' : 'text-white/90'}`}>
                     {isFirstAvailable ? 'extend this story' : 'available soon'}
                   </div>
                 </div>
@@ -500,39 +516,13 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
         )}
 
         {/* Footer with Back button, Map, and About link */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '1.5rem',
-          paddingTop: '1rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-        }}>
+        <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10">
           {/* Back button - left side */}
           {onBack && (
             <button
               onClick={onBack}
               disabled={!canGoBack}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: canGoBack ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.3)',
-                fontFamily: 'var(--font-source-code-pro)',
-                fontSize: '0.85rem',
-                cursor: canGoBack ? 'pointer' : 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0',
-                transition: 'color 0.2s ease',
-                opacity: canGoBack ? 1 : 0.5
-              }}
-              onMouseEnter={(e) => {
-                if (canGoBack) e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
-              }}
-              onMouseLeave={(e) => {
-                if (canGoBack) e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
-              }}
+              className={`bg-transparent border-none font-source-code text-sm flex items-center gap-2 p-0 transition-colors duration-200 ${canGoBack ? 'text-white/60 cursor-pointer hover:text-white/90 opacity-100' : 'text-white/30 cursor-not-allowed opacity-50'}`}
             >
               <span>←</span>
               <span>Back</span>
@@ -543,30 +533,11 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
           {!onBack && <div />}
 
           {/* Right side - Map and About */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem'
-          }}>
+          <div className="flex items-center gap-4">
             {/* Map button */}
             <button
               onClick={() => setShowMapModal(true)}
-              style={{
-                fontFamily: 'var(--font-source-code-pro)',
-                fontSize: '0.85rem',
-                color: 'rgba(255, 255, 255, 0.6)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                transition: 'color 0.2s ease',
-                padding: '0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
+              className="font-source-code text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 flex items-center gap-1 hover:text-white/90"
             >
               <span>🗺️</span>
               <span>Story Map</span>
@@ -575,19 +546,7 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
             {/* About link */}
             <button
               onClick={() => setShowAboutModal(true)}
-              style={{
-                fontFamily: 'var(--font-source-code-pro)',
-                fontSize: '0.85rem',
-                color: 'rgba(255, 255, 255, 0.6)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                transition: 'color 0.2s ease',
-                padding: '0'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
+              className="font-source-code text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 hover:text-white/90"
             >
               About this game
             </button>

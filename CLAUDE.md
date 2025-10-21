@@ -189,3 +189,80 @@ Built as a Base mini app following the Base platform specifications: https://doc
 - Dev server running on http://localhost:3001
 - Environment variables configured in `.env.local`
 - Base mini app integration via OnchainKit
+
+### Styling & Theming
+
+#### Tailwind CSS 4
+- Uses **Tailwind CSS v4.1.15** via `@tailwindcss/postcss` package
+- Configuration is CSS-based (in `app/globals.css`), no JavaScript config file
+- All styles use Tailwind utility classes
+
+**PostCSS Configuration** (`postcss.config.js`):
+```js
+module.exports = {
+  plugins: {
+    '@tailwindcss/postcss': {}
+  },
+};
+```
+
+**Theme Configuration** (`app/globals.css`):
+- Import: `@import "tailwindcss"`
+- `@theme` block defines custom colors, animations, and fonts
+- Custom animations: `animate-fade-in`, `animate-slide-up`, `animate-slide-down`, `animate-fly-in`, `animate-border-pulse`, `animate-shimmer`, `animate-label-glow`, `animate-radiate-glow`, `animate-bounce`, `animate-spin`, `animate-checkmark-circle`, `animate-checkmark-stem`, `animate-checkmark-kick`
+
+#### Per-Movie Color Theming
+
+Each movie can have its own color scheme stored in the database and applied dynamically without rebuilding CSS.
+
+**How It Works:**
+```
+Database (color_scheme JSONB) → MovieThemeProvider → CSS Variables → Tailwind Classes
+```
+
+**Core Files:**
+
+1. **`app/types/movie.ts`**
+   - `MovieColorScheme` interface: 7 color properties (primary, secondary, accent, bg, bgOverlay, text, textMuted)
+   - `PRESET_COLOR_SCHEMES`: 5 built-in themes (2009, cyberpunk, noir, nature, horror)
+   - `colorSchemeToCSS()`: Converts color scheme object to CSS variables
+
+2. **`app/components/MovieThemeProvider.tsx`**
+   - Wraps movie content and injects theme via CSS variables
+   - Pass `colorScheme` prop from database
+
+3. **`app/globals.css`**
+   - `@theme` block maps `--movie-*` variables to Tailwind utilities
+   - Enables classes: `bg-movie-primary`, `text-movie-text`, `border-movie-accent`, etc.
+
+4. **Database: `movies` table**
+   - `color_scheme JSONB` column stores themes as JSON
+   - Example: `{"primary": "#FFD700", "secondary": "#FFA500", ...}`
+
+5. **`app/test-theme/page.tsx`**
+   - Visit `/test-theme` to preview all color schemes live
+
+**Usage:**
+```tsx
+// Wrap movie content with theme provider
+<MovieThemeProvider colorScheme={movie.color_scheme}>
+  <WatchMovie sceneId={sceneId} />
+</MovieThemeProvider>
+
+// Use theme colors in components
+<div className="bg-movie-bg text-movie-text">
+  <h1 className="text-movie-primary">Title</h1>
+  <button className="bg-movie-primary hover:bg-movie-secondary">Click</button>
+</div>
+```
+
+**Adding New Theme Colors:**
+1. Update `MovieColorScheme` interface in `app/types/movie.ts`
+2. Add to `colorSchemeToCSS()` function (maps to CSS variable)
+3. Add to `@theme` block in `app/globals.css` (maps to Tailwind utility)
+4. Update preset themes in `PRESET_COLOR_SCHEMES`
+
+**Adding New Animations:**
+1. Add to `@theme` block: `--animate-custom: custom 2s ease-in-out`
+2. Define keyframes in `app/globals.css`: `@keyframes custom { ... }`
+3. Use with Tailwind: `className="animate-custom"`

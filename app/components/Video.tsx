@@ -4,7 +4,6 @@ import { useRef, useEffect, useState } from "react";
 import { useEnsName } from "wagmi";
 import { useComposeCast } from "@coinbase/onchainkit/minikit";
 import { trackSceneView } from "@/lib/analytics";
-import styles from "./Video.module.css";
 
 interface VideoProps {
   sceneId: number | null; // null for genesis/intro scene, number for all other scenes
@@ -162,21 +161,32 @@ export default function Video({
     <>
       {/* Show loading spinner for non-intro videos */}
       {isLoading && sceneId !== null && (
-        <div className={styles.loading} style={{ opacity: isVisible ? 1 : 0 }}>
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white font-source-code z-[2]"
+          style={{ opacity: isVisible ? 1 : 0 }}
+        >
           <p>Loading video...</p>
         </div>
       )}
 
       {error && (
-        <div className={styles.error} style={{ opacity: isVisible ? 1 : 0 }}>
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white font-source-code z-[2]"
+          style={{ opacity: isVisible ? 1 : 0 }}
+        >
           <p>{error}</p>
-          <button onClick={fetchVideoUrl}>Retry</button>
+          <button
+            onClick={fetchVideoUrl}
+            className="mt-4 px-4 py-2 bg-white/10 border-2 border-white/30 rounded-lg text-white font-source-code cursor-pointer transition-all duration-200 hover:bg-white/20 hover:border-white/50"
+          >
+            Retry
+          </button>
         </div>
       )}
 
       <video
         ref={videoRef}
-        className={`${styles.video} ${isVisible ? styles.videoFadeIn : ''}`}
+        className={`absolute top-0 left-0 w-full h-full object-cover z-[1] transition-opacity duration-1000 ease-in ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         src={videoUrl || undefined}
         preload="auto"
         playsInline
@@ -187,10 +197,10 @@ export default function Video({
 
       {/* Controls container - mute and share buttons */}
       {isVisible && videoUrl && (
-        <div className={styles.controlsContainer}>
+        <div className="absolute top-5 left-5 flex gap-2 z-[3]">
           <button
             onClick={toggleMute}
-            className={styles.muteButton}
+            className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-source-code text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
             aria-label={isMuted ? "Unmute video" : "Mute video"}
           >
             {isMuted ? (
@@ -213,7 +223,7 @@ export default function Video({
           {sceneId !== null && (
             <button
               onClick={handleShare}
-              className={styles.shareButton}
+              className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-source-code text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
               aria-label="Share this scene"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -231,13 +241,13 @@ export default function Video({
 
       {/* Creator attribution */}
       {isVisible && creatorAddress && (
-        <div className={styles.attribution}>
-          <div className={styles.attributionText}>
-            <div className={styles.creatorLine}>
+        <div className="absolute bottom-5 left-5 bg-black/70 backdrop-blur-md px-4 py-2 rounded-lg z-[3]">
+          <div className="text-white/90 font-source-code text-[0.65rem] m-0">
+            <div className="mb-1">
               Created by {ensName || creatorAddress}
             </div>
             {createdAt && (
-              <div className={styles.timestampLine}>
+              <div className="text-[0.6rem] text-white/60 italic">
                 {new Date(createdAt).toLocaleString()}
               </div>
             )}

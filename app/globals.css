@@ -1,7 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom color variables that reference dynamic CSS variables */
+  /* These allow classes like bg-movie-primary to use var(--movie-primary) */
+  --color-movie-primary: var(--movie-primary);
+  --color-movie-secondary: var(--movie-secondary);
+  --color-movie-accent: var(--movie-accent);
+  --color-movie-bg: var(--movie-bg);
+  --color-movie-bg-overlay: var(--movie-bg-overlay);
+  --color-movie-text: var(--movie-text);
+  --color-movie-text-muted: var(--movie-text-muted);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Custom animations */
+  --animate-fade-in: fadeIn 0.3s ease-out;
+  --animate-slide-up: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-down: slideDown 0.3s ease-out;
+  --animate-fly-in: flyIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-border-pulse: borderPulse 2s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.5s linear infinite;
+  --animate-label-glow: labelGlow 1s ease-in-out infinite alternate;
+  --animate-radiate-glow: radiateGlow 1.2s ease-in-out infinite;
+  --animate-bounce: bounce 0.6s ease-out;
+  --animate-spin: spin 2s linear infinite;
+  --animate-checkmark-circle: checkmarkCircle 0.6s ease-in-out;
+  --animate-checkmark-stem: checkmarkStem 0.3s ease-in-out 0.3s both;
+  --animate-checkmark-kick: checkmarkKick 0.2s ease-in-out 0.5s both;
+
+  /* Font families */
+  --font-family-source-code: var(--font-source-code-pro), monospace;
+  --font-family-saira: var(--font-saira), sans-serif;
+  --font-family-inter: var(--font-inter), sans-serif;
+}
+
 @layer base {
   :root {
     --background: #ffffff;
     --foreground: #171717;
+
+    /* Default movie theme colors (fallback for dynamic theming) */
+    --movie-primary: #FFD700;
+    --movie-secondary: #FFA500;
+    --movie-accent: #FF6B35;
+    --movie-bg: #0a0a0a;
+    --movie-bg-overlay: rgba(0, 0, 0, 0.85);
+    --movie-text: #ffffff;
+    --movie-text-muted: rgba(255, 255, 255, 0.85);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -56,6 +101,170 @@
     html {
       color-scheme: dark;
     }
+  }
+
+  /* Custom Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes borderPulse {
+    0%, 100% {
+      background-position: 0% 50%;
+      opacity: 0.6;
+    }
+    50% {
+      background-position: 100% 50%;
+      opacity: 1;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes labelGlow {
+    0% {
+      color: #FFD700;
+      text-shadow:
+        0 0 10px rgba(255, 215, 0, 0.8),
+        0 0 20px rgba(255, 215, 0, 0.6),
+        0 0 30px rgba(255, 215, 0, 0.4);
+    }
+    100% {
+      color: #FFF;
+      text-shadow:
+        0 0 20px rgba(255, 215, 0, 1),
+        0 0 30px rgba(255, 215, 0, 0.8),
+        0 0 40px rgba(255, 215, 0, 0.6),
+        0 0 50px rgba(255, 215, 0, 0.4);
+    }
+  }
+
+  @keyframes radiateGlow {
+    0% {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0.8;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.2);
+      opacity: 0.4;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes flyIn {
+    from {
+      transform: translateY(100px) scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes checkmarkCircle {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes checkmarkStem {
+    0% {
+      transform: scaleY(0) rotate(45deg);
+    }
+    100% {
+      transform: scaleY(1) rotate(45deg);
+    }
+  }
+
+  @keyframes checkmarkKick {
+    0% {
+      transform: scaleY(0) rotate(-45deg);
+    }
+    100% {
+      transform: scaleY(1) rotate(-45deg);
+    }
+  }
+
+  /* Slot loading label animation */
+  .slot-label-loading {
+    animation: labelGlow 1s ease-in-out infinite alternate;
+    position: relative;
+  }
+
+  .slot-label-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    border-radius: 6px;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%);
+    animation: radiateGlow 1.2s ease-in-out infinite;
+    z-index: -1;
   }
 
   /* OnchainKit Wallet Address Customization */

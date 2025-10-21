@@ -20,7 +20,6 @@ import Countdown from "./Countdown";
 import Video from "./Video";
 import SlotChoiceModal from "./SlotChoiceModal";
 import SceneMapModal from "./SceneMapModal";
-import styles from "./WatchMovie.module.css";
 import type { SceneData, PreloadedSlotsData, ActiveAttempt } from "@/lib/types";
 
 export default function WatchMovie() {
@@ -296,114 +295,52 @@ export default function WatchMovie() {
   };
 
   return (
-    <div className={styles.container}>
+    <div className="flex justify-center items-center w-full h-full relative overflow-hidden">
       {/* Animated background image */}
       {!showVideo && (
         <div
+          className="absolute top-0 left-0 w-full h-full bg-cover bg-center z-0"
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
             backgroundImage: 'url(/loading.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
             transform: `scale(${bgScale})`,
             opacity: bgOpacity,
             transition: 'transform 0.016s linear, opacity 0.016s linear',
-            zIndex: 0,
           }}
         />
       )}
 
       {/* Resume banner - shown when user has active attempts */}
       {showResumeBanner && activeAttempts.length > 0 && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          background: 'rgba(0, 255, 0, 0.15)',
-          border: '2px solid rgba(0, 255, 0, 0.6)',
-          borderRadius: '12px',
-          padding: '1rem 1.5rem',
-          backdropFilter: 'blur(10px)',
-          maxWidth: '500px',
-          animation: 'slideDown 0.3s ease-out'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '1rem'
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-[1001] rounded-xl px-6 py-4 backdrop-blur-md max-w-[500px]"
+          style={{
+            background: 'rgba(0, 255, 0, 0.15)',
+            border: '2px solid rgba(0, 255, 0, 0.6)',
+            animation: 'slideDown 0.3s ease-out'
           }}>
-            <div style={{ flex: 1 }}>
-              <p style={{
-                color: '#0f0',
-                fontFamily: 'var(--font-source-code-pro)',
-                fontSize: '0.9rem',
-                fontWeight: 'bold',
-                margin: 0,
-                marginBottom: '0.25rem'
-              }}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-[#0f0] font-source-code text-sm font-bold m-0 mb-1">
                 ✨ You have {activeAttempts.length} active scene{activeAttempts.length > 1 ? 's' : ''}
               </p>
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.8)',
-                fontFamily: 'var(--font-source-code-pro)',
-                fontSize: '0.75rem',
-                margin: 0
-              }}>
+              <p className="text-white/80 font-source-code text-xs m-0">
                 Slot {activeAttempts[0].slot} - {activeAttempts[0].resumePage === 'generating' ? 'Video generating...' : 'Enter your prompt'}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="flex gap-2">
               <button
                 onClick={() => router.push(activeAttempts[0].resumeUrl)}
+                className="font-source-code text-sm px-4 py-2 rounded-md cursor-pointer font-bold transition-all duration-200 hover:scale-105"
                 style={{
-                  fontFamily: 'var(--font-source-code-pro)',
-                  fontSize: '0.85rem',
-                  padding: '0.5rem 1rem',
                   background: 'rgba(0, 255, 0, 0.2)',
                   border: '1px solid rgba(0, 255, 0, 0.8)',
-                  borderRadius: '6px',
                   color: '#0f0',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 255, 0, 0.3)';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 255, 0, 0.2)';
-                  e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
                 Resume
               </button>
               <button
                 onClick={() => setShowResumeBanner(false)}
-                style={{
-                  fontFamily: 'var(--font-source-code-pro)',
-                  fontSize: '0.75rem',
-                  padding: '0.5rem 0.75rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '6px',
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }}
+                className="font-source-code text-xs px-3 py-2 bg-white/10 border border-white/30 rounded-md text-white/70 cursor-pointer transition-all duration-200 hover:bg-white/20"
               >
                 Dismiss
               </button>
@@ -414,15 +351,12 @@ export default function WatchMovie() {
 
       {/* Wallet connection in top right */}
       {walletVisible && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 1000,
-          opacity: walletOpacity,
-          transition: 'opacity 1s ease-out',
-          pointerEvents: walletOpacity === 0 ? 'none' : 'auto'
-        }}>
+        <div
+          className="absolute top-5 right-5 z-[1000] transition-opacity duration-1000 ease-out"
+          style={{
+            opacity: walletOpacity,
+            pointerEvents: walletOpacity === 0 ? 'none' : 'auto'
+          }}>
           <Wallet>
             <ConnectWallet>
               <Avatar className="h-6 w-6" />
@@ -465,14 +399,7 @@ export default function WatchMovie() {
               preload="auto"
               muted
               playsInline
-              style={{
-                position: 'absolute',
-                opacity: 0,
-                pointerEvents: 'none',
-                width: 1,
-                height: 1,
-                zIndex: -1
-              }}
+              className="absolute opacity-0 pointer-events-none w-px h-px -z-10"
             />
           );
         }

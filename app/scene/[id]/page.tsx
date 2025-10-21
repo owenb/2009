@@ -17,7 +17,6 @@ import {
 } from "@coinbase/onchainkit/identity";
 import Video from "../../components/Video";
 import SlotChoiceModal from "../../components/SlotChoiceModal";
-import styles from "../../components/WatchMovie.module.css";
 import type { SceneData, PreloadedSlotsData } from "@/lib/types";
 
 export default function ScenePage() {
@@ -125,16 +124,8 @@ export default function ScenePage() {
 
   if (isLoading) {
     return (
-      <div className={styles.container}>
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: '#fff',
-          fontFamily: 'var(--font-source-code-pro)',
-          textAlign: 'center'
-        }}>
+      <div className="flex justify-center items-center w-full h-full relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-source-code text-center">
           <p>Loading scene...</p>
         </div>
       </div>
@@ -143,28 +134,12 @@ export default function ScenePage() {
 
   if (error || !sceneData) {
     return (
-      <div className={styles.container}>
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: '#fff',
-          fontFamily: 'var(--font-source-code-pro)',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#FF6B6B', marginBottom: '1rem' }}>{error || 'Scene not found'}</p>
+      <div className="flex justify-center items-center w-full h-full relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-source-code text-center">
+          <p className="text-[#FF6B6B] mb-4">{error || 'Scene not found'}</p>
           <button
             onClick={() => router.push('/')}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '8px',
-              padding: '0.75rem 1.5rem',
-              color: '#fff',
-              fontFamily: 'var(--font-source-code-pro)',
-              cursor: 'pointer'
-            }}
+            className="bg-white/10 border-2 border-white/30 rounded-lg py-3 px-6 text-white font-source-code cursor-pointer transition-all duration-200 hover:bg-white/20 hover:border-white/50"
           >
             Go Home
           </button>
@@ -174,9 +149,9 @@ export default function ScenePage() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className="flex justify-center items-center w-full h-full relative overflow-hidden">
       {/* Wallet connection in top right */}
-      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000 }}>
+      <div className="absolute top-5 right-5 z-[1000]">
         <Wallet>
           <ConnectWallet>
             <Avatar className="h-6 w-6" />

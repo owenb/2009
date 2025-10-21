@@ -4,17 +4,7 @@ import WatchMovie from "./components/WatchMovie";
 
 export default function Home() {
   return (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: '#000000',
-      margin: 0,
-      padding: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      overflow: 'hidden'
-    }}>
+    <div className="w-screen h-screen bg-black m-0 p-0 flex justify-center items-center overflow-hidden">
       <WatchMovie />
     </div>
   );

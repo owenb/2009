@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useComposeCast } from "@coinbase/onchainkit/minikit";
-import styles from "./generating.module.css";
 
 function GeneratingPageContent() {
   const router = useRouter();
@@ -139,27 +138,33 @@ function GeneratingPageContent() {
   // Show share prompt modal
   if (showSharePrompt) {
     return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.successIcon}>🎉</div>
-          <h1 className={styles.title}>Scene Created!</h1>
-          <p className={styles.status} style={{ marginBottom: '1.5rem' }}>
+      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+        <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
+          <div className="text-6xl mb-4 animate-bounce">🎉</div>
+          <h1 className="text-[2rem] md:text-2xl font-bold text-white my-0 mb-6">Scene Created!</h1>
+          <p className="text-lg text-[#FFD700] m-0 font-bold uppercase tracking-wide mb-6">
             Your scene is ready to share with the world
           </p>
 
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="flex gap-4 justify-center flex-wrap md:flex-col md:gap-2">
             <button
-              className={styles.button}
+              className="font-source-code text-lg md:text-base font-bold text-black border-none rounded-lg py-5 px-8 md:py-4 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:-translate-y-0.5 active:translate-y-0"
               onClick={handleShare}
               style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                border: 'none'
+                boxShadow: '0 0 20px rgba(102, 126, 234, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(102, 126, 234, 0.6)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.4)';
               }}
             >
               Share Your Creation
             </button>
             <button
-              className={styles.secondaryButton}
+              className="font-source-code text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg py-3 px-6 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:text-white/90 hover:border-white/40 hover:bg-white/5"
               onClick={handleSkipShare}
             >
               Skip for Now
@@ -172,15 +177,27 @@ function GeneratingPageContent() {
 
   if (error) {
     return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.errorIcon}>⚠️</div>
-          <h1 className={styles.errorTitle}>Generation Failed</h1>
-          <p className={styles.errorMessage}>{error}</p>
+      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+        <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-[2rem] md:text-2xl font-bold text-[#FF6B6B] my-0 mb-4">Generation Failed</h1>
+          <p className="text-white/90 text-base mb-8 leading-relaxed">{error}</p>
 
           {canRetry && (
             <button
-              className={styles.button}
+              className="font-source-code text-lg md:text-base font-bold text-black rounded-lg py-5 px-8 md:py-4 cursor-pointer transition-all duration-200 border-none uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:-translate-y-0.5 active:translate-y-0"
+              style={{
+                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6)';
+                e.currentTarget.style.background = 'linear-gradient(135deg, #FFE44D 0%, #FFB84D 100%)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.4)';
+                e.currentTarget.style.background = 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
+              }}
               onClick={() => router.push(`/create?attemptId=${searchParams.get('attemptId')}&sceneId=${sceneId}`)}
             >
               Try Again
@@ -188,7 +205,7 @@ function GeneratingPageContent() {
           )}
 
           <button
-            className={styles.secondaryButton}
+            className="font-source-code text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg py-3 px-6 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:text-white/90 hover:border-white/40 hover:bg-white/5"
             onClick={() => router.push('/')}
           >
             Go Home
@@ -199,19 +216,19 @@ function GeneratingPageContent() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <div className={styles.spinner}>
-          <div className={styles.spinnerRing}></div>
-          <div className={styles.spinnerRing}></div>
-          <div className={styles.spinnerRing}></div>
-          <span className={styles.year}>2009</span>
+    <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+      <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
+        <div className="relative w-[150px] h-[150px] md:w-[120px] md:h-[120px] mx-auto mb-8">
+          <div className="absolute w-full h-full border-[3px] border-transparent border-t-[#FFD700] rounded-full animate-spin"></div>
+          <div className="absolute w-[80%] h-[80%] top-[10%] left-[10%] border-[3px] border-transparent border-t-[#FFA500] rounded-full animate-spin [animation-duration:1.5s] [animation-direction:reverse]"></div>
+          <div className="absolute w-[60%] h-[60%] top-[20%] left-[20%] border-[3px] border-transparent border-t-[#FFE44D] rounded-full animate-spin [animation-duration:1s]"></div>
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[2rem] md:text-2xl font-bold text-[#FFD700]" style={{textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'}}>2009</span>
         </div>
 
-        <h1 className={styles.title}>Creating Your Scene</h1>
+        <h1 className="text-[2rem] md:text-2xl font-bold text-white my-0 mb-6">Creating Your Scene</h1>
 
-        <div className={styles.statusContainer}>
-          <p className={styles.status}>
+        <div className="mb-8">
+          <p className="text-lg text-[#FFD700] m-0 font-bold uppercase tracking-wide">
             {status === 'queued' && 'In queue...'}
             {status === 'in_progress' && 'Generating video...'}
             {status === 'completed' && 'Processing...'}
@@ -221,26 +238,29 @@ function GeneratingPageContent() {
         </div>
 
         {/* Progress Bar */}
-        <div className={styles.progressContainer}>
+        <div className="w-full h-3 bg-white/10 rounded-lg overflow-hidden mb-8">
           <div
-            className={styles.progressBar}
-            style={{ width: `${progress}%` }}
+            className="h-full rounded-lg transition-all duration-500 shadow-[0_0_20px_rgba(255,215,0,0.5)]"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(90deg, #FFD700, #FFA500)'
+            }}
           ></div>
         </div>
 
-        <div className={styles.info}>
-          <p className={styles.infoText}>
+        <div className="mb-8">
+          <p className="text-white text-base m-0 mb-2">
             This usually takes 2-4 minutes. Hang tight!
           </p>
-          <p className={styles.infoSubtext}>
+          <p className="text-white/60 text-sm m-0">
             We&apos;re using Sora 2 to generate your 8-second video scene set in 2009.
           </p>
         </div>
 
         {/* Fun facts while waiting */}
-        <div className={styles.funFact}>
-          <p className={styles.funFactTitle}>Did you know?</p>
-          <p className={styles.funFactText}>
+        <div className="bg-[#FFD700]/5 border-2 border-[#FFD700]/20 rounded-lg p-6 mt-8 md:p-4">
+          <p className="text-[#FFD700] text-sm font-bold m-0 mb-3 uppercase tracking-[0.05em]">Did you know?</p>
+          <p className="text-white/80 text-sm leading-relaxed m-0">
             In 2009, Bitcoin&apos;s first block (the &quot;Genesis Block&quot;) was mined on January 3rd,
             marking the birth of cryptocurrency as we know it today.
           </p>
@@ -253,15 +273,15 @@ function GeneratingPageContent() {
 export default function GeneratingPage() {
   return (
     <Suspense fallback={
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.spinner}>
-            <div className={styles.spinnerRing}></div>
-            <div className={styles.spinnerRing}></div>
-            <div className={styles.spinnerRing}></div>
-            <span className={styles.year}>2009</span>
+      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+        <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
+          <div className="relative w-[150px] h-[150px] md:w-[120px] md:h-[120px] mx-auto mb-8">
+            <div className="absolute w-full h-full border-[3px] border-transparent border-t-[#FFD700] rounded-full animate-spin"></div>
+            <div className="absolute w-[80%] h-[80%] top-[10%] left-[10%] border-[3px] border-transparent border-t-[#FFA500] rounded-full animate-spin [animation-duration:1.5s] [animation-direction:reverse]"></div>
+            <div className="absolute w-[60%] h-[60%] top-[20%] left-[20%] border-[3px] border-transparent border-t-[#FFE44D] rounded-full animate-spin [animation-duration:1s]"></div>
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[2rem] md:text-2xl font-bold text-[#FFD700]" style={{textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'}}>2009</span>
           </div>
-          <h1 className={styles.title}>Loading...</h1>
+          <h1 className="text-[2rem] md:text-2xl font-bold text-white my-0 mb-6">Loading...</h1>
         </div>
       </div>
     }>

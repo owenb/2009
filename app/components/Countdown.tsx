@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import styles from "./Countdown.module.css";
 
 interface CountdownProps {
   onComplete: () => void;
@@ -105,10 +104,18 @@ export default function Countdown({ onComplete }: CountdownProps) {
 
   return (
     <div
-      className={`${styles.year} ${isAnimating ? styles.animating : ''} ${isExploding ? styles.exploding : ''}`}
+      className={`
+        font-source-code text-[12rem] md:text-[8rem] sm:text-[6rem] font-bold text-white -tracking-[0.05em]
+        transition-[opacity,filter] duration-75 ease-out origin-center relative z-[2]
+        ${isAnimating ? 'opacity-70 blur-[2px]' : ''}
+        ${isExploding ? '!transition-all !duration-600 !ease-[cubic-bezier(0.34,1.56,0.64,1)] !scale-[5] !opacity-0 !blur-[20px]' : ''}
+      `}
       style={{
         transform: `scale(${scale})`,
-        opacity: isExploding ? 0 : 1
+        opacity: isExploding ? 0 : 1,
+        textShadow: isExploding
+          ? '0 0 60px rgba(255, 255, 255, 0.8), 0 0 120px rgba(255, 255, 255, 0.6), 0 0 180px rgba(255, 255, 255, 0.4)'
+          : '0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.2), 0 0 60px rgba(255, 255, 255, 0.1)'
       }}
     >
       {currentYear}
