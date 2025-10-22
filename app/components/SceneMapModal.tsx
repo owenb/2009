@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 interface SceneNode {
   id: number;
@@ -18,153 +18,549 @@ interface SceneMapModalProps {
   onClose: () => void;
   onSceneSelect: (sceneId: number) => void;
   currentSceneId?: number | null;
+  movieId?: number;
+}
+
+interface PositionedNode {
+  scene: SceneNode;
+  x: number;
+  y: number;
+  depth: number;
+}
+
+// Constants for layout
+const NODE_WIDTH = 260;
+const NODE_HEIGHT = 110;
+const HORIZONTAL_GAP = 140;
+const VERTICAL_GAP = 220;
+const START_Y = 150;
+
+// Word wrap text to fit in box - returns array of lines
+function wrapText(text: string, maxCharsPerLine: number = 22): string[] {
+  if (!text) return [''];
+
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  words.forEach(word => {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+
+    if (testLine.length <= maxCharsPerLine) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      currentLine = word;
+    }
+  });
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines.length > 0 ? lines : [''];
+}
+
+// Calculate tree layout using proper algorithm
+function calculateLayout(root: SceneNode): Map<number, PositionedNode> {
+  const positions = new Map<number, PositionedNode>();
+
+  // First pass: Calculate the width each subtree needs
+  function getSubtreeWidth(node: SceneNode): number {
+    if (node.children.length === 0) {
+      return NODE_WIDTH;
+    }
+
+    let totalWidth = 0;
+    node.children.forEach(child => {
+      totalWidth += getSubtreeWidth(child);
+    });
+
+    // Add gaps between children
+    totalWidth += HORIZONTAL_GAP * (node.children.length - 1);
+
+    return Math.max(NODE_WIDTH, totalWidth);
+  }
+
+  // Second pass: Assign positions
+  function assignPositions(node: SceneNode, x: number, y: number, depth: number) {
+    const subtreeWidth = getSubtreeWidth(node);
+
+    // Position this node in the center of its subtree
+    const nodeX = x + subtreeWidth / 2;
+
+    positions.set(node.id, {
+      scene: node,
+      x: nodeX,
+      y: y,
+      depth: depth,
+    });
+
+    // Position children
+    if (node.children.length > 0) {
+      let childX = x;
+      const childY = y + VERTICAL_GAP;
+
+      node.children.forEach(child => {
+        const childWidth = getSubtreeWidth(child);
+        assignPositions(child, childX, childY, depth + 1);
+        childX += childWidth + HORIZONTAL_GAP;
+      });
+    }
+  }
+
+  assignPositions(root, 0, START_Y, 0);
+
+  return positions;
+}
+
+// Find path from root to target node
+function findPathToNode(root: SceneNode, targetId: number): Set<number> {
+  const path = new Set<number>();
+
+  function search(node: SceneNode): boolean {
+    if (node.id === targetId) {
+      path.add(node.id);
+      return true;
+    }
+
+    for (const child of node.children) {
+      if (search(child)) {
+        path.add(node.id);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  search(root);
+  return path;
 }
 
 export default function SceneMapModal({
   isVisible,
   onClose,
   onSceneSelect,
-  currentSceneId
+  currentSceneId,
+  movieId = 1
 }: SceneMapModalProps) {
   const [tree, setTree] = useState<SceneNode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
+  const [positions, setPositions] = useState<Map<number, PositionedNode>>(new Map());
+  const [pathToCurrentScene, setPathToCurrentScene] = useState<Set<number>>(new Set());
+  const [zoom, setZoom] = useState(0.8);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Fetch scene tree when modal opens
+  // Fetch scene tree
   useEffect(() => {
     if (!isVisible) return;
 
     const fetchTree = async () => {
       setIsLoading(true);
-      setError(null);
-
       try {
-        const response = await fetch('/api/scenes/tree');
-        if (!response.ok) {
-          throw new Error('Failed to fetch scene tree');
-        }
-
+        const response = await fetch(`/api/scenes/tree?movieId=${movieId}`);
+        if (!response.ok) throw new Error('Failed to fetch scene tree');
         const data = await response.json();
         setTree(data.tree);
       } catch (err) {
         console.error('Error fetching scene tree:', err);
-        setError('Failed to load scene map');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchTree();
-  }, [isVisible]);
+  }, [isVisible, movieId]);
 
-  // Handle click outside modal to close
+  // Calculate layout when tree changes
   useEffect(() => {
-    if (!isVisible) return;
+    if (!tree) return;
 
-    const handleClickOutside = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
+    const layout = calculateLayout(tree);
+    setPositions(layout);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isVisible, onClose]);
+    if (currentSceneId) {
+      const path = findPathToNode(tree, currentSceneId);
+      setPathToCurrentScene(path);
+    }
 
-  // Render a scene node and its children recursively as Merkle tree
-  const renderNode = (node: SceneNode) => {
-    const isCurrent = currentSceneId === node.id;
-    const isGenesis = node.id === 0;
-    const hasChildren = node.children.length > 0;
+    // Center view on genesis
+    setPanX(window.innerWidth / 2 - NODE_WIDTH / 2);
+    setPanY(50);
+  }, [tree, currentSceneId]);
 
-    return (
-      <div key={node.id} className="flex flex-col items-center relative">
-        {/* Current node - circular */}
-        <div
-          className={`flex flex-col items-center gap-2 p-4 md:p-[0.65rem] rounded-full w-20 h-20 cursor-pointer transition-all duration-200 relative z-[2] ${
-            isCurrent
-              ? 'bg-[#FFD700]/15 border-2 border-[#FFD700]/60 shadow-[0_0_20px_rgba(255,215,0,0.4)] hover:bg-[#FFD700]/20 hover:border-[#FFD700]/80'
-              : 'bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-[#FFD700]/40 hover:scale-110 hover:shadow-[0_0_20px_rgba(255,215,0,0.3)]'
-          } ${isGenesis ? 'text-2xl' : ''}`}
-          onClick={() => onSceneSelect(node.id)}
-          title={isGenesis ? 'Genesis - Intro' : `Slot ${node.slot}: ${node.slotLabel || 'Scene'}`}
+  // Mouse handlers for pan
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - panX, y: e.clientY - panY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPanX(e.clientX - dragStart.x);
+    setPanY(e.clientY - dragStart.y);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Wheel handler for zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY * -0.0005;
+    const newZoom = Math.max(0.3, Math.min(1.5, zoom + delta));
+    setZoom(newZoom);
+  };
+
+  // Check if a scene is clickable (adjacent to current scene)
+  const isSceneClickable = (scene: SceneNode): boolean => {
+    if (!currentSceneId) return true; // If no current scene, allow all
+    if (scene.id === currentSceneId) return false; // Can't click current scene
+
+    // Can click parent
+    if (scene.children.some(child => child.id === currentSceneId)) {
+      return true;
+    }
+
+    // Can click children
+    const currentNode = Array.from(positions.values()).find(p => p.scene.id === currentSceneId);
+    if (currentNode && currentNode.scene.children.some(child => child.id === scene.id)) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Check if a scene should be visible (fog of war)
+  const isSceneVisible = (scene: SceneNode): boolean => {
+    if (!currentSceneId) return true;
+
+    // Current scene: always visible
+    if (scene.id === currentSceneId) return true;
+
+    // Scenes on the path from START to current: always visible
+    if (pathToCurrentScene.has(scene.id)) return true;
+
+    // Direct children of current scene: visible (can see next options)
+    const currentNode = Array.from(positions.values()).find(p => p.scene.id === currentSceneId);
+    if (currentNode && currentNode.scene.children.some(child => child.id === scene.id)) {
+      return true;
+    }
+
+    // Parent of current scene: visible (can see where you came from)
+    if (scene.children.some(child => child.id === currentSceneId)) {
+      return true;
+    }
+
+    // Everything else: fogged
+    return false;
+  };
+
+  // Render all edges
+  const renderEdges = () => {
+    if (!tree) return null;
+
+    const edges: JSX.Element[] = [];
+
+    function collectEdges(node: SceneNode) {
+      const parentPos = positions.get(node.id);
+      if (!parentPos) return;
+
+      node.children.forEach(child => {
+        const childPos = positions.get(child.id);
+        if (!childPos) return;
+
+        const isOnPath = pathToCurrentScene.has(node.id) && pathToCurrentScene.has(child.id);
+
+        // Fog of war for edges: only show if both nodes are visible
+        const parentVisible = isSceneVisible(node);
+        const childVisible = isSceneVisible(child);
+        const edgeVisible = parentVisible && childVisible;
+
+        // Calculate connection points (bottom of parent to top of child)
+        const x1 = parentPos.x;
+        const y1 = parentPos.y + NODE_HEIGHT / 2;
+        const x2 = childPos.x;
+        const y2 = childPos.y - NODE_HEIGHT / 2;
+
+        // Create smooth path
+        const midY = (y1 + y2) / 2;
+        const pathD = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+
+        edges.push(
+          <g key={`edge-${node.id}-${child.id}`} opacity={edgeVisible ? 1 : 0.15}>
+            {/* Connection line */}
+            <path
+              d={pathD}
+              stroke={isOnPath ? "#FFD700" : "#FFA500"}
+              strokeWidth={isOnPath ? "4" : "3"}
+              fill="none"
+              opacity={isOnPath ? "1" : "0.6"}
+            />
+
+            {/* Arrow marker */}
+            <defs>
+              <marker
+                id={`arrow-${node.id}-${child.id}`}
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto"
+              >
+                <path
+                  d="M 0 0 L 10 5 L 0 10 z"
+                  fill={isOnPath ? "#FFD700" : "#FFA500"}
+                  opacity={isOnPath ? "1" : "0.5"}
+                />
+              </marker>
+            </defs>
+            <path
+              d={pathD}
+              stroke="transparent"
+              strokeWidth="1"
+              fill="none"
+              markerEnd={`url(#arrow-${node.id}-${child.id})`}
+            />
+          </g>
+        );
+
+        collectEdges(child);
+      });
+    }
+
+    collectEdges(tree);
+    return edges;
+  };
+
+  // Render all nodes
+  const renderNodes = () => {
+    const nodes: JSX.Element[] = [];
+
+    positions.forEach((posNode) => {
+      const { scene, x, y } = posNode;
+      const isGenesis = scene.parentId === null;
+      const isCurrent = currentSceneId === scene.id;
+      const isOnPath = pathToCurrentScene.has(scene.id);
+      const clickable = isSceneClickable(scene);
+      const visible = isSceneVisible(scene);
+
+      const boxX = x - NODE_WIDTH / 2;
+      const boxY = y - NODE_HEIGHT / 2;
+
+      // Wrap text into lines
+      const textLines = isGenesis ? ['START'] : wrapText(scene.slotLabel || 'Scene');
+
+      nodes.push(
+        <g
+          key={`node-${scene.id}`}
+          onClick={() => {
+            if (clickable) {
+              onSceneSelect(scene.id);
+              onClose();
+            }
+          }}
+          style={{ cursor: clickable ? 'pointer' : 'not-allowed' }}
+          opacity={visible ? 1 : 0.2}
         >
-          {/* Slot indicator or emoji for genesis */}
-          {isGenesis ? (
-            <span>🎬</span>
-          ) : (
-            <div className="text-2xl font-bold text-[#FFD700]">
-              {node.slot}
-            </div>
-          )}
-
-          {/* Current indicator */}
+          {/* Pulsating animation for current scene */}
           {isCurrent && (
-            <div className="absolute -top-2.5 -right-2.5 bg-[#FFD700]/30 border border-[#FFD700]/60 rounded px-[0.35rem] py-[0.15rem] text-[0.6rem] font-bold text-[#FFD700] uppercase tracking-[0.05em] z-[3]">
-              YOU
-            </div>
+            <defs>
+              <filter id="glow-pulse" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="12" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
           )}
-        </div>
 
-        {/* Children - horizontal layout below */}
-        {hasChildren && (
-          <div className="flex justify-center gap-8 mt-12 relative before:content-[''] before:absolute before:-top-12 before:left-1/2 before:w-0.5 before:h-8 before:bg-[#FFD700]/30 before:-translate-x-1/2">
-            {node.children.map((child) => (
-              <div key={child.id} className="relative flex flex-col items-center before:content-[''] before:absolute before:-top-8 before:left-1/2 before:w-0.5 before:h-8 before:bg-[#FFD700]/30 before:-translate-x-1/2">
-                {renderNode(child)}
-              </div>
+          {/* Node box */}
+          <rect
+            x={boxX}
+            y={boxY}
+            width={NODE_WIDTH}
+            height={NODE_HEIGHT}
+            fill={isCurrent ? "rgba(255, 215, 0, 0.3)" : "rgba(0, 0, 0, 0.85)"}
+            stroke={isCurrent ? "#FFD700" : isOnPath ? "#FFA500" : "rgba(255, 255, 255, 0.3)"}
+            strokeWidth={isCurrent ? "6" : "2"}
+            rx="14"
+            filter={isCurrent ? "url(#glow-pulse)" : undefined}
+          >
+            {isCurrent && (
+              <animate
+                attributeName="stroke-width"
+                values="6;10;6"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            )}
+          </rect>
+
+          {/* Pulsating glow effect */}
+          {isCurrent && (
+            <rect
+              x={boxX}
+              y={boxY}
+              width={NODE_WIDTH}
+              height={NODE_HEIGHT}
+              fill="none"
+              stroke="#FFD700"
+              strokeWidth="2"
+              rx="14"
+              opacity="0.6"
+            >
+              <animate
+                attributeName="opacity"
+                values="0.6;0;0.6"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="stroke-width"
+                values="2;6;2"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            </rect>
+          )}
+
+          {/* Genesis icon */}
+          {isGenesis && (
+            <text
+              x={x}
+              y={y - 18}
+              textAnchor="middle"
+              fontSize="40"
+            >
+              🎬
+            </text>
+          )}
+
+          {/* Scene label - multi-line with word wrap */}
+          <text
+            x={x}
+            y={y + (isGenesis ? 25 : (textLines.length === 1 ? 5 : -5))}
+            textAnchor="middle"
+            fill="#FFF"
+            fontSize={isGenesis ? "17" : "13"}
+            fontFamily="Source Code Pro"
+            fontWeight={isGenesis ? "bold" : "500"}
+          >
+            {textLines.map((line, i) => (
+              <tspan
+                key={i}
+                x={x}
+                dy={i === 0 ? 0 : "1.3em"}
+              >
+                {line}
+              </tspan>
             ))}
-          </div>
-        )}
-      </div>
-    );
+          </text>
+
+          {/* Current indicator badge - pulsating */}
+          {isCurrent && (
+            <>
+              <rect
+                x={boxX + NODE_WIDTH - 60}
+                y={boxY - 20}
+                width="70"
+                height="36"
+                fill="#FFD700"
+                rx="18"
+                stroke="#000"
+                strokeWidth="2"
+              >
+                <animate
+                  attributeName="opacity"
+                  values="1;0.7;1"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
+              </rect>
+              <text
+                x={boxX + NODE_WIDTH - 25}
+                y={boxY + 3}
+                textAnchor="middle"
+                fill="#000"
+                fontSize="16"
+                fontFamily="Source Code Pro"
+                fontWeight="bold"
+              >
+                YOU
+              </text>
+            </>
+          )}
+        </g>
+      );
+    });
+
+    return nodes;
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-0 left-0 w-screen h-screen bg-black/70 backdrop-blur-[5px] z-[150] flex items-center justify-center animate-fade-in pointer-events-auto">
-      <div className="w-[90%] max-w-[600px] max-h-[80vh] bg-black/85 border-[3px] border-white/30 rounded-xl backdrop-blur-md shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] animate-[flyIn_0.5s_cubic-bezier(0.34,1.56,0.64,1)] flex flex-col overflow-hidden sm:w-full sm:max-w-full sm:max-h-screen sm:rounded-none" ref={modalRef}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 md:px-6 md:py-4 sm:px-4 sm:py-4 border-b-2 border-white/20">
-          <h2 className="font-source-code text-2xl md:text-xl sm:text-lg font-bold text-[#FFD700] uppercase tracking-[0.1em] m-0">Story Map</h2>
+    <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-20 px-8 py-6 bg-gradient-to-b from-black/95 to-transparent border-b border-[#FFD700]/20">
+        <div className="flex items-center justify-between">
+          <h2 className="font-source-code text-2xl font-bold text-[#FFD700] uppercase tracking-wide">
+            Story Map
+          </h2>
           <button
-            className="bg-transparent border-2 border-white/30 rounded-md text-white/70 text-2xl w-10 h-10 flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-white/60 hover:text-white hover:bg-white/10"
+            className="bg-black/60 border-2 border-white/30 rounded-lg text-white text-xl w-12 h-12 flex items-center justify-center cursor-pointer hover:border-[#FFD700] transition-colors"
             onClick={onClose}
-            aria-label="Close map"
           >
             ✕
           </button>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 md:p-6 sm:p-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center min-h-[200px] font-source-code text-white/70 text-base">
-              <p>Loading map...</p>
+      {/* SVG Canvas */}
+      <div className="w-full h-full pt-24">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="text-[#FFD700] text-4xl mb-4">🗺️</div>
+              <p className="font-source-code text-white/70">Loading map...</p>
             </div>
-          ) : error ? (
-            <div className="flex items-center justify-center min-h-[200px] font-source-code text-[#FF6B6B] text-base">
-              <p>{error}</p>
-            </div>
-          ) : tree ? (
-            <div className="font-source-code flex flex-col items-center gap-12 p-4 min-w-full">
-              {renderNode(tree)}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center min-h-[200px] font-source-code text-white/70 text-base">
-              <p>No scenes found</p>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : tree && positions.size > 0 ? (
+          <svg
+            width="100%"
+            height="100%"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          >
+            <g transform={`translate(${panX}, ${panY}) scale(${zoom})`}>
+              {/* Render edges first (behind nodes) */}
+              {renderEdges()}
+              {/* Render nodes on top */}
+              {renderNodes()}
+            </g>
+          </svg>
+        ) : null}
+      </div>
 
-        {/* Footer */}
-        <div className="px-8 py-4 md:px-6 md:py-4 sm:px-4 sm:py-3 border-t-2 border-white/20 bg-black/30">
-          <p className="font-source-code text-[0.85rem] sm:text-[0.8rem] text-white/60 m-0 text-center">
-            Click any scene to jump there
-          </p>
-        </div>
+      {/* Controls hint */}
+      <div className="absolute bottom-8 left-8 bg-black/85 border-2 border-[#FFD700]/30 rounded-lg px-5 py-3 backdrop-blur-sm">
+        <p className="font-source-code text-white/70 text-sm m-0">
+          💡 Drag to pan • Scroll to zoom • Click adjacent scenes to navigate
+        </p>
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ import {
   Address
 } from "@coinbase/onchainkit/identity";
 import Video from "../../components/Video";
-import SlotChoiceModal from "../../components/SlotChoiceModal";
+import SwipeableSlotChoice from "../../components/SwipeableSlotChoice";
 import type { SceneData, PreloadedSlotsData } from "@/lib/types";
 
 export default function ScenePage() {
@@ -115,11 +115,11 @@ export default function ScenePage() {
     const previousScene = sceneHistory[sceneHistory.length - 1];
     const newHistory = sceneHistory.slice(0, -1);
 
-    setShowPopup(false);
     setPreloadedSlots(null);
     setSceneHistory(newHistory);
     setCurrentScene(previousScene);
-    setShowVideo(true);
+    // Keep modal visible and don't replay video
+    // Modal will immediately show slot options for previous scene
   };
 
   if (isLoading) {
@@ -181,14 +181,33 @@ export default function ScenePage() {
         createdAt={currentScene?.createdAt}
       />
 
+      {/* Hidden video elements for pre-caching next scenes */}
+      {showVideo && preloadedSlots?.slots && preloadedSlots.slots.map((slot) => {
+        // Only pre-cache completed slots with video URLs
+        if (slot.videoUrl && slot.status === 'completed') {
+          return (
+            <video
+              key={`precache-${currentScene?.sceneId}-${slot.slot}`}
+              src={slot.videoUrl}
+              preload="auto"
+              muted
+              playsInline
+              className="absolute opacity-0 pointer-events-none w-px h-px -z-10"
+            />
+          );
+        }
+        return null;
+      })}
+
       {/* Slot choice modal */}
-      <SlotChoiceModal
+      <SwipeableSlotChoice
         isVisible={showPopup}
         parentSceneId={currentScene?.sceneId ?? 'genesis'}
         onSlotSelected={handleSlotSelected}
         preloadedData={preloadedSlots}
         onBack={handleBack}
         canGoBack={sceneHistory.length > 0}
+        backToLabel={sceneHistory.length > 0 ? sceneHistory[sceneHistory.length - 1].slotLabel : null}
       />
     </div>
   );

@@ -157,6 +157,71 @@ Built as a Base mini app following the Base platform specifications: https://doc
   - **Padding**: Tightened to 0.5rem 0.75rem for minimal footprint
 - Method: Use browser DevTools → Inspect element → Find `data-testid` attributes → Target in CSS with `[data-testid="..."]` selectors
 
+#### Video Pre-Caching System
+Enables instant playback when navigating between scenes by pre-downloading videos during current scene playback.
+
+**How It Works:**
+
+1. **Slot Data Preloading** (During Video Playback)
+   - When video starts playing, `useEffect` triggers API call to `/api/scenes/{parentSceneId}/slots`
+   - API returns slot metadata including `videoUrl` for completed slots
+   - Data stored in `preloadedSlots` state
+   - Implemented in both `WatchMovie.tsx` (lines 152-178) and `app/scene/[id]/page.tsx` (lines 65-88)
+
+2. **Browser Video Pre-Caching** (Hidden Video Elements)
+   - Hidden `<video>` elements created for each completed slot with video URL
+   - Elements have `preload="auto"` attribute to trigger browser download
+   - Styled as invisible: `opacity-0 pointer-events-none w-px h-px -z-10`
+   - Browser automatically downloads and caches video files in background
+   - Implemented in `WatchMovie.tsx` (lines 391-404) and `app/scene/[id]/page.tsx` (lines 184-200)
+
+3. **Instant Playback** (Cache Utilization)
+   - When user selects a slot, `SwipeableSlotChoice` checks if `videoUrl` is cached
+   - If cached: logs `"✅ Using pre-cached video for slot X - instant playback!"` and plays immediately
+   - If not cached: shows loading spinner while fetching
+   - Video plays instantly because browser already has file in cache
+   - Implemented in `SwipeableSlotChoice.tsx` (lines 193-237)
+
+**Flow:**
+```
+User watches scene → API fetches next slots → Hidden <video> elements created
+→ Browser downloads videos → User selects slot → Instant playback!
+```
+
+**Performance Benefits:**
+- Zero latency for completed slots (videos already in browser cache)
+- Seamless navigation through story tree
+- Optimized bandwidth usage (preload happens during current video)
+- Mobile-friendly with `playsInline` attribute
+
+**Console Logs:**
+- `"✅ Slots and video URLs preloaded during video playback"` - Slot data fetched
+- `"✅ Using pre-cached video for slot X - instant playback!"` - Cache hit on selection
+
+#### Swipeable Navigation (2025-10-22)
+Mobile-first gesture-based interface for slot selection, replacing button-based modal.
+
+**Features:**
+- **Gesture Support**: Swipe left/right/down for slots A/B/C, swipe up to go back
+- **Click/Tap Support**: Desktop compatibility - click direction indicators directly
+- **Performance Optimized**:
+  - Swipe threshold: 60px (reduced from 100px for faster response)
+  - Velocity threshold: 0.5 px/ms (increased for more responsive flicks)
+  - Snappy transitions for instant feedback
+- **Smart Back Button**:
+  - Hides when no back navigation available (no "no back" text)
+  - Shows "Back to [slot label]" when history exists (e.g., "Back to The First Decision")
+  - Falls back to "Go back" if label unavailable
+- **No Video Replay on Back**: When going back, immediately shows slot options without replaying previous video
+- **Visual Distinction**: Available slots highlighted with gold color from movie theme palette
+- **Darkening Overlay**: Fades in after video ends to improve text readability
+
+**Implementation:**
+- `SwipeableSlotChoice.tsx` - Main gesture component
+- `WatchMovie.tsx` & `app/scene/[id]/page.tsx` - Integration points
+- Touch and mouse event handlers for cross-device support
+- Distance-based (60px) and velocity-based (0.5 px/ms) swipe detection
+
 ### Infrastructure Setup (2025-10-18)
 
 #### Video Storage

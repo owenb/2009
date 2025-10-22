@@ -16,15 +16,44 @@ interface SceneNode {
   children: SceneNode[];
 }
 
+// Cache configuration
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const cache = new Map<number, { tree: SceneNode; timestamp: number; totalScenes: number }>();
+
 /**
- * GET /api/scenes/tree
+ * GET /api/scenes/tree?movieId=1
  *
  * Fetches the entire scene tree structure for map visualization.
  * Returns a hierarchical tree starting from the genesis scene.
+ * Scoped by movie_id for multi-movie support.
+ * Cached for 5 minutes to optimize performance for thousands of scenes.
  */
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    // Fetch all scenes (only completed ones for the map)
+    // Get movie_id from query params (default to 1 for "2009" movie)
+    const { searchParams } = new URL(request.url);
+    const movieId = parseInt(searchParams.get('movieId') || '1', 10);
+
+    if (isNaN(movieId) || movieId < 1) {
+      return NextResponse.json(
+        { error: 'Invalid movieId parameter' },
+        { status: 400 }
+      );
+    }
+
+    // Check cache
+    const cached = cache.get(movieId);
+    const now = Date.now();
+    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+      console.log(`✅ Cache hit for movie ${movieId} tree (${cached.totalScenes} scenes)`);
+      return NextResponse.json({
+        tree: cached.tree,
+        totalScenes: cached.totalScenes,
+        cached: true
+      });
+    }
+
+    // Fetch all scenes (only completed ones for the map), scoped by movie_id
     const result = await pool.query(`
       SELECT
         id,
@@ -36,9 +65,9 @@ export async function GET(_request: NextRequest) {
         view_count as "viewCount",
         created_at as "createdAt"
       FROM scenes
-      WHERE status = 'completed'
+      WHERE status = 'completed' AND movie_id = $1
       ORDER BY created_at ASC
-    `);
+    `, [movieId]);
 
     const scenes = result.rows;
 
@@ -104,18 +133,29 @@ export async function GET(_request: NextRequest) {
       sortChildren(rootNode);
     }
 
-    return NextResponse.json({
-      tree: rootNode || {
-        id: 0,
-        parentId: null,
-        slot: null,
-        slotLabel: 'Intro',
-        status: 'completed',
-        creatorAddress: null,
-        viewCount: 0,
-        children: []
-      },
+    const treeData = rootNode || {
+      id: 0,
+      parentId: null,
+      slot: null,
+      slotLabel: 'Intro',
+      status: 'completed',
+      creatorAddress: null,
+      viewCount: 0,
+      children: []
+    };
+
+    // Update cache
+    cache.set(movieId, {
+      tree: treeData,
+      timestamp: now,
       totalScenes: scenes.length
+    });
+    console.log(`📦 Cached tree for movie ${movieId} (${scenes.length} scenes)`);
+
+    return NextResponse.json({
+      tree: treeData,
+      totalScenes: scenes.length,
+      cached: false
     });
 
   } catch (error) {
@@ -125,4 +165,12 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Invalidate cache for a specific movie (call when new scene created)
+ */
+export function invalidateMovieCache(movieId: number) {
+  cache.delete(movieId);
+  console.log(`🗑️ Invalidated cache for movie ${movieId}`);
 }
