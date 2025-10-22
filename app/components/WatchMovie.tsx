@@ -18,7 +18,7 @@ import {
 } from "@coinbase/onchainkit/identity";
 import Countdown from "./Countdown";
 import Video from "./Video";
-import SlotChoiceModal from "./SlotChoiceModal";
+import SwipeableSlotChoice from "./SwipeableSlotChoice";
 import SceneMapModal from "./SceneMapModal";
 import type { SceneData, PreloadedSlotsData, ActiveAttempt } from "@/lib/types";
 
@@ -217,9 +217,6 @@ export default function WatchMovie() {
     const previousScene = sceneHistory[sceneHistory.length - 1];
     const newHistory = sceneHistory.slice(0, -1);
 
-    // Hide modal
-    setShowPopup(false);
-
     // Clear preloaded slots
     setPreloadedSlots(null);
 
@@ -232,8 +229,8 @@ export default function WatchMovie() {
     // Update parent scene ID
     setParentSceneId(previousScene.sceneId);
 
-    // Show video
-    setShowVideo(true);
+    // Keep modal visible (don't hide it) and don't replay video
+    // The modal will immediately show slot options for the previous scene
   };
 
   const handleSceneSelectFromMap = async (sceneId: number) => {
@@ -410,13 +407,14 @@ export default function WatchMovie() {
       {!showVideo && <Countdown onComplete={handleCountdownComplete} />}
 
       {/* Slot choice modal */}
-      <SlotChoiceModal
+      <SwipeableSlotChoice
         isVisible={showPopup}
         parentSceneId={parentSceneId}
         onSlotSelected={handleSlotSelected}
         preloadedData={preloadedSlots}
         onBack={handleBack}
         canGoBack={sceneHistory.length > 0}
+        backToLabel={sceneHistory.length > 0 ? sceneHistory[sceneHistory.length - 1].slotLabel : null}
       />
 
       {/* Scene map modal */}
