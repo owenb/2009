@@ -14,10 +14,10 @@ import type { SceneData } from "@/lib/types";
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.000056";
 
-// Swipe thresholds - optimized for snappy, responsive feel
-const SWIPE_THRESHOLD = 60; // px - reduced for quicker response
+// Swipe thresholds - allow preview before snap
+const SWIPE_THRESHOLD = 120; // px - increased to allow more preview before snap
 const _MIN_SWIPE_DISTANCE = 20; // px - minimum to start visual feedback (reserved for future use)
-const VELOCITY_THRESHOLD = 0.5; // px/ms - increased for more responsive flicks
+const VELOCITY_THRESHOLD = 0.8; // px/ms - increased to require more intent
 
 type SwipeDirection = 'left' | 'right' | 'up' | 'down' | null;
 
@@ -156,12 +156,16 @@ export default function SwipeableSlotChoice({
     fetchSlots();
   }, [isVisible, parentSceneId, preloadedData]);
 
-  // Map slots to swipe directions
+  // Map slots to swipe directions (all inverted for natural mobile UX)
+  // Swipe left → reveals content from RIGHT (slot A positioned right)
+  // Swipe right → reveals content from LEFT (slot B positioned left)
+  // Swipe up → reveals content from BOTTOM (slot C positioned bottom)
+  // Swipe down → reveals content from TOP (back navigation positioned top)
   const directionMap = {
-    left: slots.find(s => s.slot === 'A') || null,
-    right: slots.find(s => s.slot === 'B') || null,
-    down: slots.find(s => s.slot === 'C') || null,
-    up: null // Reserved for back navigation
+    left: slots.find(s => s.slot === 'A') || null,  // Positioned RIGHT
+    right: slots.find(s => s.slot === 'B') || null, // Positioned LEFT
+    down: slots.find(s => s.slot === 'C') || null,  // Positioned BOTTOM
+    up: null // Back navigation (positioned TOP)
   };
 
   // Determine which empty slot should be available (sequential unlocking)
@@ -469,11 +473,13 @@ export default function SwipeableSlotChoice({
     setDragOffset({ x: deltaX, y: deltaY });
 
     // Determine dominant direction
-    // Horizontal: invert to match standard mobile UX (swipe left reveals right content)
+    // ALL gestures inverted to match mobile UX (swipe reveals content from that direction)
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Horizontal: swipe left reveals right content (slot B), swipe right reveals left content (slot A)
       setSwipeDirection(deltaX > 0 ? 'left' : 'right');
     } else {
-      setSwipeDirection(deltaY > 0 ? 'down' : 'up');
+      // Vertical: swipe down reveals top content (go back), swipe up reveals bottom content (slot C)
+      setSwipeDirection(deltaY > 0 ? 'up' : 'down');
     }
   };
 
@@ -503,7 +509,7 @@ export default function SwipeableSlotChoice({
   const handleSwipeComplete = (direction: SwipeDirection) => {
     if (!direction) return;
 
-    // Handle back gesture
+    // Handle back gesture (swipe down = go back up tree)
     if (direction === 'up') {
       if (onBack && canGoBack) {
         onBack();
@@ -513,7 +519,7 @@ export default function SwipeableSlotChoice({
       return;
     }
 
-    // Get the slot for this direction
+    // Get the slot for this direction (left, right, or down)
     const targetSlot = directionMap[direction as 'left' | 'right' | 'down'];
     if (!targetSlot) {
       // No slot mapped to this direction, just reset
@@ -646,11 +652,11 @@ export default function SwipeableSlotChoice({
       willChange: 'transform, opacity'
     };
 
-    // Position off-screen based on direction with more aggressive reveal
+    // Position off-screen based on direction with inverted gestures
     if (direction === 'left') {
       // Left slot (A) is on the RIGHT - swipe left (negative dragX) to reveal
       const reveal = Math.max(0, -dragX); // Only when swiping left
-      const opacity = Math.min(1, reveal / 100); // Fade in over 100px
+      const opacity = Math.min(1, reveal / 150); // Fade in over 150px
       positionStyle = {
         ...positionStyle,
         right: 0,
@@ -661,7 +667,7 @@ export default function SwipeableSlotChoice({
     } else if (direction === 'right') {
       // Right slot (B) is on the LEFT - swipe right (positive dragX) to reveal
       const reveal = Math.max(0, dragX); // Only when swiping right
-      const opacity = Math.min(1, reveal / 100);
+      const opacity = Math.min(1, reveal / 150);
       positionStyle = {
         ...positionStyle,
         left: 0,
@@ -670,9 +676,9 @@ export default function SwipeableSlotChoice({
         opacity
       };
     } else if (direction === 'down') {
-      // Down slot (C) is on the BOTTOM - swipe down (positive dragY) to reveal
-      const reveal = Math.max(0, dragY); // Only when swiping down
-      const opacity = Math.min(1, reveal / 100);
+      // Down slot (C) is on the BOTTOM - swipe UP (negative dragY) to reveal
+      const reveal = Math.max(0, -dragY); // Only when swiping UP (inverted!)
+      const opacity = Math.min(1, reveal / 150);
       positionStyle = {
         ...positionStyle,
         left: 0,
