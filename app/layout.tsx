@@ -6,6 +6,7 @@ import { RootProvider } from "./rootProvider";
 import { GenerationProvider } from "./contexts/GenerationContext";
 import GenerationNotificationBar from "./components/GenerationNotificationBar";
 import GlobalWallet from "./components/GlobalWallet";
+import MiniKitInitializer from "./components/MiniKitInitializer";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -45,14 +46,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${saira.variable}`}>
+    <html lang="en" suppressHydrationWarning className="bg-black">
+      <body className={`${inter.variable} ${saira.variable} bg-black`}>
         <RootProvider>
           <GenerationProvider>
+            <MiniKitInitializer />
             <GenerationNotificationBar />
             <GlobalWallet />
             <SafeArea>
-              <div className="max-w-[480px] mx-auto">
+              <div className="max-w-[480px] mx-auto bg-black min-h-screen">
                 {children}
               </div>
             </SafeArea>

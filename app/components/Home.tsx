@@ -87,7 +87,7 @@ export default function Home() {
   }, []);
 
   return (
-    <section className="px-4 py-8">
+    <section className="px-4 py-8 bg-black min-h-screen">
       {isLoading && offset === 0 ? (
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (

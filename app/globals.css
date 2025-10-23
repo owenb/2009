@@ -36,30 +36,25 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #171717;
+    /* Always use black background for Base mini app */
+    --background: #000000;
+    --foreground: #ffffff;
 
     /* Default movie theme colors (fallback for dynamic theming) */
     --movie-primary: #FFD700;
     --movie-secondary: #FFA500;
     --movie-accent: #FF6B35;
-    --movie-bg: #0a0a0a;
+    --movie-bg: #000000;
     --movie-bg-overlay: rgba(0, 0, 0, 0.85);
     --movie-text: #ffffff;
     --movie-text-muted: rgba(255, 255, 255, 0.85);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: #0a0a0a;
-      --foreground: #ededed;
-    }
   }
 
   html,
   body {
     max-width: 100vw;
     overflow-x: hidden;
+    background-color: #000000;
   }
 
   body {
