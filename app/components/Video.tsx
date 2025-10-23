@@ -39,6 +39,7 @@ export default function Video({
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [needsManualPlay, setNeedsManualPlay] = useState(false);
 
   // ENS name resolution
   const { data: ensName } = useEnsName({
@@ -87,6 +88,7 @@ export default function Video({
   useEffect(() => {
     // Reset tracking flag when scene changes
     setHasTrackedView(false);
+    setNeedsManualPlay(false);
 
     if (directUrl) {
       setVideoUrl(directUrl);
@@ -109,7 +111,6 @@ export default function Video({
 
     if (timeUntilRefresh > 0) {
       const timer = setTimeout(() => {
-        console.log('Refreshing video URL before expiration...');
         fetchVideoUrl();
       }, timeUntilRefresh);
 
@@ -127,26 +128,78 @@ export default function Video({
 
   // Play video when visible and track view
   useEffect(() => {
-    if (isVisible && videoRef.current && videoUrl) {
-      videoRef.current.play().catch((err) => {
-        console.error('Error playing video:', err);
-      });
+    if (!isVisible || !videoRef.current || !videoUrl) return;
 
-      // Track view (only once per scene load)
-      if (!hasTrackedView && sceneId !== null) {
-        trackSceneView({
-          sceneId,
-          viewerAddress,
-          viewerFid,
-          referrerSceneId
-        }).then((success) => {
-          if (success) {
-            setHasTrackedView(true);
-          }
+    let cancelled = false;
+
+    const attemptPlay = async () => {
+      try {
+        await videoRef.current!.play();
+        if (!cancelled) {
+          setNeedsManualPlay(false);
+        }
+      } catch (err: any) {
+        if (cancelled) return;
+
+        // Only show manual play button for actual autoplay policy blocks
+        // Ignore interruption errors (AbortError or interrupted by new load)
+        const isInterruption =
+          err.name === 'AbortError' ||
+          err.message?.includes('interrupted') ||
+          err.message?.includes('aborted');
+
+        if (!isInterruption) {
+          console.error('Video autoplay blocked by browser:', err.message);
+          setNeedsManualPlay(true);
+        }
+      }
+    };
+
+    attemptPlay();
+
+    // Track view (only once per scene load)
+    if (!hasTrackedView && sceneId !== null) {
+      trackSceneView({
+        sceneId,
+        viewerAddress,
+        viewerFid,
+        referrerSceneId
+      }).then((success) => {
+        if (success && !cancelled) {
+          setHasTrackedView(true);
+        }
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isVisible, videoUrl, hasTrackedView, sceneId, viewerAddress, viewerFid, referrerSceneId]);
+
+  // Manual play handler
+  const handleManualPlay = async () => {
+    if (!videoRef.current) return;
+
+    try {
+      // Ensure video is loaded before playing
+      if (videoRef.current.readyState < 2) {
+        await new Promise((resolve) => {
+          const handleCanPlay = () => {
+            videoRef.current?.removeEventListener('canplay', handleCanPlay);
+            resolve(undefined);
+          };
+          videoRef.current?.addEventListener('canplay', handleCanPlay);
+          videoRef.current?.load();
         });
       }
+
+      await videoRef.current.play();
+      setNeedsManualPlay(false);
+    } catch (err) {
+      console.error('Manual play failed:', err);
+      // Keep the button visible if it fails
     }
-  }, [isVisible, videoUrl, hasTrackedView, sceneId, viewerAddress, viewerFid, referrerSceneId]);
+  };
 
   // Toggle mute/unmute
   const toggleMute = () => {
@@ -159,13 +212,14 @@ export default function Video({
 
   return (
     <>
-      {/* Show loading spinner for non-intro videos */}
-      {isLoading && sceneId !== null && (
+      {/* Show loading spinner while video is loading */}
+      {isLoading && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white font-source-code z-[2]"
           style={{ opacity: isVisible ? 1 : 0 }}
         >
-          <p>Loading video...</p>
+          <div className="animate-spin h-8 w-8 border-4 border-white/20 border-t-white rounded-full mx-auto mb-3" />
+          <p className="text-sm">Loading video...</p>
         </div>
       )}
 
@@ -181,6 +235,21 @@ export default function Video({
           >
             Retry
           </button>
+        </div>
+      )}
+
+      {/* Manual play button - shown when autoplay is blocked */}
+      {needsManualPlay && isVisible && !error && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-[4]">
+          <button
+            onClick={handleManualPlay}
+            className="px-8 py-4 bg-white/20 backdrop-blur-md border-2 border-white/50 rounded-lg text-white font-source-code text-lg font-bold cursor-pointer transition-all duration-200 hover:bg-white/30 hover:border-white/70 hover:scale-105 active:scale-95"
+          >
+            ▶ Click to Play
+          </button>
+          <p className="mt-3 text-white/70 text-sm font-source-code">
+            Your browser blocked autoplay
+          </p>
         </div>
       )}
 

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Source_Code_Pro, Saira } from "next/font/google";
+import { Inter, Saira } from "next/font/google";
 import { SafeArea } from "@coinbase/onchainkit/minikit";
 import { minikitConfig } from "../minikit.config";
 import { RootProvider } from "./rootProvider";
+import { GenerationProvider } from "./contexts/GenerationContext";
+import GenerationNotificationBar from "./components/GenerationNotificationBar";
+import GlobalWallet from "./components/GlobalWallet";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,11 +34,6 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const sourceCodePro = Source_Code_Pro({
-  variable: "--font-source-code-pro",
-  subsets: ["latin"],
-});
-
 const saira = Saira({
   variable: "--font-saira",
   subsets: ["latin"],
@@ -47,12 +45,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <RootProvider>
-      <html lang="en">
-        <body className={`${inter.variable} ${sourceCodePro.variable} ${saira.variable}`}>
-          <SafeArea>{children}</SafeArea>
-        </body>
-      </html>
-    </RootProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${saira.variable}`}>
+        <RootProvider>
+          <GenerationProvider>
+            <GenerationNotificationBar />
+            <GlobalWallet />
+            <SafeArea>
+              <div className="max-w-[480px] mx-auto">
+                {children}
+              </div>
+            </SafeArea>
+          </GenerationProvider>
+        </RootProvider>
+      </body>
+    </html>
   );
 }

@@ -29,7 +29,6 @@
   --animate-checkmark-kick: checkmarkKick 0.2s ease-in-out 0.5s both;
 
   /* Font families */
-  --font-family-source-code: var(--font-source-code-pro), monospace;
   --font-family-saira: var(--font-saira), sans-serif;
   --font-family-inter: var(--font-inter), sans-serif;
 }
@@ -74,7 +73,7 @@
     background-color: rgba(0, 0, 0, 0.05);
     border-radius: 6px;
     border: 1px solid rgba(0, 0, 0, 0.1);
-    font-family: var(--font-source-code-pro), monospace;
+    font-family: monospace;
     font-size: 0.875rem;
     padding: 0.25rem 0.5rem calc(0.25rem + 2px);
   }
@@ -277,7 +276,7 @@
     border-radius: 8px !important;
     padding: 0.5rem 1rem !important;
     color: #fff !important;
-    font-family: var(--font-source-code-pro), monospace !important;
+    font-family: var(--font-saira), sans-serif !important;
     font-size: 0.8rem !important;
     font-weight: 600 !important;
     transition: all 0.2s ease !important;
@@ -325,7 +324,7 @@
 
   /* Style the address text */
   span[data-testid="ockIdentity_Text"] {
-    font-family: var(--font-source-code-pro), monospace !important;
+    font-family: var(--font-saira), sans-serif !important;
     font-size: 0.75rem !important; /* 12px */
     font-weight: 500 !important; /* Medium weight instead of semibold */
   }

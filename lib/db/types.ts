@@ -22,6 +22,7 @@ export interface Movie {
   genesis_scene_id: number | null;
   deposit_amount_wei: string | null; // NUMERIC stored as string
   scene_price_wei: string | null; // NUMERIC stored as string
+  color_scheme: Record<string, string> | null; // JSONB color scheme
   status: 'draft' | 'active' | 'paused' | 'archived';
   total_scenes: number;
   total_views: number;

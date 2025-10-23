@@ -24,6 +24,7 @@ type SwipeDirection = 'left' | 'right' | 'up' | 'down' | null;
 interface SwipeableSlotChoiceProps {
   isVisible: boolean;
   parentSceneId?: number | 'genesis';
+  movieSlug: string;
   onSlotSelected?: (sceneData: SceneData) => void;
   preloadedData?: { slots: SlotInfo[] } | null;
   onBack?: () => void;
@@ -34,6 +35,7 @@ interface SwipeableSlotChoiceProps {
 export default function SwipeableSlotChoice({
   isVisible,
   parentSceneId = 'genesis',
+  movieSlug,
   onSlotSelected,
   preloadedData,
   onBack,
@@ -87,7 +89,6 @@ export default function SwipeableSlotChoice({
     if (!isVisible) return;
 
     if (preloadedData?.slots) {
-      console.log('🚀 Using preloaded slots - instant display!');
       setSlots(preloadedData.slots);
       setIsLoading(false);
       setLoadError(null);
@@ -95,7 +96,6 @@ export default function SwipeableSlotChoice({
     }
 
     const fetchSlots = async () => {
-      console.log('⚠️ No preloaded data - fetching slots (fallback)');
       setIsLoading(true);
       setLoadError(null);
 
@@ -202,8 +202,6 @@ export default function SwipeableSlotChoice({
 
       if (!hasCachedVideo) {
         setLoadingSlot(slot);
-      } else {
-        console.log(`✅ Using pre-cached video for slot ${slot} - instant playback!`);
       }
 
       const response = await fetch('/api/play', {
@@ -247,9 +245,9 @@ export default function SwipeableSlotChoice({
     const hasActivePrompt = promptId && (promptOutcome === 'pending' || promptOutcome === 'generating');
 
     if (hasActivePrompt) {
-      router.push(`/generating?promptId=${promptId}&sceneId=${sceneId}`);
+      router.push(`/movie/${movieSlug}/generating?promptId=${promptId}&sceneId=${sceneId}`);
     } else {
-      router.push(`/create?attemptId=${attemptId}&sceneId=${sceneId}`);
+      router.push(`/movie/${movieSlug}/create?attemptId=${attemptId}&sceneId=${sceneId}`);
     }
   };
 
@@ -307,8 +305,6 @@ export default function SwipeableSlotChoice({
       setLockSceneId(lockData.sceneId);
       setStatusMessage('Lock acquired! Please confirm transaction...');
 
-      console.log('Lock acquired:', lockData);
-
       const numericParentId = parentSceneId === 'genesis' ? 0 : Number(parentSceneId);
 
       writeContract({
@@ -353,12 +349,10 @@ export default function SwipeableSlotChoice({
         }
 
         const data = await response.json();
-        console.log('Payment verified:', data);
-
         setStatusMessage('Payment verified! Redirecting...');
 
         setTimeout(() => {
-          router.push(`/create?attemptId=${data.attemptId}&sceneId=${lockSceneId}`);
+          router.push(`/movie/${movieSlug}/create?attemptId=${data.attemptId}&sceneId=${lockSceneId}`);
         }, 1000);
 
       } catch (error) {

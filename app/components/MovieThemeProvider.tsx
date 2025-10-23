@@ -32,7 +32,7 @@ export function MovieThemeProvider({
 }: MovieThemeProviderProps) {
   return (
     <div
-      className="min-h-screen w-full"
+      className="h-screen w-full"
       style={colorSchemeToCSS(colorScheme)}
     >
       {children}

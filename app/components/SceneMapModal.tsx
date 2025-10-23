@@ -10,6 +10,7 @@ interface SceneNode {
   status: string;
   creatorAddress: string | null;
   viewCount: number;
+  viewedByUser: boolean;
   children: SceneNode[];
 }
 
@@ -19,6 +20,7 @@ interface SceneMapModalProps {
   onSceneSelect: (sceneId: number) => void;
   currentSceneId?: number | null;
   movieId?: number;
+  viewerAddress?: string | null;
 }
 
 interface PositionedNode {
@@ -145,7 +147,8 @@ export default function SceneMapModal({
   onClose,
   onSceneSelect,
   currentSceneId,
-  movieId = 1
+  movieId = 1,
+  viewerAddress = null
 }: SceneMapModalProps) {
   const [tree, setTree] = useState<SceneNode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -164,7 +167,11 @@ export default function SceneMapModal({
     const fetchTree = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/scenes/tree?movieId=${movieId}`);
+        const url = viewerAddress
+          ? `/api/scenes/tree?movieId=${movieId}&viewerAddress=${encodeURIComponent(viewerAddress)}`
+          : `/api/scenes/tree?movieId=${movieId}`;
+
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch scene tree');
         const data = await response.json();
         setTree(data.tree);
@@ -176,7 +183,7 @@ export default function SceneMapModal({
     };
 
     fetchTree();
-  }, [isVisible, movieId]);
+  }, [isVisible, movieId, viewerAddress]);
 
   // Calculate layout when tree changes
   useEffect(() => {
@@ -219,17 +226,20 @@ export default function SceneMapModal({
     setZoom(newZoom);
   };
 
-  // Check if a scene is clickable (adjacent to current scene)
+  // Check if a scene is clickable
   const isSceneClickable = (scene: SceneNode): boolean => {
-    if (!currentSceneId) return true; // If no current scene, allow all
+    if (!currentSceneId) return scene.viewedByUser; // Only allow visited scenes if no current
     if (scene.id === currentSceneId) return false; // Can't click current scene
 
-    // Can click parent
+    // Can teleport to any visited scene
+    if (scene.viewedByUser) return true;
+
+    // Can click parent (go back)
     if (scene.children.some(child => child.id === currentSceneId)) {
       return true;
     }
 
-    // Can click children
+    // Can click children (go forward)
     const currentNode = Array.from(positions.values()).find(p => p.scene.id === currentSceneId);
     if (currentNode && currentNode.scene.children.some(child => child.id === scene.id)) {
       return true;
@@ -244,6 +254,9 @@ export default function SceneMapModal({
 
     // Current scene: always visible
     if (scene.id === currentSceneId) return true;
+
+    // Visited scenes: always visible (can teleport)
+    if (scene.viewedByUser) return true;
 
     // Scenes on the path from START to current: always visible
     if (pathToCurrentScene.has(scene.id)) return true;
@@ -390,17 +403,17 @@ export default function SceneMapModal({
             y={boxY}
             width={NODE_WIDTH}
             height={NODE_HEIGHT}
-            fill={isCurrent ? "rgba(255, 215, 0, 0.3)" : "rgba(0, 0, 0, 0.85)"}
-            stroke={isCurrent ? "#FFD700" : isOnPath ? "#FFA500" : "rgba(255, 255, 255, 0.3)"}
-            strokeWidth={isCurrent ? "6" : "2"}
+            fill={isCurrent ? "rgba(255, 165, 0, 0.4)" : "rgba(0, 0, 0, 0.85)"}
+            stroke={isCurrent ? "#FFA500" : isOnPath ? "#FFA500" : "rgba(255, 255, 255, 0.3)"}
+            strokeWidth={isCurrent ? "7" : "2"}
             rx="14"
             filter={isCurrent ? "url(#glow-pulse)" : undefined}
           >
             {isCurrent && (
               <animate
                 attributeName="stroke-width"
-                values="6;10;6"
-                dur="2s"
+                values="7;12;7"
+                dur="1.5s"
                 repeatCount="indefinite"
               />
             )}
@@ -414,21 +427,21 @@ export default function SceneMapModal({
               width={NODE_WIDTH}
               height={NODE_HEIGHT}
               fill="none"
-              stroke="#FFD700"
-              strokeWidth="2"
+              stroke="#FFA500"
+              strokeWidth="3"
               rx="14"
-              opacity="0.6"
+              opacity="0.8"
             >
               <animate
                 attributeName="opacity"
-                values="0.6;0;0.6"
-                dur="2s"
+                values="0.8;0;0.8"
+                dur="1.5s"
                 repeatCount="indefinite"
               />
               <animate
                 attributeName="stroke-width"
-                values="2;6;2"
-                dur="2s"
+                values="3;8;3"
+                dur="1.5s"
                 repeatCount="indefinite"
               />
             </rect>
@@ -467,7 +480,7 @@ export default function SceneMapModal({
             ))}
           </text>
 
-          {/* Current indicator badge - pulsating */}
+          {/* Current indicator badge - pulsating ORANGE */}
           {isCurrent && (
             <>
               <rect
@@ -475,15 +488,15 @@ export default function SceneMapModal({
                 y={boxY - 20}
                 width="70"
                 height="36"
-                fill="#FFD700"
+                fill="#FFA500"
                 rx="18"
                 stroke="#000"
-                strokeWidth="2"
+                strokeWidth="3"
               >
                 <animate
                   attributeName="opacity"
                   values="1;0.7;1"
-                  dur="2s"
+                  dur="1.5s"
                   repeatCount="indefinite"
                 />
               </rect>
@@ -492,7 +505,7 @@ export default function SceneMapModal({
                 y={boxY + 3}
                 textAnchor="middle"
                 fill="#000"
-                fontSize="16"
+                fontSize="17"
                 fontFamily="Source Code Pro"
                 fontWeight="bold"
               >

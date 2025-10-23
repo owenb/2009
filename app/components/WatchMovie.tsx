@@ -1,35 +1,28 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useRouter } from "next/navigation";
-import {
-  ConnectWallet,
-  Wallet,
-  WalletDropdown,
-  WalletDropdownDisconnect
-} from "@coinbase/onchainkit/wallet";
-import {
-  Avatar,
-  Name,
-  Identity,
-  Address
-} from "@coinbase/onchainkit/identity";
-import Countdown from "./Countdown";
 import Video from "./Video";
 import SwipeableSlotChoice from "./SwipeableSlotChoice";
 import SceneMapModal from "./SceneMapModal";
 import type { SceneData, PreloadedSlotsData, ActiveAttempt } from "@/lib/types";
 
-export default function WatchMovie() {
+interface WatchMovieProps {
+  movieId: number;
+  movieSlug: string;
+  genesisSceneId: number;
+}
+
+export default function WatchMovie({ movieId, movieSlug, genesisSceneId }: WatchMovieProps) {
   const { address } = useAccount(); // Get connected wallet address
   const { isFrameReady, setFrameReady } = useMiniKit(); // Base mini app initialization
   const router = useRouter();
-  const [showVideo, setShowVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(true); // Start with video visible
   const [showPopup, setShowPopup] = useState(false);
   const [currentScene, setCurrentScene] = useState<SceneData | null>(null);
-  const [parentSceneId, setParentSceneId] = useState<number | 'genesis'>('genesis');
+  const [parentSceneId, setParentSceneId] = useState<number | 'genesis'>(genesisSceneId);
   const [previousSceneId, setPreviousSceneId] = useState<number | null>(null);
   const [preloadedSlots, setPreloadedSlots] = useState<PreloadedSlotsData | null>(null);
   const [activeAttempts, setActiveAttempts] = useState<ActiveAttempt[]>([]);
@@ -37,49 +30,12 @@ export default function WatchMovie() {
   const [sceneHistory, setSceneHistory] = useState<SceneData[]>([]);
   const [showMapModal, setShowMapModal] = useState(false);
 
-  // Background animation state
-  const [bgScale, setBgScale] = useState(1);
-  const [bgOpacity, setBgOpacity] = useState(1);
-  const startTimeRef = useRef<number>(0);
-  const TOTAL_DURATION = 2500; // Match countdown duration (must match Countdown.tsx)
-
-  // Wallet visibility state
-  const [walletVisible, setWalletVisible] = useState(true);
-  const [walletOpacity, setWalletOpacity] = useState(1);
-
   // Signal to Base mini app that we're ready to display
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
     }
   }, [setFrameReady, isFrameReady]);
-
-  // Fade out wallet after connection
-  useEffect(() => {
-    if (!address) {
-      // User not connected - keep wallet visible
-      setWalletVisible(true);
-      setWalletOpacity(1);
-      return;
-    }
-
-    // User just connected - show for 3 seconds then fade out
-    setWalletVisible(true);
-    setWalletOpacity(1);
-
-    const fadeTimer = setTimeout(() => {
-      setWalletOpacity(0);
-    }, 3000);
-
-    const hideTimer = setTimeout(() => {
-      setWalletVisible(false);
-    }, 4000); // Extra 1 second for fade transition
-
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [address]);
 
   // Check for active attempts when user connects wallet
   useEffect(() => {
@@ -101,7 +57,6 @@ export default function WatchMovie() {
         if (data.hasActiveAttempts && data.attempts.length > 0) {
           setActiveAttempts(data.attempts);
           setShowResumeBanner(true);
-          console.log('✨ Found active attempts:', data.attempts);
         } else {
           setActiveAttempts([]);
           setShowResumeBanner(false);
@@ -113,41 +68,6 @@ export default function WatchMovie() {
 
     checkActiveAttempts();
   }, [address]);
-
-  // Initialize start time for background animation
-  useEffect(() => {
-    if (!showVideo) {
-      startTimeRef.current = performance.now();
-    }
-  }, [showVideo]);
-
-  // Animate background scale and opacity
-  useEffect(() => {
-    if (showVideo) return; // Stop animation when video starts
-
-    let animationFrameId: number;
-
-    const updateBackground = () => {
-      const elapsed = performance.now() - startTimeRef.current;
-      const progress = Math.min(elapsed / TOTAL_DURATION, 1);
-
-      // Scale from 1.0 to 1.8 (gets bigger)
-      const newScale = 1 + (progress * 0.8);
-      setBgScale(newScale);
-
-      // Fade out from 1 to 0
-      const newOpacity = 1 - progress;
-      setBgOpacity(newOpacity);
-
-      if (progress < 1) {
-        animationFrameId = requestAnimationFrame(updateBackground);
-      }
-    };
-
-    animationFrameId = requestAnimationFrame(updateBackground);
-
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [showVideo, TOTAL_DURATION]);
 
   // Preload slots for current scene when video starts playing
   useEffect(() => {
@@ -168,7 +88,6 @@ export default function WatchMovie() {
         }
         const data = await response.json();
         setPreloadedSlots(data);
-        console.log('✅ Slots and video URLs preloaded during video playback', data);
       } catch (err) {
         console.error('Error preloading slots:', err);
       }
@@ -176,10 +95,6 @@ export default function WatchMovie() {
 
     preloadSlots();
   }, [showVideo, parentSceneId]);
-
-  const handleCountdownComplete = () => {
-    setShowVideo(true);
-  };
 
   const handleVideoEnd = () => {
     setShowPopup(true);
@@ -240,11 +155,11 @@ export default function WatchMovie() {
     // Close slot choice modal if open
     setShowPopup(false);
 
-    // Special case: sceneId 1 is genesis, restart from beginning
-    if (sceneId === 1) {
+    // Special case: genesis scene ID, restart from beginning
+    if (sceneId === genesisSceneId) {
       // Reset to genesis state
       setCurrentScene(null);
-      setParentSceneId('genesis');
+      setParentSceneId(genesisSceneId);
       setSceneHistory([]);
       setPreviousSceneId(null);
       setPreloadedSlots(null);
@@ -292,20 +207,7 @@ export default function WatchMovie() {
   };
 
   return (
-    <div className="flex justify-center items-center w-full h-full relative overflow-hidden">
-      {/* Animated background image */}
-      {!showVideo && (
-        <div
-          className="absolute top-0 left-0 w-full h-full bg-cover bg-center z-0"
-          style={{
-            backgroundImage: 'url(/loading.jpg)',
-            transform: `scale(${bgScale})`,
-            opacity: bgOpacity,
-            transition: 'transform 0.016s linear, opacity 0.016s linear',
-          }}
-        />
-      )}
-
+    <div className="flex justify-center items-center w-full h-full relative overflow-hidden bg-black">
       {/* Resume banner - shown when user has active attempts */}
       {showResumeBanner && activeAttempts.length > 0 && (
         <div className="absolute top-5 left-1/2 -translate-x-1/2 z-[1001] rounded-xl px-6 py-4 backdrop-blur-md max-w-[500px]"
@@ -346,31 +248,6 @@ export default function WatchMovie() {
         </div>
       )}
 
-      {/* Wallet connection in top right */}
-      {walletVisible && (
-        <div
-          className="absolute top-5 right-5 z-[1000] transition-opacity duration-1000 ease-out"
-          style={{
-            opacity: walletOpacity,
-            pointerEvents: walletOpacity === 0 ? 'none' : 'auto'
-          }}>
-          <Wallet>
-            <ConnectWallet>
-              <Avatar className="h-6 w-6" />
-              <Name />
-            </ConnectWallet>
-            <WalletDropdown>
-              <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                <Avatar />
-                <Name />
-                <Address />
-              </Identity>
-              <WalletDropdownDisconnect />
-            </WalletDropdown>
-          </Wallet>
-        </div>
-      )}
-
       {/* Video player */}
       <Video
         sceneId={currentScene?.sceneId ?? null}
@@ -403,13 +280,11 @@ export default function WatchMovie() {
         return null;
       })}
 
-      {/* Countdown animation */}
-      {!showVideo && <Countdown onComplete={handleCountdownComplete} />}
-
       {/* Slot choice modal */}
       <SwipeableSlotChoice
         isVisible={showPopup}
         parentSceneId={parentSceneId}
+        movieSlug={movieSlug}
         onSlotSelected={handleSlotSelected}
         preloadedData={preloadedSlots}
         onBack={handleBack}
