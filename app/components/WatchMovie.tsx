@@ -289,7 +289,7 @@ export default function WatchMovie({ movieId: _movieId, movieSlug, genesisSceneI
         onSlotSelected={handleSlotSelected}
         preloadedData={preloadedSlots}
         onBack={handleBack}
-        canGoBack={sceneHistory.length > 0}
+        canGoBack={parentSceneId !== genesisSceneId}
         backToLabel={sceneHistory.length > 0 ? sceneHistory[sceneHistory.length - 1].slotLabel : null}
       />
 

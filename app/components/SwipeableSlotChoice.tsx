@@ -14,10 +14,10 @@ import type { SceneData } from "@/lib/types";
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const SCENE_PRICE = process.env.NEXT_PUBLIC_SCENE_PRICE || "0.000056";
 
-// Swipe thresholds - allow preview before snap
-const SWIPE_THRESHOLD = 120; // px - increased to allow more preview before snap
+// Swipe thresholds - allow much more preview before snap
+const SWIPE_THRESHOLD = 200; // px - very high to allow extensive preview before snap
 const _MIN_SWIPE_DISTANCE = 20; // px - minimum to start visual feedback (reserved for future use)
-const VELOCITY_THRESHOLD = 0.8; // px/ms - increased to require more intent
+const VELOCITY_THRESHOLD = 1.2; // px/ms - very high to require strong flick intent
 
 type SwipeDirection = 'left' | 'right' | 'up' | 'down' | null;
 

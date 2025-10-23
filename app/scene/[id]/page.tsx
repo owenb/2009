@@ -207,7 +207,7 @@ export default function ScenePage() {
         onSlotSelected={handleSlotSelected}
         preloadedData={preloadedSlots}
         onBack={handleBack}
-        canGoBack={sceneHistory.length > 0}
+        canGoBack={currentScene !== null}
         backToLabel={sceneHistory.length > 0 ? sceneHistory[sceneHistory.length - 1].slotLabel : null}
       />
     </div>
