@@ -51,11 +51,15 @@ export default function SwipeableSlotChoice({
 
   // Swipe state
   const [isDragging, setIsDragging] = useState(false);
-  const [_dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection>(null);
 
   const dragStartRef = useRef({ x: 0, y: 0, time: 0 });
-  const _cardRef = useRef<HTMLDivElement>(null);
+
+  // Video preview refs for each direction
+  const leftVideoRef = useRef<HTMLVideoElement>(null);
+  const rightVideoRef = useRef<HTMLVideoElement>(null);
+  const downVideoRef = useRef<HTMLVideoElement>(null);
 
   // ExtendStoryModal state
   const [showExtendModal, setShowExtendModal] = useState(false);
@@ -81,8 +85,41 @@ export default function SwipeableSlotChoice({
       setIsDragging(false);
       setDragOffset({ x: 0, y: 0 });
       setSwipeDirection(null);
+
+      // Pause and reset preview videos
+      if (leftVideoRef.current) {
+        leftVideoRef.current.pause();
+        leftVideoRef.current.currentTime = 0;
+      }
+      if (rightVideoRef.current) {
+        rightVideoRef.current.pause();
+        rightVideoRef.current.currentTime = 0;
+      }
+      if (downVideoRef.current) {
+        downVideoRef.current.pause();
+        downVideoRef.current.currentTime = 0;
+      }
     }
   }, [isVisible]);
+
+  // Load and pause preview videos when modal becomes visible
+  useEffect(() => {
+    if (!isVisible) return;
+
+    // Small delay to ensure videos are loaded
+    const timer = setTimeout(() => {
+      [leftVideoRef, rightVideoRef, downVideoRef].forEach(ref => {
+        if (ref.current) {
+          ref.current.load();
+          ref.current.currentTime = 0;
+          // Pause immediately to show first frame
+          ref.current.pause();
+        }
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isVisible, slots]);
 
   // Fetch slots when modal becomes visible (or use preloaded data)
   useEffect(() => {
@@ -544,8 +581,95 @@ export default function SwipeableSlotChoice({
     );
   };
 
+  // Calculate transforms for video previews based on drag offset
+  // Invert X for natural swipe behavior (swipe left reveals right content)
+  const previewTransforms = {
+    left: {
+      // Left slot positioned on RIGHT (off-screen right), slides in when swiping left (negative X)
+      x: Math.max(0, -dragOffset.x), // Only show when dragging left (negative offset)
+      opacity: Math.min(1, Math.abs(dragOffset.x) / 150)
+    },
+    right: {
+      // Right slot positioned on LEFT (off-screen left), slides in when swiping right (positive X)
+      x: Math.min(0, -dragOffset.x), // Only show when dragging right (positive offset)
+      opacity: Math.min(1, Math.abs(dragOffset.x) / 150)
+    },
+    down: {
+      // Down slot positioned on BOTTOM, slides in when swiping down (positive Y)
+      y: Math.max(0, -dragOffset.y), // Only show when dragging down (positive offset)
+      opacity: Math.min(1, Math.abs(dragOffset.y) / 150)
+    }
+  };
+
+  // Helper to render video preview
+  const renderVideoPreview = (
+    direction: 'left' | 'right' | 'down',
+    slot: SlotInfo | null,
+    videoRef: React.RefObject<HTMLVideoElement | null>
+  ) => {
+    if (!slot?.videoUrl || slot.status !== 'completed') return null;
+
+    let positionStyle: React.CSSProperties = {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      pointerEvents: 'none',
+      transition: isDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out'
+    };
+
+    // Position off-screen based on direction
+    if (direction === 'left') {
+      // Left slot content is on the RIGHT (swipe left to reveal)
+      const leftTransform = previewTransforms.left;
+      positionStyle = {
+        ...positionStyle,
+        right: 0,
+        top: 0,
+        transform: `translateX(${100 + (leftTransform.x * 100 / window.innerWidth)}%)`,
+        opacity: leftTransform.opacity
+      };
+    } else if (direction === 'right') {
+      // Right slot content is on the LEFT (swipe right to reveal)
+      const rightTransform = previewTransforms.right;
+      positionStyle = {
+        ...positionStyle,
+        left: 0,
+        top: 0,
+        transform: `translateX(${-100 + (rightTransform.x * 100 / window.innerWidth)}%)`,
+        opacity: rightTransform.opacity
+      };
+    } else if (direction === 'down') {
+      // Down slot content is on the BOTTOM
+      const downTransform = previewTransforms.down;
+      positionStyle = {
+        ...positionStyle,
+        left: 0,
+        bottom: 0,
+        transform: `translateY(${100 + (downTransform.y * 100 / window.innerHeight)}%)`,
+        opacity: downTransform.opacity
+      };
+    }
+
+    return (
+      <video
+        ref={videoRef}
+        src={slot.videoUrl}
+        style={positionStyle}
+        muted
+        playsInline
+        preload="auto"
+      />
+    );
+  };
+
   return (
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center z-10 pointer-events-none">
+    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center z-10 pointer-events-none overflow-hidden">
+      {/* Video preview peeks */}
+      {renderVideoPreview('left', directionMap.left, leftVideoRef)}
+      {renderVideoPreview('right', directionMap.right, rightVideoRef)}
+      {renderVideoPreview('down', directionMap.down, downVideoRef)}
+
       {/* Darkening overlay that fades in */}
       <div className="absolute inset-0 bg-black/60 animate-fade-in pointer-events-none" />
 
