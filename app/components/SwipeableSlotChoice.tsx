@@ -392,8 +392,9 @@ export default function SwipeableSlotChoice({
     setDragOffset({ x: deltaX, y: deltaY });
 
     // Determine dominant direction
+    // Horizontal: invert to match standard mobile UX (swipe left reveals right content)
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      setSwipeDirection(deltaX > 0 ? 'right' : 'left');
+      setSwipeDirection(deltaX > 0 ? 'left' : 'right');
     } else {
       setSwipeDirection(deltaY > 0 ? 'down' : 'up');
     }
