@@ -463,25 +463,25 @@ export default function SwipeableSlotChoice({
     handleSwipeComplete(direction);
   };
 
-  // Touch events (reserved for future use)
-  const _handleTouchStart = (e: React.TouchEvent) => {
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     handleDragStart(touch.clientX, touch.clientY);
   };
 
-  const _handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     handleDragMove(touch.clientX, touch.clientY);
     e.preventDefault(); // Prevent page scroll
   };
 
-  const _handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     const touch = e.changedTouches[0];
     handleDragEnd(touch.clientX, touch.clientY);
   };
 
-  // Mouse events (for desktop/tablet, reserved for future use)
-  const _handleMouseDown = (e: React.MouseEvent) => {
+  // Mouse events (for desktop/tablet)
+  const handleMouseDown = (e: React.MouseEvent) => {
     handleDragStart(e.clientX, e.clientY);
   };
 
@@ -550,9 +550,13 @@ export default function SwipeableSlotChoice({
 
       <div
         className="relative w-full h-full flex items-center justify-center pointer-events-auto"
+        onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{ touchAction: 'none' }}
       >
         {/* Status messages */}
