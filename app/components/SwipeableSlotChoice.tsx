@@ -607,14 +607,21 @@ export default function SwipeableSlotChoice({
     slot: SlotInfo | null,
     videoRef: React.RefObject<HTMLVideoElement | null>
   ) => {
-    if (!slot?.videoUrl || slot.status !== 'completed') return null;
+    if (!slot?.videoUrl || slot.status !== 'completed') {
+      console.log(`No video preview for ${direction}:`, { hasUrl: !!slot?.videoUrl, status: slot?.status });
+      return null;
+    }
 
+    console.log(`Rendering video preview for ${direction}:`, { url: slot.videoUrl, dragOffset });
+
+    // Use viewport units and CSS calc instead of window.innerWidth/Height for better SSR compatibility
     let positionStyle: React.CSSProperties = {
       position: 'absolute',
       width: '100%',
       height: '100%',
       objectFit: 'cover',
       pointerEvents: 'none',
+      zIndex: 5, // Above everything except UI controls
       transition: isDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out'
     };
 
@@ -622,31 +629,34 @@ export default function SwipeableSlotChoice({
     if (direction === 'left') {
       // Left slot content is on the RIGHT (swipe left to reveal)
       const leftTransform = previewTransforms.left;
+      const percentReveal = typeof window !== 'undefined' ? (leftTransform.x / window.innerWidth) * 100 : 0;
       positionStyle = {
         ...positionStyle,
         right: 0,
         top: 0,
-        transform: `translateX(${100 + (leftTransform.x * 100 / window.innerWidth)}%)`,
+        transform: `translateX(${100 - percentReveal}%)`,
         opacity: leftTransform.opacity
       };
     } else if (direction === 'right') {
       // Right slot content is on the LEFT (swipe right to reveal)
       const rightTransform = previewTransforms.right;
+      const percentReveal = typeof window !== 'undefined' ? Math.abs(rightTransform.x / window.innerWidth) * 100 : 0;
       positionStyle = {
         ...positionStyle,
         left: 0,
         top: 0,
-        transform: `translateX(${-100 + (rightTransform.x * 100 / window.innerWidth)}%)`,
+        transform: `translateX(${-100 + percentReveal}%)`,
         opacity: rightTransform.opacity
       };
     } else if (direction === 'down') {
       // Down slot content is on the BOTTOM
       const downTransform = previewTransforms.down;
+      const percentReveal = typeof window !== 'undefined' ? (downTransform.y / window.innerHeight) * 100 : 0;
       positionStyle = {
         ...positionStyle,
         left: 0,
         bottom: 0,
-        transform: `translateY(${100 + (downTransform.y * 100 / window.innerHeight)}%)`,
+        transform: `translateY(${100 - percentReveal}%)`,
         opacity: downTransform.opacity
       };
     }
@@ -665,13 +675,13 @@ export default function SwipeableSlotChoice({
 
   return (
     <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center z-10 pointer-events-none overflow-hidden">
-      {/* Video preview peeks */}
+      {/* Darkening overlay (behind video previews) */}
+      <div className="absolute inset-0 bg-black/60 animate-fade-in pointer-events-none z-0" />
+
+      {/* Video preview peeks (above overlay) */}
       {renderVideoPreview('left', directionMap.left, leftVideoRef)}
       {renderVideoPreview('right', directionMap.right, rightVideoRef)}
       {renderVideoPreview('down', directionMap.down, downVideoRef)}
-
-      {/* Darkening overlay that fades in */}
-      <div className="absolute inset-0 bg-black/60 animate-fade-in pointer-events-none" />
 
       <div
         className="relative w-full h-full flex items-center justify-center pointer-events-auto"
