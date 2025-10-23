@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import StoryMap from "./StoryMap";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 interface SceneMapModalProps {
   isVisible: boolean;
@@ -20,19 +20,8 @@ export default function SceneMapModal({
   movieId = 1,
   viewerAddress = null
 }: SceneMapModalProps) {
-  // Handle escape key to close
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isVisible, onClose]);
+  // Handle ESC key to close
+  useEscapeKey(onClose, isVisible);
 
   if (!isVisible) return null;
 
