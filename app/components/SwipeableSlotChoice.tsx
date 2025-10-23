@@ -164,6 +164,32 @@ export default function SwipeableSlotChoice({
     up: null // Reserved for back navigation
   };
 
+  // Determine which empty slot should be available (sequential unlocking)
+  const getFirstAvailableEmptySlot = (): 'A' | 'B' | 'C' | null => {
+    const slotOrder: ('A' | 'B' | 'C')[] = ['A', 'B', 'C'];
+
+    for (const slotLetter of slotOrder) {
+      const slot = slots.find(s => s.slot === slotLetter);
+      if (!slot) continue;
+
+      // Check if this slot is truly empty (no attempts, not locked, not completed)
+      const isEmpty = !slot.exists &&
+                      !slot.attemptId &&
+                      !slot.isLocked &&
+                      slot.status !== 'locked' &&
+                      slot.status !== 'verifying_payment' &&
+                      slot.status !== 'awaiting_prompt' &&
+                      slot.status !== 'generating' &&
+                      slot.status !== 'completed';
+
+      if (isEmpty) {
+        return slotLetter; // This is the first empty slot
+      }
+    }
+
+    return null; // All slots are taken
+  };
+
   // Determine slot state and action
   const getSlotState = (slotInfo: SlotInfo) => {
     // Filled slot (exists and completed)
@@ -216,7 +242,21 @@ export default function SwipeableSlotChoice({
       };
     }
 
-    // Empty/available slot
+    // Empty slot - check if this is the first available one
+    const firstAvailableSlot = getFirstAvailableEmptySlot();
+    const isThisSlotAvailable = firstAvailableSlot === slotInfo.slot;
+
+    if (!isThisSlotAvailable) {
+      // This slot is empty but not yet available (earlier slots must be filled first)
+      return {
+        type: 'locked' as const,
+        canInteract: false,
+        label: 'not yet available',
+        action: null
+      };
+    }
+
+    // This is the first available empty slot
     const slotIndex = slotInfo.slot.charCodeAt(0) - 'A'.charCodeAt(0);
     return {
       type: 'empty' as const,
@@ -581,26 +621,6 @@ export default function SwipeableSlotChoice({
     );
   };
 
-  // Calculate transforms for video previews based on drag offset
-  // Invert X for natural swipe behavior (swipe left reveals right content)
-  const previewTransforms = {
-    left: {
-      // Left slot positioned on RIGHT (off-screen right), slides in when swiping left (negative X)
-      x: Math.max(0, -dragOffset.x), // Only show when dragging left (negative offset)
-      opacity: Math.min(1, Math.abs(dragOffset.x) / 150)
-    },
-    right: {
-      // Right slot positioned on LEFT (off-screen left), slides in when swiping right (positive X)
-      x: Math.min(0, -dragOffset.x), // Only show when dragging right (positive offset)
-      opacity: Math.min(1, Math.abs(dragOffset.x) / 150)
-    },
-    down: {
-      // Down slot positioned on BOTTOM, slides in when swiping down (positive Y)
-      y: Math.max(0, -dragOffset.y), // Only show when dragging down (positive offset)
-      opacity: Math.min(1, Math.abs(dragOffset.y) / 150)
-    }
-  };
-
   // Helper to render video preview
   const renderVideoPreview = (
     direction: 'left' | 'right' | 'down',
@@ -608,56 +628,57 @@ export default function SwipeableSlotChoice({
     videoRef: React.RefObject<HTMLVideoElement | null>
   ) => {
     if (!slot?.videoUrl || slot.status !== 'completed') {
-      console.log(`No video preview for ${direction}:`, { hasUrl: !!slot?.videoUrl, status: slot?.status });
       return null;
     }
 
-    console.log(`Rendering video preview for ${direction}:`, { url: slot.videoUrl, dragOffset });
+    // Simpler, more aggressive reveal calculation
+    const dragX = dragOffset.x;
+    const dragY = dragOffset.y;
 
-    // Use viewport units and CSS calc instead of window.innerWidth/Height for better SSR compatibility
     let positionStyle: React.CSSProperties = {
       position: 'absolute',
       width: '100%',
       height: '100%',
       objectFit: 'cover',
       pointerEvents: 'none',
-      zIndex: 5, // Above everything except UI controls
-      transition: isDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out'
+      zIndex: 5,
+      transition: isDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out',
+      willChange: 'transform, opacity'
     };
 
-    // Position off-screen based on direction
+    // Position off-screen based on direction with more aggressive reveal
     if (direction === 'left') {
-      // Left slot content is on the RIGHT (swipe left to reveal)
-      const leftTransform = previewTransforms.left;
-      const percentReveal = typeof window !== 'undefined' ? (leftTransform.x / window.innerWidth) * 100 : 0;
+      // Left slot (A) is on the RIGHT - swipe left (negative dragX) to reveal
+      const reveal = Math.max(0, -dragX); // Only when swiping left
+      const opacity = Math.min(1, reveal / 100); // Fade in over 100px
       positionStyle = {
         ...positionStyle,
         right: 0,
         top: 0,
-        transform: `translateX(${100 - percentReveal}%)`,
-        opacity: leftTransform.opacity
+        transform: `translateX(calc(100% - ${reveal}px))`,
+        opacity
       };
     } else if (direction === 'right') {
-      // Right slot content is on the LEFT (swipe right to reveal)
-      const rightTransform = previewTransforms.right;
-      const percentReveal = typeof window !== 'undefined' ? Math.abs(rightTransform.x / window.innerWidth) * 100 : 0;
+      // Right slot (B) is on the LEFT - swipe right (positive dragX) to reveal
+      const reveal = Math.max(0, dragX); // Only when swiping right
+      const opacity = Math.min(1, reveal / 100);
       positionStyle = {
         ...positionStyle,
         left: 0,
         top: 0,
-        transform: `translateX(${-100 + percentReveal}%)`,
-        opacity: rightTransform.opacity
+        transform: `translateX(calc(-100% + ${reveal}px))`,
+        opacity
       };
     } else if (direction === 'down') {
-      // Down slot content is on the BOTTOM
-      const downTransform = previewTransforms.down;
-      const percentReveal = typeof window !== 'undefined' ? (downTransform.y / window.innerHeight) * 100 : 0;
+      // Down slot (C) is on the BOTTOM - swipe down (positive dragY) to reveal
+      const reveal = Math.max(0, dragY); // Only when swiping down
+      const opacity = Math.min(1, reveal / 100);
       positionStyle = {
         ...positionStyle,
         left: 0,
         bottom: 0,
-        transform: `translateY(${100 - percentReveal}%)`,
-        opacity: downTransform.opacity
+        transform: `translateY(calc(100% - ${reveal}px))`,
+        opacity
       };
     }
 
