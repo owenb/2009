@@ -170,7 +170,7 @@ export default function StoryMap({
   }
 
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div className={`w-full h-full overflow-hidden ${className}`}>
       <svg
         width="100%"
         height="100%"
@@ -184,7 +184,7 @@ export default function StoryMap({
         onTouchEnd={panZoomHandlers.handleTouchEnd}
         style={{
           cursor: panZoomState.isDragging ? 'grabbing' : 'grab',
-          touchAction: 'auto'
+          touchAction: 'none'
         }}
       >
         <g transform={`translate(${panZoomState.panX}, ${panZoomState.panY}) scale(${panZoomState.zoom})`}>

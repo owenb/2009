@@ -79,6 +79,7 @@ export function usePanZoom(options: UsePanZoomOptions = {}) {
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       // Two fingers - pinch to zoom
+      e.preventDefault(); // Prevent browser zoom immediately
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
       setLastPinchDistance(distance);
     }
@@ -87,7 +88,7 @@ export function usePanZoom(options: UsePanZoomOptions = {}) {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && lastPinchDistance !== null) {
-      // Only prevent default for two-finger pinch gestures
+      // Prevent default for two-finger pinch gestures
       e.preventDefault();
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
       const delta = (distance - lastPinchDistance) * 0.01;

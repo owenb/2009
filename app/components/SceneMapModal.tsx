@@ -39,8 +39,9 @@ export default function SceneMapModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm overflow-hidden"
       onClick={handleBackgroundClick}
+      style={{ touchAction: 'none' }}
     >
       {/* Header with Close Button */}
       <div className="absolute top-0 left-0 right-0 z-[250] px-4 sm:px-8 py-4 sm:py-6 bg-gradient-to-b from-black/95 to-transparent border-b border-[#FFD700]/20 pointer-events-none">
@@ -64,7 +65,11 @@ export default function SceneMapModal({
       </div>
 
       {/* StoryMap Canvas */}
-      <div className="w-full h-full pt-28 sm:pt-32" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="w-full h-full pt-28 sm:pt-32 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        style={{ touchAction: 'none' }}
+      >
         <StoryMap
           movieId={movieId}
           currentSceneId={currentSceneId}
