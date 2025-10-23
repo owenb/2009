@@ -225,7 +225,8 @@ export default function StoryMap({
     setZoom(newZoom);
   };
 
-  // Touch handlers for mobile pinch-to-zoom
+  // Touch handlers for mobile pinch-to-zoom only
+  // Single-finger gestures are left to Base app and normal click handlers
   const getTouchDistance = (touch1: React.Touch, touch2: React.Touch): number => {
     const dx = touch1.clientX - touch2.clientX;
     const dy = touch1.clientY - touch2.clientY;
@@ -237,32 +238,24 @@ export default function StoryMap({
       // Two fingers - pinch to zoom
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
       setLastPinchDistance(distance);
-    } else if (e.touches.length === 1) {
-      // Single finger - pan
-      setIsDragging(true);
-      setDragStart({ x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY });
     }
+    // Don't handle single-finger touches - let them work as normal taps/clicks
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault(); // Prevent native zoom/scroll
-
     if (e.touches.length === 2 && lastPinchDistance !== null) {
-      // Two fingers - pinch to zoom
+      // Only prevent default for two-finger pinch gestures
+      e.preventDefault();
       const distance = getTouchDistance(e.touches[0], e.touches[1]);
       const delta = (distance - lastPinchDistance) * 0.01;
       const newZoom = Math.max(0.3, Math.min(1.5, zoom + delta));
       setZoom(newZoom);
       setLastPinchDistance(distance);
-    } else if (e.touches.length === 1 && isDragging) {
-      // Single finger - pan
-      setPanX(e.touches[0].clientX - dragStart.x);
-      setPanY(e.touches[0].clientY - dragStart.y);
     }
+    // Single-finger touches: do nothing, let Base app handle them
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
     setLastPinchDistance(null);
   };
 
@@ -581,7 +574,7 @@ export default function StoryMap({
   }
 
   return (
-    <div className={`w-full h-full ${className}`} style={{ touchAction: 'none' }}>
+    <div className={`w-full h-full ${className}`}>
       <svg
         width="100%"
         height="100%"
@@ -595,7 +588,7 @@ export default function StoryMap({
         onTouchEnd={handleTouchEnd}
         style={{
           cursor: isDragging ? 'grabbing' : 'grab',
-          touchAction: 'none'
+          touchAction: 'auto'
         }}
       >
         <g transform={`translate(${panX}, ${panY}) scale(${zoom})`}>
@@ -607,9 +600,9 @@ export default function StoryMap({
       </svg>
 
       {/* Controls hint */}
-      <div className="absolute bottom-8 left-8 bg-black/85 border-2 border-[#FFD700]/30 rounded-lg px-5 py-3 backdrop-blur-sm pointer-events-none" style={{ touchAction: 'auto' }}>
+      <div className="absolute bottom-8 left-8 bg-black/85 border-2 border-[#FFD700]/30 rounded-lg px-5 py-3 backdrop-blur-sm pointer-events-none">
         <p className="font-saira text-white/70 text-sm m-0">
-          💡 Drag/pinch to pan/zoom • Click adjacent scenes to navigate
+          💡 Tap nodes to navigate • Pinch to zoom • Drag to pan (desktop)
         </p>
       </div>
     </div>
