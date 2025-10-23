@@ -14,9 +14,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // Filters and sorting
-  const [genre, setGenre] = useState<string>('');
-  const [search, setSearch] = useState<string>('');
-  const [sortBy, setSortBy] = useState<SortOption>('total_views');
+  const [genre, _setGenre] = useState<string>('');
+  const [search, _setSearch] = useState<string>('');
+  const [sortBy, _setSortBy] = useState<SortOption>('total_views');
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
 
@@ -85,8 +85,6 @@ export default function Home() {
   const loadMore = useCallback(() => {
     setOffset((prev) => prev + LIMIT);
   }, []);
-
-  const genres = ['sci-fi', 'thriller', 'horror', 'romance', 'comedy', 'fantasy', 'mystery'];
 
   return (
     <section className="px-4 py-8">

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MovieThemeProvider } from "@/app/components/MovieThemeProvider";
 import { MovieColorScheme, DEFAULT_COLOR_SCHEME } from "@/app/types/movie";
+import type { Movie } from "@/lib/db/types";
 
 interface CreatePageProps {
   params: Promise<{
@@ -25,7 +26,7 @@ function CreatePageContent({ movieSlug }: { movieSlug: string }) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [parentSceneLabel, setParentSceneLabel] = useState<string>('');
   const [isLoadingContext, setIsLoadingContext] = useState(true);
-  const [movieData, setMovieData] = useState<any>(null);
+  const [movieData, setMovieData] = useState<Movie | null>(null);
 
   // Fetch movie data
   useEffect(() => {

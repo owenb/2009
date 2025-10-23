@@ -42,7 +42,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
         <div className="text-center">
           <h1 className="text-2xl mb-4">Movie Not Ready</h1>
           <p className="text-white/70">
-            This movie doesn't have a starting scene yet. Check back soon!
+            This movie doesn&apos;t have a starting scene yet. Check back soon!
           </p>
         </div>
       </div>

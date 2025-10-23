@@ -51,11 +51,11 @@ export default function SwipeableSlotChoice({
 
   // Swipe state
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [_dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection>(null);
 
   const dragStartRef = useRef({ x: 0, y: 0, time: 0 });
-  const cardRef = useRef<HTMLDivElement>(null);
+  const _cardRef = useRef<HTMLDivElement>(null);
 
   // ExtendStoryModal state
   const [showExtendModal, setShowExtendModal] = useState(false);
@@ -363,7 +363,7 @@ export default function SwipeableSlotChoice({
     };
 
     verifyPayment();
-  }, [isConfirmed, hash, lockSceneId, address, router]);
+  }, [isConfirmed, hash, lockSceneId, address, router, movieSlug]);
 
   // Show transaction error
   useEffect(() => {
@@ -463,25 +463,25 @@ export default function SwipeableSlotChoice({
     handleSwipeComplete(direction);
   };
 
-  // Touch events
-  const handleTouchStart = (e: React.TouchEvent) => {
+  // Touch events (reserved for future use)
+  const _handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     handleDragStart(touch.clientX, touch.clientY);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const _handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     handleDragMove(touch.clientX, touch.clientY);
     e.preventDefault(); // Prevent page scroll
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const _handleTouchEnd = (e: React.TouchEvent) => {
     const touch = e.changedTouches[0];
     handleDragEnd(touch.clientX, touch.clientY);
   };
 
-  // Mouse events (for desktop/tablet)
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Mouse events (for desktop/tablet, reserved for future use)
+  const _handleMouseDown = (e: React.MouseEvent) => {
     handleDragStart(e.clientX, e.clientY);
   };
 
@@ -673,15 +673,7 @@ export default function SwipeableSlotChoice({
               );
             })()}
 
-            {/* Central instruction - small, unobtrusive */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
-              <div
-                className="font-source-code text-sm text-white/40 text-center px-4 py-2 bg-black/30 rounded-lg backdrop-blur-sm"
-                style={{ textWrap: 'balance' } as React.CSSProperties}
-              >
-                swipe or tap
-              </div>
-            </div>
+           
           </>
         )}
 
@@ -691,8 +683,7 @@ export default function SwipeableSlotChoice({
             onClick={() => setShowMapModal(true)}
             className="font-source-code text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 flex items-center gap-1 hover:text-white/90"
           >
-            <span>🗺️</span>
-            <span>Story Map</span>
+            <span>Story map</span>
           </button>
 
           <button

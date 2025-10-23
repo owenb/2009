@@ -15,6 +15,7 @@ export interface SceneData {
   creatorAddress: string | null;
   creatorFid: number | null;
   createdAt: string;
+  movieSlug: string;
 }
 
 /**

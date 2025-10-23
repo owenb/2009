@@ -138,18 +138,19 @@ export default function Video({
         if (!cancelled) {
           setNeedsManualPlay(false);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (cancelled) return;
 
         // Only show manual play button for actual autoplay policy blocks
         // Ignore interruption errors (AbortError or interrupted by new load)
+        const error = err as Error;
         const isInterruption =
-          err.name === 'AbortError' ||
-          err.message?.includes('interrupted') ||
-          err.message?.includes('aborted');
+          error.name === 'AbortError' ||
+          error.message?.includes('interrupted') ||
+          error.message?.includes('aborted');
 
         if (!isInterruption) {
-          console.error('Video autoplay blocked by browser:', err.message);
+          console.error('Video autoplay blocked by browser:', error.message);
           setNeedsManualPlay(true);
         }
       }

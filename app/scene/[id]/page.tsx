@@ -203,6 +203,7 @@ export default function ScenePage() {
       <SwipeableSlotChoice
         isVisible={showPopup}
         parentSceneId={currentScene?.sceneId ?? 'genesis'}
+        movieSlug={sceneData?.movieSlug || '2009'}
         onSlotSelected={handleSlotSelected}
         preloadedData={preloadedSlots}
         onBack={handleBack}

@@ -8,6 +8,7 @@ import SwipeableSlotChoice from "@/app/components/SwipeableSlotChoice";
 import { MovieThemeProvider } from "@/app/components/MovieThemeProvider";
 import { MovieColorScheme, DEFAULT_COLOR_SCHEME } from "@/app/types/movie";
 import type { SceneData, PreloadedSlotsData } from "@/lib/types";
+import type { Movie } from "@/lib/db/types";
 
 interface ScenePageProps {
   params: Promise<{
@@ -22,7 +23,7 @@ export default function ScenePage({ params }: ScenePageProps) {
   const [movieSlug, setMovieSlug] = useState<string>('');
   const [sceneId, setSceneId] = useState<string>('');
   const [sceneData, setSceneData] = useState<SceneData | null>(null);
-  const [movieData, setMovieData] = useState<any>(null);
+  const [movieData, setMovieData] = useState<Movie | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showVideo, setShowVideo] = useState(false);

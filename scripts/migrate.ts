@@ -2,12 +2,17 @@
 /**
  * Database Migration Runner
  *
- * Usage: POSTGRES_URL=xxx npm run db:migrate
+ * Usage: npm run db:migrate
+ * Or: POSTGRES_URL=xxx npm run db:migrate
  */
 
+import { config } from 'dotenv';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { Client } from 'pg';
+
+// Load environment variables from .env.local
+config({ path: join(__dirname, '../.env.local') });
 
 const MIGRATIONS_DIR = join(__dirname, '../migrations');
 
@@ -78,6 +83,7 @@ async function main() {
 
   if (!connectionString) {
     console.error('Error: POSTGRES_URL environment variable is required');
+    console.error('Make sure it is set in .env.local or pass it directly:');
     console.error('Usage: POSTGRES_URL=xxx npm run db:migrate');
     process.exit(1);
   }

@@ -15,7 +15,7 @@ interface WatchMovieProps {
   genesisSceneId: number;
 }
 
-export default function WatchMovie({ movieId, movieSlug, genesisSceneId }: WatchMovieProps) {
+export default function WatchMovie({ movieId: _movieId, movieSlug, genesisSceneId }: WatchMovieProps) {
   const { address } = useAccount(); // Get connected wallet address
   const { isFrameReady, setFrameReady } = useMiniKit(); // Base mini app initialization
   const router = useRouter();
@@ -189,7 +189,8 @@ export default function WatchMovie({ movieId, movieSlug, genesisSceneId }: Watch
         slotLabel: sceneData.slotLabel,
         creatorAddress: sceneData.creatorAddress,
         creatorFid: sceneData.creatorFid,
-        createdAt: sceneData.createdAt
+        createdAt: sceneData.createdAt,
+        movieSlug: movieSlug
       });
 
       // Update parent scene ID for next modal

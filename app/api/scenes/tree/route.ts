@@ -197,8 +197,10 @@ export async function GET(request: NextRequest) {
 
 /**
  * Invalidate cache for a specific movie (call when new scene created)
+ * Note: Not exported as route files can only export HTTP handlers.
+ * Can be used internally or moved to a separate utility file if needed elsewhere.
  */
-export function invalidateMovieCache(movieId: number) {
+function _invalidateMovieCache(movieId: number) {
   cache.delete(movieId);
   console.log(`🗑️ Invalidated cache for movie ${movieId}`);
 }

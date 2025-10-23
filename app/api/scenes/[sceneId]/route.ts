@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSceneById, getSceneVideoUrl } from "@/lib/db/scenes";
+import { getMovieById } from "@/lib/db/movies";
 
 export async function GET(
   _request: Request,
@@ -16,7 +17,8 @@ export async function GET(
         slotLabel: 'Genesis Scene',
         creatorAddress: null,
         creatorFid: null,
-        createdAt: new Date('2009-01-03').toISOString()
+        createdAt: new Date('2009-01-03').toISOString(),
+        movieSlug: '2009' // Default movie slug for genesis scenes
       });
     }
 
@@ -30,13 +32,24 @@ export async function GET(
       );
     }
 
+    // Fetch movie to get slug
+    const movie = await getMovieById(scene.movie_id);
+
+    if (!movie) {
+      return NextResponse.json(
+        { error: 'Movie not found for this scene' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({
       sceneId: scene.id,
       videoUrl: getSceneVideoUrl(scene.id),
       slotLabel: scene.slot_label || `Slot ${scene.slot}`,
       creatorAddress: scene.creator_address,
       creatorFid: scene.creator_fid,
-      createdAt: scene.created_at
+      createdAt: scene.created_at,
+      movieSlug: movie.slug
     });
 
   } catch (error) {

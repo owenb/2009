@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useComposeCast } from "@coinbase/onchainkit/minikit";
 import { MovieThemeProvider } from "@/app/components/MovieThemeProvider";
 import { MovieColorScheme, DEFAULT_COLOR_SCHEME } from "@/app/types/movie";
+import type { Movie } from "@/lib/db/types";
 
 interface GeneratingPageProps {
   params: Promise<{
@@ -26,7 +27,7 @@ function GeneratingPageContent({ movieSlug }: { movieSlug: string }) {
   const [progress, setProgress] = useState(0);
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [completedSceneId, setCompletedSceneId] = useState<string | null>(null);
-  const [movieData, setMovieData] = useState<any>(null);
+  const [movieData, setMovieData] = useState<Movie | null>(null);
 
   // Fetch movie data
   useEffect(() => {
