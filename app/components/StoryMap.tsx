@@ -157,6 +157,7 @@ export default function StoryMap({
   const [panY, setPanY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(null);
 
   // Fetch scene tree
   useEffect(() => {
@@ -222,6 +223,47 @@ export default function StoryMap({
     const delta = e.deltaY * -0.0005;
     const newZoom = Math.max(0.3, Math.min(1.5, zoom + delta));
     setZoom(newZoom);
+  };
+
+  // Touch handlers for mobile pinch-to-zoom
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch): number => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Two fingers - pinch to zoom
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      setLastPinchDistance(distance);
+    } else if (e.touches.length === 1) {
+      // Single finger - pan
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent native zoom/scroll
+
+    if (e.touches.length === 2 && lastPinchDistance !== null) {
+      // Two fingers - pinch to zoom
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      const delta = (distance - lastPinchDistance) * 0.01;
+      const newZoom = Math.max(0.3, Math.min(1.5, zoom + delta));
+      setZoom(newZoom);
+      setLastPinchDistance(distance);
+    } else if (e.touches.length === 1 && isDragging) {
+      // Single finger - pan
+      setPanX(e.touches[0].clientX - dragStart.x);
+      setPanY(e.touches[0].clientY - dragStart.y);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setLastPinchDistance(null);
   };
 
   // Check if a scene is clickable
@@ -539,7 +581,7 @@ export default function StoryMap({
   }
 
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div className={`w-full h-full ${className}`} style={{ touchAction: 'none' }}>
       <svg
         width="100%"
         height="100%"
@@ -548,7 +590,13 @@ export default function StoryMap({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none'
+        }}
       >
         <g transform={`translate(${panX}, ${panY}) scale(${zoom})`}>
           {/* Render edges first (behind nodes) */}
@@ -559,9 +607,9 @@ export default function StoryMap({
       </svg>
 
       {/* Controls hint */}
-      <div className="absolute bottom-8 left-8 bg-black/85 border-2 border-[#FFD700]/30 rounded-lg px-5 py-3 backdrop-blur-sm pointer-events-none">
+      <div className="absolute bottom-8 left-8 bg-black/85 border-2 border-[#FFD700]/30 rounded-lg px-5 py-3 backdrop-blur-sm pointer-events-none" style={{ touchAction: 'auto' }}>
         <p className="font-saira text-white/70 text-sm m-0">
-          💡 Drag to pan • Scroll to zoom • Click adjacent scenes to navigate
+          💡 Drag/pinch to pan/zoom • Click adjacent scenes to navigate
         </p>
       </div>
     </div>
