@@ -6,7 +6,7 @@ import { useComposeCast } from "@coinbase/onchainkit/minikit";
 import { trackSceneView } from "@/lib/analytics";
 
 interface VideoProps {
-  sceneId: number | null; // null for genesis/intro scene, number for all other scenes
+  sceneId: number; // Scene ID (genesis scenes have their own IDs like 0 for 2009, 100 for Mochi)
   isVisible: boolean;
   onVideoEnd: () => void;
   directUrl?: string; // Optional: if provided, use this URL instead of fetching
@@ -52,7 +52,6 @@ export default function Video({
 
   // Handle sharing the scene
   const handleShare = () => {
-    if (!sceneId) return; // Don't share genesis/intro
     const sceneUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/scene/${sceneId}`;
     composeCast({
       text: `Check out this alternate 2009 timeline! 🎬✨`,
@@ -66,8 +65,7 @@ export default function Video({
     setError(null);
 
     try {
-      const sceneIdParam = sceneId === null ? 'genesis' : sceneId;
-      const response = await fetch(`/api/scenes/${sceneIdParam}/video`);
+      const response = await fetch(`/api/scenes/${sceneId}/video`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch video URL');
@@ -182,7 +180,7 @@ export default function Video({
     attemptPlay();
 
     // Track view (only once per scene load)
-    if (!hasTrackedView && sceneId !== null) {
+    if (!hasTrackedView) {
       trackSceneView({
         sceneId,
         viewerAddress,
@@ -313,23 +311,21 @@ export default function Video({
             <span>{isMuted ? "UNMUTE" : "MUTE"}</span>
           </button>
 
-          {/* Share button - only show for non-genesis scenes */}
-          {sceneId !== null && (
-            <button
-              onClick={handleShare}
-              className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-saira text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
-              aria-label="Share this scene"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="18" cy="5" r="3" />
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="19" r="3" />
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-              </svg>
-              <span>SHARE</span>
-            </button>
-          )}
+          {/* Share button */}
+          <button
+            onClick={handleShare}
+            className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-source-code text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
+            aria-label="Share this scene"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <span>SHARE</span>
+          </button>
         </div>
       )}
 

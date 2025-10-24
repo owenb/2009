@@ -169,17 +169,19 @@ export default function ScenePage() {
       </div>
 
       {/* Video player */}
-      <Video
-        sceneId={currentScene?.sceneId ?? null}
-        isVisible={showVideo}
-        onVideoEnd={handleVideoEnd}
-        directUrl={currentScene?.videoUrl}
-        creatorAddress={currentScene?.creatorAddress}
-        creatorFid={currentScene?.creatorFid}
-        slotLabel={currentScene?.slotLabel}
-        viewerAddress={address}
-        createdAt={currentScene?.createdAt}
-      />
+      {currentScene && (
+        <Video
+          sceneId={currentScene.sceneId}
+          isVisible={showVideo}
+          onVideoEnd={handleVideoEnd}
+          directUrl={currentScene.videoUrl}
+          creatorAddress={currentScene.creatorAddress}
+          creatorFid={currentScene.creatorFid}
+          slotLabel={currentScene.slotLabel}
+          viewerAddress={address}
+          createdAt={currentScene.createdAt}
+        />
+      )}
 
       {/* Hidden video elements for pre-caching next scenes */}
       {showVideo && preloadedSlots?.slots && preloadedSlots.slots.map((slot) => {

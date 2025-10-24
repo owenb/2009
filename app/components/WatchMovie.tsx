@@ -278,7 +278,7 @@ export default function WatchMovie({ movieId: _movieId, movieSlug, genesisSceneI
 
       {/* Video player */}
       <Video
-        sceneId={currentScene?.sceneId ?? null}
+        sceneId={currentScene?.sceneId ?? genesisSceneId}
         isVisible={showVideo}
         onVideoEnd={handleVideoEnd}
         directUrl={currentScene?.videoUrl}

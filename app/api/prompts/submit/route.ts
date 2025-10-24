@@ -47,9 +47,10 @@ export async function POST(request: NextRequest) {
 
     // Verify attempt exists and is still valid
     const attemptResult = await query<AttemptRow>(`
-      SELECT id, scene_id, outcome, retry_window_expires_at
-      FROM scene_generation_attempts
-      WHERE id = $1
+      SELECT sga.id, sga.scene_id, sga.outcome, sga.retry_window_expires_at, s.status as scene_status
+      FROM scene_generation_attempts sga
+      JOIN scenes s ON sga.scene_id = s.id
+      WHERE sga.id = $1
     `, [attemptId]);
 
     if (attemptResult.rowCount === 0) {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const attempt = attemptResult.rows[0];
+    const attempt = attemptResult.rows[0] as AttemptRow & { scene_status: string };
 
     // Check if attempt is still in progress
     if (attempt.outcome !== 'in_progress') {
@@ -89,6 +90,27 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: 'Retry window has expired' },
+        { status: 400 }
+      );
+    }
+
+    // Check prompt limit (max 3 attempts per scene generation)
+    const promptCountResult = await query<{ count: string }>(`
+      SELECT COUNT(*) as count
+      FROM prompts
+      WHERE attempt_id = $1
+    `, [attemptId]);
+
+    const promptCount = parseInt(promptCountResult.rows[0].count);
+
+    if (promptCount >= 3) {
+      return NextResponse.json(
+        {
+          error: 'Maximum prompt limit reached',
+          message: 'You have used all 3 prompt attempts. Please confirm your best scene or request a refund.',
+          promptsUsed: promptCount,
+          maxPrompts: 3
+        },
         { status: 400 }
       );
     }

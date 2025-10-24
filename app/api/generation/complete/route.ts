@@ -10,6 +10,7 @@ import { query } from '@/lib/db';
 import { downloadSoraVideo } from '@/lib/sora';
 import { uploadVideoToR2 } from '@/lib/r2';
 import { generateSlotLabel } from '@/lib/generateSlotLabel';
+import { uploadMetadataToPinata } from '@/lib/pinata';
 
 interface CompleteRequest {
   promptId: number;
@@ -154,7 +155,24 @@ export async function POST(request: NextRequest) {
       slotLabel = 'new scene';
     }
 
-    // Step 4: Update database - mark everything as complete
+    // Step 4: Upload metadata to IPFS
+    let metadataURI: string;
+    try {
+      console.log('[Complete] Uploading metadata to Pinata...');
+      metadataURI = await uploadMetadataToPinata(
+        sceneId,
+        promptRow.movie_slug,
+        r2Url,
+        slotLabel
+      );
+      console.log(`[Complete] ✓ Metadata uploaded: ${metadataURI}`);
+    } catch (error) {
+      console.error('[Complete] ❌ Pinata upload failed:', error);
+      // Fallback: use R2 URL directly (not ideal but prevents total failure)
+      metadataURI = r2Url;
+    }
+
+    // Step 5: Update database - mark as awaiting confirmation (NOT completed!)
     try {
       // Update prompts table
       await query(`
@@ -174,26 +192,28 @@ export async function POST(request: NextRequest) {
         WHERE id = $1
       `, [promptRow.attempt_id]);
 
-      // Update scenes table - THIS IS THE BIG ONE
+      // Update scenes table - mark as awaiting_confirmation (video ready, needs user confirmation)
       await query(`
         UPDATE scenes
         SET
-          status = 'completed',
+          status = 'awaiting_confirmation',
           creator_address = $1,
           creator_fid = $2,
           current_attempt_id = $3,
           slot_label = $4,
+          metadata_uri = $5,
           updated_at = NOW()
-        WHERE id = $5
+        WHERE id = $6
       `, [
         promptRow.creator_address,
         promptRow.creator_fid,
         promptRow.attempt_id,
         slotLabel,
+        metadataURI,
         sceneId
       ]);
 
-      console.log(`Scene ${sceneId} completed successfully!`);
+      console.log(`[Complete] ✓ Scene ${sceneId} ready for confirmation`);
 
     } catch (error) {
       console.error('Failed to update database:', error);
@@ -206,15 +226,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get prompt count for this attempt
+    const promptCountResult = await query(`
+      SELECT COUNT(*) as count
+      FROM prompts
+      WHERE attempt_id = $1
+    `, [promptRow.attempt_id]);
+
+    const promptCount = parseInt((promptCountResult.rows[0] as { count: string }).count);
+
     // Success!
     return NextResponse.json({
       success: true,
       sceneId,
       videoUrl: r2Url,
+      metadataURI,
       slotLabel,
       parentId: promptRow.parent_id,
       slot: promptRow.slot,
-      message: 'Video generation completed successfully'
+      attemptId: promptRow.attempt_id,
+      promptCount,
+      message: 'Video ready - please confirm or request refund'
     });
 
   } catch (error) {

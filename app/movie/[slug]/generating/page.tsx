@@ -3,9 +3,13 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useComposeCast } from "@coinbase/onchainkit/minikit";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { MovieThemeProvider } from "@/app/components/MovieThemeProvider";
 import { MovieColorScheme, DEFAULT_COLOR_SCHEME } from "@/app/types/movie";
 import type { Movie } from "@/lib/db/types";
+import VideoAdventureABI from '@/lib/VideoAdventure.abi.json';
+
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 
 interface GeneratingPageProps {
   params: Promise<{
@@ -20,6 +24,7 @@ function GeneratingPageContent({ movieSlug }: { movieSlug: string }) {
 
   const promptId = searchParams.get('promptId');
   const sceneId = searchParams.get('sceneId');
+  const attemptId = searchParams.get('attemptId');
 
   const [status, setStatus] = useState<string>('queued');
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +33,15 @@ function GeneratingPageContent({ movieSlug }: { movieSlug: string }) {
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [completedSceneId, setCompletedSceneId] = useState<string | null>(null);
   const [movieData, setMovieData] = useState<Movie | null>(null);
+
+  // New state for escrow confirmation flow
+  const [confirmationState, setConfirmationState] = useState<'ready' | 'confirming' | 'confirmed' | 'refunding' | 'refunded'>('ready');
+  const [videoData, setVideoData] = useState<{ videoUrl: string; metadataURI: string; promptCount?: number; attemptId?: string } | null>(null);
+
+  // Wagmi hooks for contract interaction
+  const { address } = useAccount();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isLoading: isTxPending, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Fetch movie data
   useEffect(() => {
@@ -47,6 +61,44 @@ function GeneratingPageContent({ movieSlug }: { movieSlug: string }) {
       fetchMovie();
     }
   }, [movieSlug]);
+
+  // Check if scene is already awaiting confirmation (user returned to page)
+  useEffect(() => {
+    const checkSceneStatus = async () => {
+      if (!sceneId) return;
+
+      try {
+        const response = await fetch(`/api/scenes/${sceneId}/status`);
+        if (response.ok) {
+          const sceneData = await response.json();
+
+          // Scene is completed - redirect to scene page
+          if (sceneData.status === 'completed') {
+            router.push(`/movie/${movieSlug}/scene/${sceneId}`);
+          }
+          // Scene is awaiting confirmation - show confirmation modal
+          else if (sceneData.status === 'awaiting_confirmation' && sceneData.videoUrl && sceneData.metadataURI) {
+            setVideoData({
+              videoUrl: sceneData.videoUrl,
+              metadataURI: sceneData.metadataURI,
+              promptCount: sceneData.promptCount,
+              attemptId: sceneData.attemptId
+            });
+            setCompletedSceneId(sceneId);
+            setProgress(100);
+            setStatus('Complete!');
+          }
+        }
+      } catch (err) {
+        console.error('Error checking scene status:', err);
+      }
+    };
+
+    // Only check if we don't have a promptId (user came back without active generation)
+    if (sceneId && !promptId) {
+      checkSceneStatus();
+    }
+  }, [sceneId, promptId, movieSlug, router]);
 
   // Complete generation function
   const completeGeneration = useCallback(async (promptIdParam: string, videoJobId: string) => {
@@ -71,14 +123,20 @@ function GeneratingPageContent({ movieSlug }: { movieSlug: string }) {
       const data = await response.json();
       console.log('Generation completed:', data);
 
-      setProgress(100);
-      setStatus('Complete!');
-      setCompletedSceneId(data.sceneId);
+      // Store video data for confirmation modal
+      if (data.success) {
+        setVideoData({
+          videoUrl: data.videoUrl,
+          metadataURI: data.metadataURI,
+          promptCount: data.promptCount,
+          attemptId: data.attemptId
+        });
+        setCompletedSceneId(data.sceneId);
+        setProgress(100);
+        setStatus('Complete!');
+      }
 
-      // Show share prompt after a brief moment
-      setTimeout(() => {
-        setShowSharePrompt(true);
-      }, 1000);
+      return data;
 
     } catch (err) {
       console.error('Error completing generation:', err);
@@ -149,6 +207,104 @@ function GeneratingPageContent({ movieSlug }: { movieSlug: string }) {
     };
   }, [promptId, completeGeneration]);
 
+  // Handle scene confirmation (mint NFT)
+  const handleConfirmScene = async () => {
+    if (!videoData || !address || !sceneId) return;
+
+    setConfirmationState('confirming');
+
+    try {
+      await writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: VideoAdventureABI,
+        functionName: 'confirmScene',
+        args: [BigInt(sceneId), videoData.metadataURI]
+      });
+    } catch (error) {
+      console.error('[Confirm] Error:', error);
+      setConfirmationState('ready');
+    }
+  };
+
+  // Handle refund request (50% back)
+  const handleRequestRefund = async () => {
+    if (!address || !sceneId) return;
+
+    setConfirmationState('refunding');
+
+    try {
+      await writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: VideoAdventureABI,
+        functionName: 'requestRefund',
+        args: [BigInt(sceneId)]
+      });
+    } catch (error) {
+      console.error('[Refund] Error:', error);
+      setConfirmationState('ready');
+    }
+  };
+
+  // Verify confirmation or refund after transaction success
+  useEffect(() => {
+    if (isTxSuccess && hash && sceneId) {
+      if (confirmationState === 'confirming') {
+        (async () => {
+          try {
+            const response = await fetch('/api/scenes/verify-confirmation', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sceneId: parseInt(sceneId),
+                transactionHash: hash,
+                userAddress: address
+              })
+            });
+
+            if (response.ok) {
+              setConfirmationState('confirmed');
+              // NOW show share prompt
+              setTimeout(() => setShowSharePrompt(true), 1000);
+            } else {
+              const error = await response.json();
+              console.error('[VerifyConfirmation] Error:', error);
+              setError('Failed to verify confirmation');
+            }
+          } catch (err) {
+            console.error('[VerifyConfirmation] Error:', err);
+            setError('Failed to verify confirmation');
+          }
+        })();
+      } else if (confirmationState === 'refunding') {
+        (async () => {
+          try {
+            const response = await fetch('/api/scenes/verify-refund', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sceneId: parseInt(sceneId),
+                attemptId: attemptId ? parseInt(attemptId) : undefined,
+                transactionHash: hash,
+                userAddress: address
+              })
+            });
+
+            if (response.ok) {
+              setConfirmationState('refunded');
+            } else {
+              const error = await response.json();
+              console.error('[VerifyRefund] Error:', error);
+              setError('Failed to verify refund');
+            }
+          } catch (err) {
+            console.error('[VerifyRefund] Error:', err);
+            setError('Failed to verify refund');
+          }
+        })();
+      }
+    }
+  }, [isTxSuccess, hash, confirmationState, sceneId, attemptId, address]);
+
   // Handle sharing the completed scene
   const handleShare = () => {
     const sceneUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/movie/${movieSlug}/scene/${completedSceneId}`;
@@ -168,6 +324,110 @@ function GeneratingPageContent({ movieSlug }: { movieSlug: string }) {
   const colorScheme: MovieColorScheme = movieData?.color_scheme
     ? (movieData.color_scheme as unknown as MovieColorScheme)
     : DEFAULT_COLOR_SCHEME;
+
+  // Show confirmation modal (before share prompt)
+  if (videoData && confirmationState === 'ready') {
+    return (
+      <MovieThemeProvider colorScheme={colorScheme}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-black/90 border-2 border-movie-primary rounded-lg p-8 max-w-2xl w-full">
+            <h2 className="text-2xl font-bold text-movie-primary mb-4">
+              Your scene is ready!
+            </h2>
+
+            {/* Video preview */}
+            <video
+              src={videoData.videoUrl}
+              controls
+              className="w-full rounded-lg mb-6"
+            />
+
+            <p className="text-white mb-6">
+              Review your scene and choose:
+            </p>
+
+            <div className="flex gap-4 flex-col">
+              <button
+                onClick={handleConfirmScene}
+                disabled={isPending || isTxPending}
+                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 transition-colors"
+              >
+                {isTxPending ? 'Minting NFT...' : '✓ Confirm Scene (Mint NFT)'}
+              </button>
+
+              {videoData.promptCount && videoData.promptCount < 3 && videoData.attemptId && (
+                <button
+                  onClick={() => router.push(`/movie/${movieSlug}/create?attemptId=${videoData.attemptId}&sceneId=${sceneId}`)}
+                  disabled={isPending || isTxPending}
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 transition-colors"
+                >
+                  🔄 Try Again ({videoData.promptCount}/3 attempts used)
+                </button>
+              )}
+
+              <button
+                onClick={handleRequestRefund}
+                disabled={isPending || isTxPending}
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 transition-colors"
+              >
+                ✕ Request 50% Refund
+              </button>
+            </div>
+
+            <p className="text-sm text-white/70 mt-4">
+              <strong>Confirm:</strong> Mints your NFT and adds your scene to the story permanently.<br/>
+              {videoData.promptCount && videoData.promptCount < 3 && <><strong>Try Again:</strong> Generate a new version (up to 3 total attempts).<br/></>}
+              <strong>Refund:</strong> Returns 50% of your payment and reopens the slot for others.
+            </p>
+          </div>
+        </div>
+      </MovieThemeProvider>
+    );
+  }
+
+  // Show confirmation success message
+  if (confirmationState === 'confirmed' && !showSharePrompt) {
+    return (
+      <MovieThemeProvider colorScheme={colorScheme}>
+        <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+          <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
+            <div className="text-6xl mb-4 animate-bounce">✓</div>
+            <h1 className="text-[2rem] md:text-2xl font-bold text-green-600 my-0 mb-4">NFT Minted!</h1>
+            <p className="text-white/90 text-base mb-8 leading-relaxed">
+              Your scene is now part of the story permanently.
+            </p>
+          </div>
+        </div>
+      </MovieThemeProvider>
+    );
+  }
+
+  // Show refund success message
+  if (confirmationState === 'refunded') {
+    return (
+      <MovieThemeProvider colorScheme={colorScheme}>
+        <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+          <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
+            <div className="text-6xl mb-4">✓</div>
+            <h1 className="text-[2rem] md:text-2xl font-bold text-yellow-600 my-0 mb-4">Refund Processed</h1>
+            <p className="text-white/90 text-base mb-8 leading-relaxed">
+              50% returned to your wallet. Slot reopened for other players.
+            </p>
+            <button
+              className="font-source-code text-lg md:text-base font-bold text-black rounded-lg py-5 px-8 md:py-4 cursor-pointer transition-all duration-200 border-none uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:-translate-y-0.5 active:translate-y-0"
+              style={{
+                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)'
+              }}
+              onClick={() => router.push(`/movie/${movieSlug}`)}
+            >
+              Back to Movie
+            </button>
+          </div>
+        </div>
+      </MovieThemeProvider>
+    );
+  }
 
   // Show share prompt modal
   if (showSharePrompt) {

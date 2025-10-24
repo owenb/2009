@@ -40,3 +40,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+
+# Scripts
+scripts/
+mochi/
+
+
+# Backups
+backups/
+cache/

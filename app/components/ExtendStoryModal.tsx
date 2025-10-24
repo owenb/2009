@@ -44,7 +44,7 @@ export default function ExtendStoryModal({
             </li>
             <li className="flex items-start gap-3 font-source-code text-sm md:text-[0.85rem] text-white/85 leading-relaxed">
               <span className="text-xl flex items-center justify-center w-7 h-7 flex-shrink-0">🤖</span>
-              <span>You&apos;ll have <strong className="text-white font-bold">1 hour</strong> enter your ideas</span>
+              <span>You&apos;ll have <strong className="text-white font-bold">1 hour</strong>to enter your ideas</span>
             </li>
             <li className="flex items-start gap-3 font-source-code text-sm md:text-[0.85rem] text-white/85 leading-relaxed">
               <span className="text-xl flex items-center justify-center w-7 h-7 flex-shrink-0">💰</span>
