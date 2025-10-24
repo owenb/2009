@@ -216,7 +216,6 @@ export default function ScenePage({ params }: ScenePageProps) {
           preloadedData={preloadedSlots}
           onBack={handleBack}
           canGoBack={true}
-          backToLabel={sceneHistory.length > 0 ? sceneHistory[sceneHistory.length - 1].slotLabel : null}
         />
       </div>
     </MovieThemeProvider>

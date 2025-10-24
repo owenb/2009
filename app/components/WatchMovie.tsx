@@ -317,7 +317,6 @@ export default function WatchMovie({ movieId: _movieId, movieSlug, genesisSceneI
         preloadedData={preloadedSlots}
         onBack={handleBack}
         canGoBack={sceneHistory.length > 0}
-        backToLabel={null}
       />
 
       {/* Scene map modal */}

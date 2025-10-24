@@ -22,10 +22,9 @@ interface SlotChoiceModalProps {
   preloadedData?: { slots: SlotInfo[] } | null; // Preloaded slot data from parent
   onBack?: () => void; // Callback to go back to previous scene
   canGoBack?: boolean; // Whether back button should be shown
-  backToLabel?: string | null; // Label of the scene we're going back to
 }
 
-export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', movieSlug, onSlotSelected, preloadedData, onBack, canGoBack = false, backToLabel = null }: SlotChoiceModalProps) {
+export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', movieSlug, onSlotSelected, preloadedData, onBack, canGoBack = false }: SlotChoiceModalProps) {
   const [_selectedSlot, setSelectedSlot] = useState<'A' | 'B' | 'C' | null>(null);
   const [_selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
