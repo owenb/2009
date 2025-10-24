@@ -16,7 +16,7 @@ import {
   Address
 } from "@coinbase/onchainkit/identity";
 import Video from "../../components/Video";
-import SwipeableSlotChoice from "../../components/SwipeableSlotChoice";
+import SlotChoiceModal from "../../components/SlotChoiceModal";
 import type { SceneData, PreloadedSlotsData } from "@/lib/types";
 
 export default function ScenePage() {
@@ -200,7 +200,7 @@ export default function ScenePage() {
       })}
 
       {/* Slot choice modal */}
-      <SwipeableSlotChoice
+      <SlotChoiceModal
         isVisible={showPopup}
         parentSceneId={currentScene?.sceneId ?? 'genesis'}
         movieSlug={sceneData?.movieSlug || '2009'}

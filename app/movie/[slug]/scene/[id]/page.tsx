@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import Video from "@/app/components/Video";
-import SwipeableSlotChoice from "@/app/components/SwipeableSlotChoice";
+import SlotChoiceModal from "@/app/components/SlotChoiceModal";
 import { MovieThemeProvider } from "@/app/components/MovieThemeProvider";
 import { MovieColorScheme, DEFAULT_COLOR_SCHEME } from "@/app/types/movie";
 import type { SceneData, PreloadedSlotsData } from "@/lib/types";
@@ -208,7 +208,7 @@ export default function ScenePage({ params }: ScenePageProps) {
         })}
 
         {/* Slot choice modal */}
-        <SwipeableSlotChoice
+        <SlotChoiceModal
           isVisible={showPopup}
           parentSceneId={currentScene?.sceneId ?? 'genesis'}
           movieSlug={movieSlug}

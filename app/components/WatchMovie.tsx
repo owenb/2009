@@ -5,7 +5,7 @@ import { useAccount } from "wagmi";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useRouter } from "next/navigation";
 import Video from "./Video";
-import SwipeableSlotChoice from "./SwipeableSlotChoice";
+import SlotChoiceModal from "./SlotChoiceModal";
 import SceneMapModal from "./SceneMapModal";
 import type { SceneData, PreloadedSlotsData, ActiveAttempt } from "@/lib/types";
 
@@ -282,7 +282,7 @@ export default function WatchMovie({ movieId: _movieId, movieSlug, genesisSceneI
       })}
 
       {/* Slot choice modal */}
-      <SwipeableSlotChoice
+      <SlotChoiceModal
         isVisible={showPopup}
         parentSceneId={parentSceneId}
         movieSlug={movieSlug}

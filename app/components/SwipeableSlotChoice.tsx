@@ -1,3 +1,12 @@
+/**
+ * ⚠️ WORK IN PROGRESS - NOT PRODUCTION READY ⚠️
+ *
+ * This is an experimental swipeable navigation interface for slot selection.
+ * It's currently being developed and is not yet ready for production use.
+ *
+ * The production-ready slot selection interface is in SlotChoiceModal.tsx
+ */
+
 "use client";
 
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
