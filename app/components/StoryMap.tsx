@@ -179,12 +179,13 @@ export default function StoryMap({
         onMouseUp={panZoomHandlers.handleMouseUp}
         onMouseLeave={panZoomHandlers.handleMouseUp}
         onWheel={panZoomHandlers.handleWheel}
-        onTouchStart={panZoomHandlers.handleTouchStart}
-        onTouchMove={panZoomHandlers.handleTouchMove}
-        onTouchEnd={panZoomHandlers.handleTouchEnd}
+        onPointerDown={panZoomHandlers.handlePointerDown}
+        onPointerMove={panZoomHandlers.handlePointerMove}
+        onPointerUp={panZoomHandlers.handlePointerUp}
+        onPointerCancel={panZoomHandlers.handlePointerCancel}
         style={{
           cursor: panZoomState.isDragging ? 'grabbing' : 'grab',
-          touchAction: 'none'
+          touchAction: 'pinch-zoom'
         }}
       >
         <g transform={`translate(${panZoomState.panX}, ${panZoomState.panY}) scale(${panZoomState.zoom})`}>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Saira } from "next/font/google";
 import { SafeArea } from "@coinbase/onchainkit/minikit";
 import { minikitConfig } from "../minikit.config";
@@ -8,6 +8,13 @@ import GenerationNotificationBar from "./components/GenerationNotificationBar";
 import GlobalWallet from "./components/GlobalWallet";
 import MiniKitInitializer from "./components/MiniKitInitializer";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

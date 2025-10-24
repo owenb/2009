@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export interface PanZoomState {
   zoom: number;
@@ -12,9 +12,10 @@ export interface PanZoomHandlers {
   handleMouseMove: (e: React.MouseEvent) => void;
   handleMouseUp: () => void;
   handleWheel: (e: React.WheelEvent) => void;
-  handleTouchStart: (e: React.TouchEvent) => void;
-  handleTouchMove: (e: React.TouchEvent) => void;
-  handleTouchEnd: () => void;
+  handlePointerDown: (e: React.PointerEvent) => void;
+  handlePointerMove: (e: React.PointerEvent) => void;
+  handlePointerUp: (e: React.PointerEvent) => void;
+  handlePointerCancel: (e: React.PointerEvent) => void;
 }
 
 interface UsePanZoomOptions {
@@ -25,8 +26,15 @@ interface UsePanZoomOptions {
   initialPanY?: number;
 }
 
+interface CachedPointer {
+  pointerId: number;
+  clientX: number;
+  clientY: number;
+}
+
 /**
- * Hook to manage pan and zoom state with mouse and touch handlers
+ * Hook to manage pan and zoom state with mouse and pointer events
+ * Uses pointer events for better iframe/mobile support (MDN best practice)
  */
 export function usePanZoom(options: UsePanZoomOptions = {}) {
   const {
@@ -42,9 +50,12 @@ export function usePanZoom(options: UsePanZoomOptions = {}) {
   const [panY, setPanY] = useState(initialPanY);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(null);
 
-  // Mouse handlers for pan
+  // Pointer event cache for pinch detection (MDN pattern)
+  const pointerCache = useRef<CachedPointer[]>([]);
+  const prevDiff = useRef<number>(-1);
+
+  // Mouse handlers for desktop pan
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX - panX, y: e.clientY - panY });
@@ -60,7 +71,7 @@ export function usePanZoom(options: UsePanZoomOptions = {}) {
     setIsDragging(false);
   };
 
-  // Wheel handler for zoom
+  // Wheel handler for desktop zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY * -0.0005;
@@ -68,39 +79,70 @@ export function usePanZoom(options: UsePanZoomOptions = {}) {
     setZoom(newZoom);
   };
 
-  // Touch helper
-  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch): number => {
-    const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
+  // Pointer event helpers
+  const getPointerDistance = (p1: CachedPointer, p2: CachedPointer): number => {
+    const dx = p1.clientX - p2.clientX;
+    const dy = p1.clientY - p2.clientY;
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Touch handlers for mobile pinch-to-zoom
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      // Two fingers - pinch to zoom
-      e.preventDefault(); // Prevent browser zoom immediately
-      const distance = getTouchDistance(e.touches[0], e.touches[1]);
-      setLastPinchDistance(distance);
+  const removePointer = (pointerId: number) => {
+    const index = pointerCache.current.findIndex(p => p.pointerId === pointerId);
+    if (index > -1) {
+      pointerCache.current.splice(index, 1);
     }
-    // Don't handle single-finger touches - let them work as normal taps/clicks
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && lastPinchDistance !== null) {
-      // Prevent default for two-finger pinch gestures
-      e.preventDefault();
-      const distance = getTouchDistance(e.touches[0], e.touches[1]);
-      const delta = (distance - lastPinchDistance) * 0.01;
-      const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom + delta));
-      setZoom(newZoom);
-      setLastPinchDistance(distance);
-    }
-    // Single-finger touches: do nothing, let Base app handle them
+  // Pointer handlers for mobile pinch-to-zoom (MDN pattern)
+  const handlePointerDown = (e: React.PointerEvent) => {
+    // Add pointer to cache
+    pointerCache.current.push({
+      pointerId: e.pointerId,
+      clientX: e.clientX,
+      clientY: e.clientY
+    });
   };
 
-  const handleTouchEnd = () => {
-    setLastPinchDistance(null);
+  const handlePointerMove = (e: React.PointerEvent) => {
+    // Update cached pointer
+    const index = pointerCache.current.findIndex(p => p.pointerId === e.pointerId);
+    if (index > -1) {
+      pointerCache.current[index] = {
+        pointerId: e.pointerId,
+        clientX: e.clientX,
+        clientY: e.clientY
+      };
+    }
+
+    // If two pointers are down, check for pinch gestures
+    if (pointerCache.current.length === 2) {
+      const curDiff = getPointerDistance(pointerCache.current[0], pointerCache.current[1]);
+
+      if (prevDiff.current > 0) {
+        // Calculate zoom based on distance change
+        const delta = (curDiff - prevDiff.current) * 0.01;
+        const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom + delta));
+        setZoom(newZoom);
+      }
+
+      prevDiff.current = curDiff;
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    removePointer(e.pointerId);
+
+    // Reset previous diff when pinch ends
+    if (pointerCache.current.length < 2) {
+      prevDiff.current = -1;
+    }
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    removePointer(e.pointerId);
+    if (pointerCache.current.length < 2) {
+      prevDiff.current = -1;
+    }
   };
 
   const state: PanZoomState = { zoom, panX, panY, isDragging };
@@ -109,9 +151,10 @@ export function usePanZoom(options: UsePanZoomOptions = {}) {
     handleMouseMove,
     handleMouseUp,
     handleWheel,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel
   };
 
   const setPan = (x: number, y: number) => {
