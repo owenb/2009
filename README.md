@@ -1,6 +1,6 @@
-# Waitlist Mini App Quickstart
+# BasedOn
 
-This is a demo Mini App application built using OnchainKit and the Farcaster SDK. Build a waitlist sign-up mini app for your company that can be published to the Base app and Farcaster.
+An interactive movie platform where users extend branching narratives through AI-generated video scenes. Built as a Base mini app using OnchainKit and the Farcaster SDK.
 
 ## Prerequisites
 
@@ -13,16 +13,16 @@ Before getting started, make sure you have:
 
 ## Getting Started
 
-### 1. Clone this repository 
+### 1. Clone this repository
 
 ```bash
-git clone https://github.com/base/demos.git
+git clone https://github.com/your-org/basedon.git
 ```
 
 ### 2. Install dependencies:
 
 ```bash
-cd demos/minikit/waitlist-mini-app-qs
+cd basedon
 npm install
 ```
 
@@ -31,26 +31,43 @@ npm install
 Create a `.env.local` file and add your environment variables:
 
 ```bash
-NEXT_PUBLIC_PROJECT_NAME="Your App Name"
+# App Configuration
+NEXT_PUBLIC_PROJECT_NAME="BasedOn"
 NEXT_PUBLIC_ONCHAINKIT_API_KEY=<Replace-WITH-YOUR-CDP-API-KEY>
 NEXT_PUBLIC_URL=
+
+# Database (Neon PostgreSQL)
+POSTGRES_URL=<Your-Neon-Postgres-URL>
+
+# Video Storage (Cloudflare R2)
+AWS_REGION=auto
+AWS_ACCESS_KEY_ID=<Your-R2-Access-Key>
+AWS_SECRET_ACCESS_KEY=<Your-R2-Secret-Key>
+AWS_S3_BUCKET_NAME=scenes
 ```
 
-### 4. Run locally:
+### 4. Set up the database:
+
+```bash
+npm run db:migrate
+```
+
+### 5. Run locally:
 
 ```bash
 npm run dev
 ```
 
-## Customization
+The app will be available at http://localhost:3001
 
-### Update Manifest Configuration
+## Project Structure
 
-The `minikit.config.ts` file configures your manifest located at `app/.well-known/farcaster.json`.
-
-**Skip the `accountAssociation` object for now.**
-
-To personalize your app, change the `name`, `subtitle`, and `description` fields and add images to your `/public` folder. Then update their URLs in the file.
+- `app/` - Next.js app directory with pages and API routes
+- `app/components/` - React components
+- `app/types/` - TypeScript type definitions
+- `schema.md` - Database schema documentation
+- `MOVIE_PLATFORM.md` - Platform design and mechanics
+- `minikit.config.ts` - Farcaster manifest configuration
 
 ## Deployment
 
@@ -67,19 +84,24 @@ You should have a URL deployed to a domain similar to: `https://your-vercel-proj
 Add your production URL to your local `.env` file:
 
 ```bash
-NEXT_PUBLIC_PROJECT_NAME="Your App Name"
+NEXT_PUBLIC_PROJECT_NAME="BasedOn"
 NEXT_PUBLIC_ONCHAINKIT_API_KEY=<Replace-WITH-YOUR-CDP-API-KEY>
 NEXT_PUBLIC_URL=https://your-vercel-project-name.vercel.app/
 ```
 
 ### 3. Upload environment variables to Vercel
 
-Add environment variables to your production environment:
+Add all environment variables to your production environment:
 
 ```bash
 vercel env add NEXT_PUBLIC_PROJECT_NAME production
 vercel env add NEXT_PUBLIC_ONCHAINKIT_API_KEY production
 vercel env add NEXT_PUBLIC_URL production
+vercel env add POSTGRES_URL production
+vercel env add AWS_REGION production
+vercel env add AWS_ACCESS_KEY_ID production
+vercel env add AWS_SECRET_ACCESS_KEY production
+vercel env add AWS_S3_BUCKET_NAME production
 ```
 
 ## Account Association
@@ -128,6 +150,19 @@ Go to [base.dev/preview](https://base.dev/preview) to validate your app:
 
 To publish your app, create a post in the Base app with your app's URL.
 
-## Learn More
+## Technology Stack
 
-For detailed step-by-step instructions, see the [Create a Mini App tutorial](https://docs.base.org/docs/mini-apps/quickstart/create-new-miniapp/) in the Base documentation.
+- **Framework**: Next.js 15 with App Router
+- **Blockchain**: Base (Ethereum L2)
+- **Wallet Integration**: OnchainKit
+- **Database**: PostgreSQL (Neon)
+- **Video Storage**: Cloudflare R2
+- **Styling**: Tailwind CSS v4
+- **AI**: GPT-4o-mini for prompt refinement
+
+## Documentation
+
+- `MOVIE_PLATFORM.md` - Platform design and mechanics
+- `schema.md` - Database schema and architecture
+- [Base Mini Apps](https://docs.base.org/docs/mini-apps/quickstart/create-new-miniapp/)
+- [OnchainKit](https://onchainkit.xyz/)

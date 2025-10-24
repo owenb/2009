@@ -134,7 +134,30 @@ export default function Video({
 
     const attemptPlay = async () => {
       try {
-        await videoRef.current!.play();
+        // Ensure video is muted before playing for better autoplay compatibility
+        if (videoRef.current) {
+          videoRef.current.muted = isMuted;
+        }
+
+        // Wait a brief moment to ensure video element is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        if (cancelled || !videoRef.current) return;
+
+        // Ensure video has loaded enough to play
+        if (videoRef.current.readyState < 2) {
+          await new Promise((resolve) => {
+            const handleCanPlay = () => {
+              videoRef.current?.removeEventListener('canplay', handleCanPlay);
+              resolve(undefined);
+            };
+            videoRef.current?.addEventListener('canplay', handleCanPlay);
+          });
+        }
+
+        if (cancelled || !videoRef.current) return;
+
+        await videoRef.current.play();
         if (!cancelled) {
           setNeedsManualPlay(false);
         }
@@ -175,7 +198,7 @@ export default function Video({
     return () => {
       cancelled = true;
     };
-  }, [isVisible, videoUrl, hasTrackedView, sceneId, viewerAddress, viewerFid, referrerSceneId]);
+  }, [isVisible, videoUrl, hasTrackedView, sceneId, viewerAddress, viewerFid, referrerSceneId, isMuted]);
 
   // Manual play handler
   const handleManualPlay = async () => {
@@ -216,7 +239,7 @@ export default function Video({
       {/* Show loading spinner while video is loading */}
       {isLoading && (
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white font-source-code z-[2]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white font-saira z-[2]"
           style={{ opacity: isVisible ? 1 : 0 }}
         >
           <div className="animate-spin h-8 w-8 border-4 border-white/20 border-t-white rounded-full mx-auto mb-3" />
@@ -226,13 +249,13 @@ export default function Video({
 
       {error && (
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white font-source-code z-[2]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white font-saira z-[2]"
           style={{ opacity: isVisible ? 1 : 0 }}
         >
           <p>{error}</p>
           <button
             onClick={fetchVideoUrl}
-            className="mt-4 px-4 py-2 bg-white/10 border-2 border-white/30 rounded-lg text-white font-source-code cursor-pointer transition-all duration-200 hover:bg-white/20 hover:border-white/50"
+            className="mt-4 px-4 py-2 bg-white/10 border-2 border-white/30 rounded-lg text-white font-saira cursor-pointer transition-all duration-200 hover:bg-white/20 hover:border-white/50"
           >
             Retry
           </button>
@@ -244,11 +267,11 @@ export default function Video({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-[4]">
           <button
             onClick={handleManualPlay}
-            className="px-8 py-4 bg-white/20 backdrop-blur-md border-2 border-white/50 rounded-lg text-white font-source-code text-lg font-bold cursor-pointer transition-all duration-200 hover:bg-white/30 hover:border-white/70 hover:scale-105 active:scale-95"
+            className="px-8 py-4 bg-white/20 backdrop-blur-md border-2 border-white/50 rounded-lg text-white font-saira text-lg font-bold cursor-pointer transition-all duration-200 hover:bg-white/30 hover:border-white/70 hover:scale-105 active:scale-95"
           >
             ▶ Click to Play
           </button>
-          <p className="mt-3 text-white/70 text-sm font-source-code">
+          <p className="mt-3 text-white/70 text-sm font-saira">
             Your browser blocked autoplay
           </p>
         </div>
@@ -261,6 +284,7 @@ export default function Video({
         preload="auto"
         playsInline
         muted={isMuted}
+        autoPlay={false}
         loop={false}
         onEnded={onVideoEnd}
       />
@@ -270,7 +294,7 @@ export default function Video({
         <div className="absolute top-5 left-5 flex gap-2 z-[3]">
           <button
             onClick={toggleMute}
-            className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-source-code text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
+            className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-saira text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
             aria-label={isMuted ? "Unmute video" : "Mute video"}
           >
             {isMuted ? (
@@ -293,7 +317,7 @@ export default function Video({
           {sceneId !== null && (
             <button
               onClick={handleShare}
-              className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-source-code text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
+              className="bg-white/30 backdrop-blur-md border-none rounded-lg px-4 py-2 text-white font-saira text-xs font-semibold cursor-pointer transition-all duration-200 uppercase flex items-center gap-2 hover:bg-white/40 hover:scale-105 active:scale-95"
               aria-label="Share this scene"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -310,9 +334,9 @@ export default function Video({
       )}
 
       {/* Creator attribution */}
-      {isVisible && creatorAddress && (
+      {isVisible && creatorAddress && creatorAddress !== '0x0000000000000000000000000000000000000000' && (
         <div className="absolute bottom-5 left-5 bg-black/70 backdrop-blur-md px-4 py-2 rounded-lg z-[3]">
-          <div className="text-white/90 font-source-code text-[0.65rem] m-0">
+          <div className="text-white/90 font-saira text-[0.65rem] m-0">
             <div className="mb-1">
               Created by {ensName || creatorAddress}
             </div>

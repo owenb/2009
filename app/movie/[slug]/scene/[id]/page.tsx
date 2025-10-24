@@ -150,7 +150,7 @@ export default function ScenePage({ params }: ScenePageProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center w-full h-full relative overflow-hidden bg-black">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-source-code text-center">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-saira text-center">
           <p>Loading scene...</p>
         </div>
       </div>
@@ -160,11 +160,11 @@ export default function ScenePage({ params }: ScenePageProps) {
   if (error || !sceneData || !movieData) {
     return (
       <div className="flex justify-center items-center w-full h-full relative overflow-hidden bg-black">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-source-code text-center">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-saira text-center">
           <p className="text-[#FF6B6B] mb-4">{error || 'Scene not found'}</p>
           <button
             onClick={() => router.push('/')}
-            className="bg-white/10 border-2 border-white/30 rounded-lg py-3 px-6 text-white font-source-code cursor-pointer transition-all duration-200 hover:bg-white/20 hover:border-white/50"
+            className="bg-white/10 border-2 border-white/30 rounded-lg py-3 px-6 text-white font-saira cursor-pointer transition-all duration-200 hover:bg-white/20 hover:border-white/50"
           >
             Go Home
           </button>
@@ -215,7 +215,7 @@ export default function ScenePage({ params }: ScenePageProps) {
           onSlotSelected={handleSlotSelected}
           preloadedData={preloadedSlots}
           onBack={handleBack}
-          canGoBack={sceneHistory.length > 0}
+          canGoBack={true}
           backToLabel={sceneHistory.length > 0 ? sceneHistory[sceneHistory.length - 1].slotLabel : null}
         />
       </div>

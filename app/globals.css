@@ -30,8 +30,6 @@
 
   /* Font families */
   --font-family-saira: var(--font-saira), sans-serif;
-  --font-family-inter: var(--font-inter), sans-serif;
-  --font-family-source-code: var(--font-saira), sans-serif;
 }
 
 @layer base {

@@ -138,7 +138,7 @@ function GeneratingPageContent() {
   // Show share prompt modal
   if (showSharePrompt) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-saira">
         <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
           <div className="text-6xl mb-4 animate-bounce">🎉</div>
           <h1 className="text-[2rem] md:text-2xl font-bold text-white my-0 mb-6">Scene Created!</h1>
@@ -148,7 +148,7 @@ function GeneratingPageContent() {
 
           <div className="flex gap-4 justify-center flex-wrap md:flex-col md:gap-2">
             <button
-              className="font-source-code text-lg md:text-base font-bold text-black border-none rounded-lg py-5 px-8 md:py-4 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:-translate-y-0.5 active:translate-y-0"
+              className="font-saira text-lg md:text-base font-bold text-black border-none rounded-lg py-5 px-8 md:py-4 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:-translate-y-0.5 active:translate-y-0"
               onClick={handleShare}
               style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -164,7 +164,7 @@ function GeneratingPageContent() {
               Share Your Creation
             </button>
             <button
-              className="font-source-code text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg py-3 px-6 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:text-white/90 hover:border-white/40 hover:bg-white/5"
+              className="font-saira text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg py-3 px-6 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:text-white/90 hover:border-white/40 hover:bg-white/5"
               onClick={handleSkipShare}
             >
               Skip for Now
@@ -177,7 +177,7 @@ function GeneratingPageContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-saira">
         <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
           <div className="text-6xl mb-4">⚠️</div>
           <h1 className="text-[2rem] md:text-2xl font-bold text-[#FF6B6B] my-0 mb-4">Generation Failed</h1>
@@ -185,7 +185,7 @@ function GeneratingPageContent() {
 
           {canRetry && (
             <button
-              className="font-source-code text-lg md:text-base font-bold text-black rounded-lg py-5 px-8 md:py-4 cursor-pointer transition-all duration-200 border-none uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:-translate-y-0.5 active:translate-y-0"
+              className="font-saira text-lg md:text-base font-bold text-black rounded-lg py-5 px-8 md:py-4 cursor-pointer transition-all duration-200 border-none uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:-translate-y-0.5 active:translate-y-0"
               style={{
                 background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                 boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)'
@@ -205,7 +205,7 @@ function GeneratingPageContent() {
           )}
 
           <button
-            className="font-source-code text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg py-3 px-6 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:text-white/90 hover:border-white/40 hover:bg-white/5"
+            className="font-saira text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg py-3 px-6 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] mx-2 md:mx-0 md:my-2 md:w-full hover:text-white/90 hover:border-white/40 hover:bg-white/5"
             onClick={() => router.push('/')}
           >
             Go Home
@@ -216,7 +216,7 @@ function GeneratingPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+    <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-saira">
       <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
         <div className="relative w-[150px] h-[150px] md:w-[120px] md:h-[120px] mx-auto mb-8">
           <div className="absolute w-full h-full border-[3px] border-transparent border-t-[#FFD700] rounded-full animate-spin"></div>
@@ -273,7 +273,7 @@ function GeneratingPageContent() {
 export default function GeneratingPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-source-code">
+      <div className="min-h-screen bg-black flex items-center justify-center p-8 md:p-4 font-saira">
         <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center md:p-6">
           <div className="relative w-[150px] h-[150px] md:w-[120px] md:h-[120px] mx-auto mb-8">
             <div className="absolute w-full h-full border-[3px] border-transparent border-t-[#FFD700] rounded-full animate-spin"></div>

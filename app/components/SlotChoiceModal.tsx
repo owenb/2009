@@ -311,47 +311,47 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
   return (
     <div className="absolute top-0 left-0 w-full h-full flex items-end justify-center z-10 animate-fade-in pointer-events-none">
       <div className="relative w-full max-w-[600px] bg-black/85 rounded-t-[20px] p-8 pb-[max(2rem,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-10px_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] animate-slide-up pointer-events-auto sm:p-6 sm:pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] sm:max-w-full">
-        <h2 className="font-source-code text-[1.5rem] font-bold text-white text-center m-0 mb-8 sm:mb-6 uppercase tracking-[0.1em]" style={{textShadow: '0 0 20px rgba(255, 255, 255, 0.5)'}}>
+        <h2 className="font-saira text-[1.5rem] font-bold text-white text-center m-0 mb-8 sm:mb-6 uppercase tracking-[0.1em]" style={{textShadow: '0 0 20px rgba(255, 255, 255, 0.5)'}}>
           What happens next?
         </h2>
 
         {!isConnected && (
           <div className="rounded-[10px] p-4 mb-4 text-center bg-movie-primary/20 border-2 border-movie-primary/50">
-            <p className="text-movie-primary font-bold mb-2 font-source-code">
+            <p className="text-movie-primary font-bold mb-2 font-saira">
               🔒 Wallet Connection Required
             </p>
-            <p className="text-white text-sm m-0 font-source-code">
+            <p className="text-white text-sm m-0 font-saira">
               Please connect your wallet to continue the adventure
             </p>
           </div>
         )}
 
         {statusMessage && (
-          <p className="text-movie-primary text-center mb-4 font-source-code">
+          <p className="text-movie-primary text-center mb-4 font-saira">
             {statusMessage}
           </p>
         )}
 
         {isPending && (
-          <p className="text-movie-primary text-center mb-4 font-source-code">
+          <p className="text-movie-primary text-center mb-4 font-saira">
             Waiting for wallet confirmation...
           </p>
         )}
 
         {isConfirming && (
-          <p className="text-movie-primary text-center mb-4 font-source-code">
+          <p className="text-movie-primary text-center mb-4 font-saira">
             Transaction pending on Base...
           </p>
         )}
 
         {loadError && (
-          <p className="text-[#FF6B6B] text-center mb-4 font-source-code">
+          <p className="text-[#FF6B6B] text-center mb-4 font-saira">
             {loadError}
           </p>
         )}
 
         {isLoading ? (
-          <p className="text-white text-center font-source-code">
+          <p className="text-white text-center font-saira">
             Loading slots...
           </p>
         ) : (
@@ -392,10 +392,10 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                         }} />
                       </>
                     )}
-                    <div className={`font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0 ${isSlotLoading ? 'slot-label-loading' : ''}`}>
+                    <div className={`font-saira text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0 ${isSlotLoading ? 'slot-label-loading' : ''}`}>
                       {slotInfo.slot}
                     </div>
-                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
+                    <div className="font-saira text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       {isSlotLoading ? 'loading...' : (slotInfo.label || 'view scene')}
                       {!canView && !isSlotLoading && <span className="text-xs block mt-1 text-white/70">🔒 connect wallet</span>}
                     </div>
@@ -432,10 +432,10 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                       WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'
                     }}
                   >
-                    <div className="font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
+                    <div className="font-saira text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
                       {slotInfo.slot}
                     </div>
-                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
+                    <div className="font-saira text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       ✨ {hasActivePrompt ? 'view generation' : 'resume your scene'}
                       <span className="text-[0.7rem] block mt-1" style={{color: 'rgba(0, 255, 0, 0.7)'}}>
                         ({hasActivePrompt ? 'video generating...' : 'you paid for this'})
@@ -453,10 +453,10 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                     className="flex items-center w-full bg-white/5 border-2 border-white/20 rounded-lg px-6 py-4 sm:px-4 sm:py-[0.9rem] transition-all duration-200 relative overflow-hidden min-h-[60px] cursor-not-allowed opacity-50"
                     style={{WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'}}
                   >
-                    <div className="font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
+                    <div className="font-saira text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
                       {slotInfo.slot}
                     </div>
-                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
+                    <div className="font-saira text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       being created...
                     </div>
                   </div>
@@ -476,10 +476,10 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                     className="flex items-center w-full bg-white/5 border-2 border-white/20 rounded-lg px-6 py-4 sm:px-4 sm:py-[0.9rem] transition-all duration-200 relative overflow-hidden min-h-[60px] cursor-not-allowed opacity-50"
                     style={{WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'}}
                   >
-                    <div className="font-source-code text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
+                    <div className="font-saira text-2xl md:text-xl sm:text-base font-bold text-white w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center bg-white/10 rounded-md mr-4 sm:mr-3 flex-shrink-0">
                       {slotInfo.slot}
                     </div>
-                    <div className="font-source-code text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
+                    <div className="font-saira text-lg md:text-base sm:text-[0.95rem] text-white/90 flex-1">
                       being created...
                     </div>
                   </div>
@@ -501,10 +501,10 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
                     WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.1)'
                   }}
                 >
-                  <div className={`font-source-code text-2xl md:text-xl sm:text-base font-bold w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center rounded-md mr-4 sm:mr-3 flex-shrink-0 ${isDisabled ? 'bg-white/5 text-white/40' : 'bg-white/10 text-white'}`}>
+                  <div className={`font-saira text-2xl md:text-xl sm:text-base font-bold w-9 h-9 md:w-8 md:h-8 sm:w-[34px] sm:h-[34px] flex items-center justify-center rounded-md mr-4 sm:mr-3 flex-shrink-0 ${isDisabled ? 'bg-white/5 text-white/40' : 'bg-white/10 text-white'}`}>
                     {slotInfo.slot}
                   </div>
-                  <div className={`font-source-code text-lg md:text-base sm:text-[0.95rem] flex-1 ${isDisabled ? 'text-white/40 italic' : 'text-white/90'}`}>
+                  <div className={`font-saira text-lg md:text-base sm:text-[0.95rem] flex-1 ${isDisabled ? 'text-white/40 italic' : 'text-white/90'}`}>
                     {isFirstAvailable ? 'extend this story' : 'available soon'}
                   </div>
                 </div>
@@ -517,35 +517,32 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
         {/* Footer with Back button, Map, and About link */}
         <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10">
           {/* Back button - left side */}
-          {onBack && (
+          {onBack && canGoBack ? (
             <button
               onClick={onBack}
-              disabled={!canGoBack}
-              className={`bg-transparent border-none font-source-code text-sm flex items-center gap-2 p-0 transition-colors duration-200 ${canGoBack ? 'text-white/60 cursor-pointer hover:text-white/90 opacity-100' : 'text-white/30 cursor-not-allowed opacity-50'}`}
+              className="bg-transparent border-none font-saira text-sm flex items-center gap-2 p-0 transition-colors duration-200 text-white/60 cursor-pointer hover:text-white/90"
             >
               <span>←</span>
-              <span>{backToLabel ? `Back to ${backToLabel}` : 'Back'}</span>
+              <span>Back</span>
             </button>
+          ) : (
+            <div />
           )}
-
-          {/* Spacer if no back button */}
-          {!onBack && <div />}
 
           {/* Right side - Map and About */}
           <div className="flex items-center gap-4">
             {/* Map button */}
             <button
               onClick={() => setShowMapModal(true)}
-              className="font-source-code text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 flex items-center gap-1 hover:text-white/90"
+              className="font-saira text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 flex items-center gap-1 hover:text-white/90"
             >
-              <span>🗺️</span>
-              <span>Story Map</span>
+              <span>Story map</span>
             </button>
 
             {/* About link */}
             <button
               onClick={() => setShowAboutModal(true)}
-              className="font-source-code text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 hover:text-white/90"
+              className="font-saira text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 hover:text-white/90"
             >
               About this game
             </button>

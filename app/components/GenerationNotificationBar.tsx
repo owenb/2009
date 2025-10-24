@@ -62,14 +62,14 @@ export default function GenerationNotificationBar() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <div className={`w-2 h-2 ${isCompleted ? 'bg-emerald-400' : 'bg-green-400'} rounded-full ${isCompleted ? '' : 'animate-pulse'}`} />
-            <p className="text-white font-source-code text-sm">
+            <p className="text-white font-saira text-sm">
               {isCompleted
                 ? `Scene created in "${activeGeneration.movieTitle}"!`
                 : `Creating scene in "${activeGeneration.movieTitle}"...`
               }
             </p>
           </div>
-          <p className="text-white/60 font-source-code text-xs">
+          <p className="text-white/60 font-saira text-xs">
             {getStatusText()}
           </p>
         </div>
@@ -84,7 +84,7 @@ export default function GenerationNotificationBar() {
 
         {/* Time remaining - hide when completed */}
         {!isCompleted && (
-          <p className="text-white/40 font-source-code text-xs mt-2 text-right">
+          <p className="text-white/40 font-saira text-xs mt-2 text-right">
             {timeRemaining}
           </p>
         )}

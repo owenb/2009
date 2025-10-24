@@ -178,11 +178,11 @@ function CreatePageContent({ movieSlug }: { movieSlug: string }) {
   if (!attemptId || !sceneId) {
     return (
       <MovieThemeProvider colorScheme={colorScheme}>
-        <div className="w-screen h-screen bg-black flex items-center justify-center p-8 font-source-code">
+        <div className="w-screen h-screen bg-black flex items-center justify-center p-8 font-saira">
           <div className="w-full max-w-[600px] bg-black/85 border-[3px] border-white/30 rounded-xl p-8 backdrop-blur-md shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] flex flex-col gap-6">
             <div className="flex flex-col items-center gap-4 p-8">
-              <p className="font-source-code text-lg text-[#FF6B6B] m-0">Missing session data</p>
-              <button onClick={() => router.push(`/movie/${movieSlug}`)} className="font-source-code text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg px-6 py-3 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] hover:text-white/90 hover:border-white/40 hover:bg-white/5">
+              <p className="font-saira text-lg text-[#FF6B6B] m-0">Missing session data</p>
+              <button onClick={() => router.push(`/movie/${movieSlug}`)} className="font-saira text-sm text-white/60 bg-transparent border-2 border-white/20 rounded-lg px-6 py-3 cursor-pointer transition-all duration-200 uppercase tracking-[0.05em] hover:text-white/90 hover:border-white/40 hover:bg-white/5">
                 Go Back
               </button>
             </div>
@@ -194,13 +194,13 @@ function CreatePageContent({ movieSlug }: { movieSlug: string }) {
 
   return (
     <MovieThemeProvider colorScheme={colorScheme}>
-      <div className="w-screen h-screen bg-black flex items-center justify-center p-8 md:p-6 sm:p-0 font-source-code">
+      <div className="w-screen h-screen bg-black flex items-center justify-center p-8 md:p-6 sm:p-0 font-saira">
         <div className="w-full max-w-[600px] bg-black/85 border-[3px] border-white/30 rounded-xl p-8 md:p-6 sm:p-5 sm:rounded-2xl backdrop-blur-md shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] flex flex-col gap-6">
           {/* Header with timer */}
           <div className="flex justify-between items-center gap-4 sm:flex-col sm:items-start sm:gap-3">
-            <h1 className="font-source-code text-[2rem] md:text-2xl sm:text-xl font-bold text-white m-0 uppercase tracking-[0.1em]" style={{textShadow: '0 0 20px rgba(255, 255, 255, 0.5)'}}>What happens next?</h1>
+            <h1 className="font-saira text-[2rem] md:text-2xl sm:text-xl font-bold text-white m-0 uppercase tracking-[0.1em]" style={{textShadow: '0 0 20px rgba(255, 255, 255, 0.5)'}}>What happens next?</h1>
             {timeRemaining && (
-              <div className="font-source-code text-xl md:text-base font-bold text-[#FFD700] bg-[#FFD700]/10 border-2 border-[#FFD700]/30 rounded-lg py-2 px-4 min-w-[80px] md:min-w-[70px] md:py-[0.4rem] md:px-3 text-center sm:self-stretch">
+              <div className="font-saira text-xl md:text-base font-bold text-[#FFD700] bg-[#FFD700]/10 border-2 border-[#FFD700]/30 rounded-lg py-2 px-4 min-w-[80px] md:min-w-[70px] md:py-[0.4rem] md:px-3 text-center sm:self-stretch">
                 {timeRemaining}
               </div>
             )}
@@ -208,7 +208,7 @@ function CreatePageContent({ movieSlug }: { movieSlug: string }) {
 
           {/* Context display */}
           {!isLoadingContext && (
-            <div className="bg-white/5 border-2 border-white/20 rounded-lg p-4 text-white font-source-code text-base font-semibold md:flex-col md:items-start md:gap-2">
+            <div className="bg-white/5 border-2 border-white/20 rounded-lg p-4 text-white font-saira text-base font-semibold md:flex-col md:items-start md:gap-2">
               <span className="text-white/60">Continuing from: </span>
               <span>{parentSceneLabel}</span>
             </div>
@@ -216,7 +216,7 @@ function CreatePageContent({ movieSlug }: { movieSlug: string }) {
 
           {/* Prompt Input */}
           <textarea
-            className="font-source-code text-base text-white bg-white/5 border-2 border-white/20 rounded-lg py-4 px-5 resize-y min-h-[120px] transition-all duration-200 md:text-[0.95rem] focus:outline-none focus:border-[#FFD700]/50 focus:bg-white/8 focus:shadow-[0_0_20px_rgba(255,215,0,0.2)] placeholder:text-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="font-saira text-base text-white bg-white/5 border-2 border-white/20 rounded-lg py-4 px-5 resize-y min-h-[120px] transition-all duration-200 md:text-[0.95rem] focus:outline-none focus:border-[#FFD700]/50 focus:bg-white/8 focus:shadow-[0_0_20px_rgba(255,215,0,0.2)] placeholder:text-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder="Describe what happens next in 2009..."
             value={promptText}
             onChange={(e) => setPromptText(e.target.value)}
@@ -227,14 +227,14 @@ function CreatePageContent({ movieSlug }: { movieSlug: string }) {
 
           {/* Error Message */}
           {error && (
-            <div className="font-source-code text-sm text-[#FF6B6B] bg-[#FF6B6B]/10 border-2 border-[#FF6B6B]/30 rounded-lg py-3 px-4 text-center">
+            <div className="font-saira text-sm text-[#FF6B6B] bg-[#FF6B6B]/10 border-2 border-[#FF6B6B]/30 rounded-lg py-3 px-4 text-center">
               {error}
             </div>
           )}
 
           {/* Generate Button */}
           <button
-            className="font-source-code text-lg font-bold text-black rounded-lg py-5 px-8 cursor-pointer transition-all duration-200 border-none uppercase tracking-[0.05em] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:not(:disabled):-translate-y-0.5 active:not(:disabled):translate-y-0"
+            className="font-saira text-lg font-bold text-black rounded-lg py-5 px-8 cursor-pointer transition-all duration-200 border-none uppercase tracking-[0.05em] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:not(:disabled):-translate-y-0.5 active:not(:disabled):translate-y-0"
             style={{
               background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
               boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)',
@@ -271,7 +271,7 @@ export default function CreatePage({ params }: CreatePageProps) {
 
   if (!movieSlug) {
     return (
-      <div className="w-screen h-screen bg-black flex items-center justify-center p-8 font-source-code">
+      <div className="w-screen h-screen bg-black flex items-center justify-center p-8 font-saira">
         <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center">
           <p>Loading...</p>
         </div>
@@ -281,7 +281,7 @@ export default function CreatePage({ params }: CreatePageProps) {
 
   return (
     <Suspense fallback={
-      <div className="w-screen h-screen bg-black flex items-center justify-center p-8 font-source-code">
+      <div className="w-screen h-screen bg-black flex items-center justify-center p-8 font-saira">
         <div className="bg-black/85 backdrop-blur-md rounded-xl border-[3px] border-white/30 p-8 max-w-[600px] w-full shadow-[0_0_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] text-center">
           <p>Loading...</p>
         </div>

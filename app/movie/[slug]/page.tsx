@@ -24,7 +24,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   // Check if movie is active (you may want to show different UI for draft/paused/archived)
   if (movie.status !== 'active') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white font-source-code">
+      <div className="flex items-center justify-center min-h-screen bg-black text-white font-saira">
         <div className="text-center">
           <h1 className="text-2xl mb-4">Movie Not Available</h1>
           <p className="text-white/70">
@@ -38,7 +38,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   // Ensure movie has a genesis scene (check for null/undefined, not falsy since ID can be 0)
   if (movie.genesis_scene_id === null || movie.genesis_scene_id === undefined) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white font-source-code">
+      <div className="flex items-center justify-center min-h-screen bg-black text-white font-saira">
         <div className="text-center">
           <h1 className="text-2xl mb-4">Movie Not Ready</h1>
           <p className="text-white/70">

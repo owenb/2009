@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Saira } from "next/font/google";
+import { Saira } from "next/font/google";
 import { SafeArea } from "@coinbase/onchainkit/minikit";
 import { minikitConfig } from "../minikit.config";
 import { RootProvider } from "./rootProvider";
@@ -37,11 +37,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
 const saira = Saira({
   variable: "--font-saira",
   subsets: ["latin"],
@@ -54,7 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="bg-black">
-      <body className={`${inter.variable} ${saira.variable} bg-black`}>
+      <body className={`${saira.variable} bg-black`}>
         <RootProvider>
           <GenerationProvider>
             <MiniKitInitializer />

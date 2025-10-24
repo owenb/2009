@@ -618,7 +618,7 @@ export default function SwipeableSlotChoice({
     const isAvailable = slotState.type === 'empty' && slotState.canInteract;
 
     return (
-      <div className={`font-source-code transition-all duration-200 ${isHighlighted ? 'text-white scale-105' : slotState.canInteract ? 'text-white' : 'text-white/40'}`}>
+      <div className={`font-saira transition-all duration-200 ${isHighlighted ? 'text-white scale-105' : slotState.canInteract ? 'text-white' : 'text-white/40'}`}>
         <div className={`flex flex-col items-center max-w-[200px] sm:max-w-[160px] relative px-3 py-2 rounded-lg ${isAvailable ? 'bg-black/60' : 'bg-black/40'} backdrop-blur-sm`}>
           {/* Available slot background highlight */}
           {isAvailable && (
@@ -734,7 +734,7 @@ export default function SwipeableSlotChoice({
         {!isConnected && (
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20 w-[90%] max-w-[400px]">
             <div className="rounded-lg p-3 text-center bg-[rgba(255,215,0,0.2)] border-2 border-[rgba(255,215,0,0.5)]">
-              <p className="text-[#FFD700] font-bold text-sm font-source-code m-0">
+              <p className="text-[#FFD700] font-bold text-sm font-saira m-0">
                 🔒 Wallet Connection Required
               </p>
             </div>
@@ -743,7 +743,7 @@ export default function SwipeableSlotChoice({
 
         {statusMessage && (
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
-            <p className="text-[#FFD700] font-source-code text-sm">
+            <p className="text-[#FFD700] font-saira text-sm">
               {statusMessage}
             </p>
           </div>
@@ -751,7 +751,7 @@ export default function SwipeableSlotChoice({
 
         {isPending && (
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
-            <p className="text-[#FFD700] font-source-code text-sm">
+            <p className="text-[#FFD700] font-saira text-sm">
               Waiting for wallet confirmation...
             </p>
           </div>
@@ -759,7 +759,7 @@ export default function SwipeableSlotChoice({
 
         {isConfirming && (
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
-            <p className="text-[#FFD700] font-source-code text-sm">
+            <p className="text-[#FFD700] font-saira text-sm">
               Transaction pending on Base...
             </p>
           </div>
@@ -767,14 +767,14 @@ export default function SwipeableSlotChoice({
 
         {loadError && (
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
-            <p className="text-[#FF6B6B] font-source-code text-sm">
+            <p className="text-[#FF6B6B] font-saira text-sm">
               {loadError}
             </p>
           </div>
         )}
 
         {isLoading ? (
-          <p className="text-white font-source-code">Loading slots...</p>
+          <p className="text-white font-saira">Loading slots...</p>
         ) : (
           <>
             {/* Up direction - Back button (only show if canGoBack) */}
@@ -783,7 +783,7 @@ export default function SwipeableSlotChoice({
                 className="absolute top-[8%] left-1/2 transform -translate-x-1/2 z-10 pointer-events-auto cursor-pointer"
                 onClick={() => handleDirectionClick('up')}
               >
-                <div className="font-source-code transition-all duration-200">
+                <div className="font-saira transition-all duration-200">
                   <div className="flex flex-col items-center px-4 py-2 rounded-lg bg-black/60 backdrop-blur-sm">
                     <div className={`text-3xl mb-1 sm:text-2xl transition-all duration-200 ${swipeDirection === 'up' ? 'scale-110 text-white' : 'text-white hover:text-white'}`}>↑</div>
                     <div
@@ -856,14 +856,14 @@ export default function SwipeableSlotChoice({
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4 z-20 pb-[env(safe-area-inset-bottom)]">
           <button
             onClick={() => setShowMapModal(true)}
-            className="font-source-code text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 flex items-center gap-1 hover:text-white/90"
+            className="font-saira text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 flex items-center gap-1 hover:text-white/90"
           >
             <span>Story map</span>
           </button>
 
           <button
             onClick={() => setShowAboutModal(true)}
-            className="font-source-code text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 hover:text-white/90"
+            className="font-saira text-sm text-white/60 bg-transparent border-none cursor-pointer no-underline transition-colors duration-200 p-0 hover:text-white/90"
           >
             About this game
           </button>

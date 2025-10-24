@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import type { Movie } from '@/lib/db/types';
+import Logo from './Logo';
 
 type SortOption = 'created_at' | 'total_scenes' | 'total_views' | 'title';
 
@@ -88,6 +89,11 @@ export default function Home() {
 
   return (
     <section className="px-4 py-8 bg-black min-h-screen">
+      {/* Logo */}
+      <div className="flex justify-center mb-12">
+        <Logo />
+      </div>
+
       {isLoading && offset === 0 ? (
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
