@@ -217,9 +217,15 @@ export async function getCompletedScenes(movieId: number): Promise<Scene[]> {
 
 /**
  * Get video URL for a scene
+ *
+ * NOTE: This returns a direct R2 URL (not signed). For actual playback,
+ * use the /api/scenes/[sceneId]/video endpoint which generates signed URLs.
+ * This function now returns a placeholder - the actual video path requires
+ * knowing the movie slug which requires a database query.
  */
 export function getSceneVideoUrl(sceneId: number): string {
-  return `https://${process.env.AWS_S3_BUCKET_NAME}.r2.cloudflarestorage.com/${sceneId}.mp4`;
+  // Return API endpoint that will generate proper signed URL
+  return `/api/scenes/${sceneId}/video`;
 }
 
 /**

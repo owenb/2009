@@ -8,11 +8,11 @@ export async function GET(
   try {
     const { sceneId: sceneIdParam } = await params;
 
-    // Handle "genesis" or "null" as the intro scene (null sceneId → INTRO.mp4)
-    let sceneId: number | null;
+    // Handle "genesis" or "null" as scene ID 0 (genesis scene for "2009" movie)
+    let sceneId: number;
 
     if (sceneIdParam === 'genesis' || sceneIdParam === 'null') {
-      sceneId = null; // Maps to INTRO.mp4 in R2
+      sceneId = 0; // Genesis scene ID (no longer INTRO.mp4)
     } else {
       const parsed = parseInt(sceneIdParam, 10);
       if (isNaN(parsed)) {

@@ -28,6 +28,7 @@ interface PromptRow {
   creator_fid: number | null;
   parent_id: number;
   slot: string;
+  movie_slug: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch prompt and related data
+    // Fetch prompt and related data (including movie slug for R2 upload)
     const promptResult = await query<PromptRow>(`
       SELECT
         p.id,
@@ -63,10 +64,12 @@ export async function POST(request: NextRequest) {
         a.creator_address,
         a.creator_fid,
         s.parent_id,
-        s.slot
+        s.slot,
+        m.slug as movie_slug
       FROM prompts p
       JOIN scene_generation_attempts a ON p.attempt_id = a.id
       JOIN scenes s ON a.scene_id = s.id
+      JOIN movies m ON s.movie_id = m.id
       WHERE p.id = $1
     `, [promptId]);
 
@@ -119,12 +122,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 2: Upload to R2
+    // Step 2: Upload to R2 (with movie slug for new structure)
     let r2Url: string;
 
     try {
-      console.log('Uploading video to R2...');
-      r2Url = await uploadVideoToR2(sceneId, videoBlob);
+      console.log(`Uploading video to R2: ${promptRow.movie_slug}/${sceneId}.mp4`);
+      r2Url = await uploadVideoToR2(sceneId, promptRow.movie_slug, videoBlob);
       console.log(`Video uploaded to R2: ${r2Url}`);
     } catch (error) {
       console.error('Failed to upload to R2:', error);

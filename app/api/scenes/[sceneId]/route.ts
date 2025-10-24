@@ -9,16 +9,29 @@ export async function GET(
   try {
     const { sceneId } = await params;
 
-    // Handle genesis scene
+    // Handle genesis scene - now uses R2 like all other scenes
     if (sceneId === 'genesis' || sceneId === '0') {
+      // Get signed URL from R2 (scene ID 0 for "2009" movie)
+      const scene = await getSceneById(0);
+
+      if (!scene) {
+        return NextResponse.json(
+          { error: 'Genesis scene not found in database' },
+          { status: 404 }
+        );
+      }
+
+      // Fetch movie to get slug
+      const movie = await getMovieById(scene.movie_id);
+
       return NextResponse.json({
         sceneId: 0,
-        videoUrl: '/intro/intro.mp4',
-        slotLabel: 'Genesis Scene',
-        creatorAddress: null,
-        creatorFid: null,
-        createdAt: new Date('2009-01-03').toISOString(),
-        movieSlug: '2009' // Default movie slug for genesis scenes
+        videoUrl: getSceneVideoUrl(0), // Returns /api/scenes/0/video endpoint
+        slotLabel: scene.slot_label || 'Genesis Scene',
+        creatorAddress: scene.creator_address,
+        creatorFid: scene.creator_fid,
+        createdAt: scene.created_at || new Date('2009-01-03').toISOString(),
+        movieSlug: movie?.slug || '2009'
       });
     }
 

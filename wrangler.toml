@@ -1,0 +1,21 @@
+# Wrangler configuration for 2009 base app
+# Uses CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN from .env.local
+
+name = "2009-base-app"
+
+# Account ID is read from CLOUDFLARE_ACCOUNT_ID environment variable
+# API Token is read from CLOUDFLARE_API_TOKEN environment variable
+
+# This ensures this project uses its own Cloudflare account
+# without affecting other projects using the global OAuth session
+
+# R2 Buckets:
+# - scenes: Private bucket for video files (requires signed URLs)
+# - public-images: Public bucket for cover images, posters, etc.
+#   Public URL: https://pub-03a74b8c3e8b4631b0919e3d44a1e600.r2.dev
+#
+# Upload to public bucket:
+#   wrangler r2 object put public-images/<path> --file=<local-file> --remote
+#
+# Or use the helper script:
+#   tsx scripts/upload-public-image.ts <local-file> <destination-path>
