@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Movie Platform - Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Code Pro', monospace;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #ffffff;
+      overflow: hidden;
+    }
+
+    .slides-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      z-index: 10;
+    }
+
+    .slide.prev {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+
+    /* Slide backgrounds */
+    .slide-1 { background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0a 100%); }
+    .slide-2 { background: radial-gradient(circle at 30% 70%, #2d1810 0%, #0a0a0a 100%); }
+    .slide-3 { background: radial-gradient(circle at 70% 30%, #1a2d10 0%, #0a0a0a 100%); }
+    .slide-4 { background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0a 100%); }
+
+    h1 {
+      font-size: clamp(2rem, 8vw, 4rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      text-align: center;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3)); }
+      to { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); }
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      font-weight: 700;
+      color: #FFD700;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+
+    h3 {
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-weight: 600;
+      color: #FFA500;
+      margin-bottom: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    p, li {
+      font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+      line-height: 1.6;
+      color: #ffffff;
+      max-width: 1000px;
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      color: #FFA500;
+      margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    .tagline {
+      font-size: clamp(1.2rem, 4vw, 2rem);
+      color: #ffffff;
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .problem-list {
+      list-style: none;
+      max-width: 900px;
+      margin: 1rem auto;
+      text-align: left;
+    }
+
+    .problem-list li {
+      margin: 1rem 0;
+      padding-left: 2.5rem;
+      position: relative;
+      color: #ffffff;
+    }
+
+    .problem-list li::before {
+      content: "⚠️";
+      position: absolute;
+      left: 0;
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+    }
+
+    .solution-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 1.5rem auto;
+      width: 100%;
+    }
+
+    .solution-card {
+      background: rgba(255, 215, 0, 0.1);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .solution-card:hover {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: rgba(255, 215, 0, 0.6);
+      transform: translateY(-5px);
+    }
+
+    .solution-card h3 {
+      margin-top: 0;
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+    }
+
+    .solution-card p {
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      line-height: 1.5;
+      color: #e0e0e0;
+    }
+
+    .architecture-diagram {
+      max-width: 1200px;
+      margin: 1rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .arch-layer {
+      background: rgba(26, 26, 46, 0.6);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 1rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .arch-layer h3 {
+      margin: 0 0 0.8rem 0;
+      font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+      color: #FFD700;
+    }
+
+    .arch-components {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .arch-component {
+      background: rgba(255, 215, 0, 0.15);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      font-size: clamp(0.75rem, 2vw, 0.95rem);
+      color: #ffffff;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 1.5rem auto;
+      width: 100%;
+    }
+
+    .role-card {
+      background: rgba(255, 215, 0, 0.1);
+      border: 3px solid rgba(255, 215, 0, 0.4);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .role-card h3 {
+      margin-top: 0;
+      text-align: center;
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+    }
+
+    .role-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+    }
+
+    .role-card li {
+      margin: 0.8rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      font-size: clamp(0.85rem, 2vw, 1rem);
+    }
+
+    .role-card li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: #FFD700;
+      font-weight: 700;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1rem;
+      z-index: 1000;
+      padding: 0 1rem;
+    }
+
+    button {
+      background: rgba(255, 215, 0, 0.2);
+      border: 2px solid #FFD700;
+      color: #FFD700;
+      padding: 0.8rem 1.5rem;
+      font-size: clamp(0.8rem, 2vw, 1rem);
+      font-family: 'Source Code Pro', monospace;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    button:hover:not(:disabled) {
+      background: rgba(255, 215, 0, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .slide-number {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      font-size: clamp(0.9rem, 2vw, 1.2rem);
+      color: rgba(255, 215, 0, 0.6);
+      z-index: 1000;
+    }
+
+    .icon {
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      margin-bottom: 1rem;
+    }
+
+    .highlight {
+      color: #FFD700;
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .revenue-diagram {
+      background: rgba(26, 26, 46, 0.6);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 900px;
+      margin: 1.5rem auto;
+      width: 100%;
+    }
+
+    .revenue-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .revenue-label {
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      color: #ffffff;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .revenue-amount {
+      font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+      color: #00ff00;
+      font-weight: 700;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    @media (max-width: 768px) {
+      .slide {
+        padding: 1.5rem 1rem;
+        padding-bottom: 5rem;
+      }
+
+      .solution-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        width: 100%;
+        padding: 0 1rem;
+        bottom: 0.5rem;
+      }
+
+      button {
+        flex: 1;
+        padding: 0.8rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="slides-container">
+    <!-- Slide 1: Intro -->
+    <div class="slide slide-1 active">
+      <div class="icon">🎬</div>
+      <h1>Interactive Movie Platform</h1>
+      <p class="tagline">Hollywood Meets Collaborative Storytelling Meets Blockchain</p>
+      <p class="subtitle" style="margin-top: 2rem; max-width: 800px;">
+        A curated platform where <span class="highlight">creators launch branching narrative universes</span>
+        that <span class="highlight">users extend through AI-generated video</span>
+      </p>
+      <div style="margin-top: 2rem; text-align: center;">
+        <p style="font-size: clamp(0.9rem, 2vw, 1.1rem); opacity: 0.8;">
+          Think Netflix meets YouTube meets Ethereum
+        </p>
+      </div>
+    </div>
+
+    <!-- Slide 2: Problem Statement -->
+    <div class="slide slide-2">
+      <h2>The Problem</h2>
+      <div class="icon">🤔</div>
+      <ul class="problem-list">
+        <li><strong>Static Content:</strong> Movies & games have fixed narratives — audiences are passive consumers, not participants</li>
+        <li><strong>No Creator Economy:</strong> Fans can't extend the universes they love and earn revenue from their contributions</li>
+        <li><strong>Centralized Gatekeepers:</strong> Hollywood studios and platforms control what gets made and who profits</li>
+        <li><strong>Wasted Creative Potential:</strong> Millions of ideas for alternate endings, spin-offs, and "what if" scenarios never get realized</li>
+      </ul>
+      <p class="center" style="margin-top: 2rem; font-size: clamp(1.1rem, 3vw, 1.5rem);">
+        <span class="highlight">What if storytelling was collaborative, infinite, and owned by creators?</span>
+      </p>
+    </div>
+
+    <!-- Slide 3: Solution -->
+    <div class="slide slide-3">
+      <h2>Our Solution: Two Types of Creators</h2>
+
+      <div class="two-column">
+        <!-- Movie Creators -->
+        <div class="role-card">
+          <div class="icon" style="text-align: center;">🎥</div>
+          <h3>Movie Creators<br>("Producers")</h3>
+          <ul>
+            <li>Launch branching narrative universes</li>
+            <li>Deposit 1-2 ETH (skin in the game)</li>
+            <li>Work with platform to create genesis + 3 initial scenes</li>
+            <li>Earn <span class="highlight">~55%</span> from <strong>every scene</strong> in their universe</li>
+            <li>Recoup deposit + profit if movie resonates</li>
+            <li>Absorb loss if it flops (like Hollywood)</li>
+          </ul>
+          <p class="center" style="margin-top: 1rem; opacity: 0.8; font-size: clamp(0.8rem, 2vw, 0.95rem);">
+            Highly curated: 10-100 exceptional movies only
+          </p>
+        </div>
+
+        <!-- Scene Creators -->
+        <div class="role-card">
+          <div class="icon" style="text-align: center;">✍️</div>
+          <h3>Scene Creators<br>("Co-Writers")</h3>
+          <ul>
+            <li>Purchase slots (0.007 ETH) to extend the story</li>
+            <li>Submit prompts → AI generates 8-sec video</li>
+            <li>GPT-4o-mini refines prompts (unlimited retries, 1hr window)</li>
+            <li>Earn <span class="highlight">~35%</span> when others build on your branch:</li>
+            <li style="padding-left: 2.5rem;">20% from children</li>
+            <li style="padding-left: 2.5rem;">10% from grandchildren</li>
+            <li style="padding-left: 2.5rem;">5% from great-grandchildren</li>
+          </ul>
+          <p class="center" style="margin-top: 1rem; opacity: 0.8; font-size: clamp(0.8rem, 2vw, 0.95rem);">
+            Break even after ~7 follow-on scenes
+          </p>
+        </div>
+      </div>
+
+      <div class="solution-grid" style="margin-top: 2rem;">
+        <div class="solution-card">
+          <div class="icon" style="text-align: center;">🌳</div>
+          <h3>Infinite Branching</h3>
+          <p>Every scene has 3 slots (A, B, C). Each filled slot adds 3 more opportunities. No depth or breadth limits.</p>
+        </div>
+        <div class="solution-card">
+          <div class="icon" style="text-align: center;">🤖</div>
+          <h3>AI-Powered</h3>
+          <p>GPT-4o-mini refines prompts. Sora/Luma generates videos. 1-hour retry window with unlimited attempts.</p>
+        </div>
+        <div class="solution-card">
+          <div class="icon" style="text-align: center;">🔗</div>
+          <h3>On-Chain Ownership</h3>
+          <p>Each scene is an ERC-721 NFT on Base. Smart contract enforces revenue splits. Permanent, immutable rights.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Architecture Overview -->
+    <div class="slide slide-4">
+      <h2>Architecture Overview</h2>
+
+      <div class="architecture-diagram">
+        <!-- Frontend Layer -->
+        <div class="arch-layer">
+          <h3>🎨 Frontend (Next.js 15)</h3>
+          <div class="arch-components">
+            <div class="arch-component">Video Player (Pre-caching)</div>
+            <div class="arch-component">Gesture Navigation</div>
+            <div class="arch-component">Wallet (OnchainKit)</div>
+            <div class="arch-component">Movie Browser</div>
+            <div class="arch-component">Earnings Dashboard</div>
+          </div>
+        </div>
+
+        <!-- Backend Layer -->
+        <div class="arch-layer">
+          <h3>⚙️ Backend (API Routes)</h3>
+          <div class="arch-components">
+            <div class="arch-component">PostgreSQL (3-tier schema)</div>
+            <div class="arch-component">Atomic Slot Locking (1 min)</div>
+            <div class="arch-component">Payment Verification</div>
+            <div class="arch-component">AI Generation (1hr retry)</div>
+            <div class="arch-component">R2 Video Storage</div>
+          </div>
+        </div>
+
+        <!-- Blockchain Layer -->
+        <div class="arch-layer">
+          <h3>🔗 Blockchain (Base L2)</h3>
+          <div class="arch-components">
+            <div class="arch-component">ERC-721 Scene NFTs</div>
+            <div class="arch-component">Revenue Distribution</div>
+            <div class="arch-component">Movie Registry</div>
+            <div class="arch-component">Earnings Withdrawal</div>
+            <div class="arch-component">UUPS Upgradeable</div>
+          </div>
+        </div>
+
+        <!-- AI Layer -->
+        <div class="arch-layer">
+          <h3>🤖 AI Layer</h3>
+          <div class="arch-components">
+            <div class="arch-component">GPT-4o-mini (Prompt Refinement)</div>
+            <div class="arch-component">Sora/Luma (Video Gen)</div>
+            <div class="arch-component">Content Moderation</div>
+            <div class="arch-component">Theme Enforcement</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Example -->
+      <div class="revenue-diagram">
+        <h3 class="center" style="color: #FFD700; margin-bottom: 1rem;">Revenue Split (0.007 ETH per scene)</h3>
+        <div class="revenue-row">
+          <div class="revenue-label">Parent Scene Creator</div>
+          <div class="revenue-amount">20% (0.0014 ETH)</div>
+        </div>
+        <div class="revenue-row">
+          <div class="revenue-label">Grandparent Scene Creator</div>
+          <div class="revenue-amount">10% (0.0007 ETH)</div>
+        </div>
+        <div class="revenue-row">
+          <div class="revenue-label">Great-Grandparent Scene Creator</div>
+          <div class="revenue-amount">5% (0.00035 ETH)</div>
+        </div>
+        <div class="revenue-row" style="border-top: 1px solid rgba(255, 215, 0, 0.3); padding-top: 0.5rem; margin-top: 0.5rem;">
+          <div class="revenue-label"><strong>Movie Creator</strong></div>
+          <div class="revenue-amount" style="color: #FFD700;"><strong>~55% (0.00385 ETH)</strong></div>
+        </div>
+        <div class="revenue-row">
+          <div class="revenue-label">Platform</div>
+          <div class="revenue-amount" style="color: #FFA500;">~10% (0.0007 ETH)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Controls -->
+  <div class="controls">
+    <button id="prevBtn" disabled>← Prev</button>
+    <button id="nextBtn">Next →</button>
+  </div>
+
+  <!-- Slide Number -->
+  <div class="slide-number">
+    <span id="currentSlide">1</span> / <span id="totalSlides">4</span>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const currentSlideSpan = document.getElementById('currentSlide');
+    const totalSlidesSpan = document.getElementById('totalSlides');
+
+    totalSlidesSpan.textContent = totalSlides;
+
+    function updateSlides() {
+      slides.forEach((slide, index) => {
+        slide.classList.remove('active', 'prev');
+        if (index === currentSlide) {
+          slide.classList.add('active');
+        } else if (index < currentSlide) {
+          slide.classList.add('prev');
+        }
+      });
+
+      currentSlideSpan.textContent = currentSlide + 1;
+      prevBtn.disabled = currentSlide === 0;
+      nextBtn.disabled = currentSlide === totalSlides - 1;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlides();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlides();
+      }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' && currentSlide > 0) {
+        currentSlide--;
+        updateSlides();
+      } else if (e.key === 'ArrowRight' && currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlides();
+      }
+    });
+
+    updateSlides();
+  </script>
+</body>
+</html>

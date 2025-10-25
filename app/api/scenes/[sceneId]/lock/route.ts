@@ -68,6 +68,20 @@ export async function POST(
       );
     }
 
+    // Get movie_id from parent scene
+    const parentScene = await query<{ movie_id: number }>(`
+      SELECT movie_id FROM scenes WHERE id = $1
+    `, [parentId]);
+
+    if (parentScene.rowCount === 0) {
+      return NextResponse.json(
+        { error: 'Parent scene not found' },
+        { status: 404 }
+      );
+    }
+
+    const movieId = parentScene.rows[0].movie_id;
+
     // Check if user already has an active lock on ANY slot globally
     // IMPORTANT: We check BOTH scene status AND active attempts to avoid stuck states
     const existingLock = await query<CurrentLockRow>(`
@@ -135,10 +149,11 @@ export async function POST(
 
     // Attempt to acquire lock
     // This uses INSERT ... ON CONFLICT to atomically lock the slot
-    const lockExpiry = new Date(Date.now() + 60000); // 1 minute from now
+    // Calculate expiry in database to avoid timezone issues
 
     const result = await query<LockResultRow>(`
       INSERT INTO scenes (
+        movie_id,
         parent_id,
         slot,
         status,
@@ -148,8 +163,8 @@ export async function POST(
         created_at,
         updated_at
       )
-      VALUES ($1, $2, 'locked', $3, $4, $5, NOW(), NOW())
-      ON CONFLICT (parent_id, slot)
+      VALUES ($1, $2, $3, 'locked', NOW() + INTERVAL '1 minute', $4, $5, NOW(), NOW())
+      ON CONFLICT (movie_id, parent_id, slot)
       DO UPDATE SET
         status = CASE
           WHEN scenes.locked_until < NOW() OR scenes.status = 'lock_expired' OR scenes.status = 'failed'
@@ -158,7 +173,7 @@ export async function POST(
         END,
         locked_until = CASE
           WHEN scenes.locked_until < NOW() OR scenes.status = 'lock_expired' OR scenes.status = 'failed'
-            THEN $3
+            THEN NOW() + INTERVAL '1 minute'
           ELSE scenes.locked_until
         END,
         locked_by_address = CASE
@@ -178,7 +193,7 @@ export async function POST(
         END
       WHERE scenes.locked_until < NOW() OR scenes.status = 'lock_expired' OR scenes.status = 'failed'
       RETURNING id, locked_until, status
-    `, [parentId, slot, lockExpiry, userAddress.toLowerCase(), fid || null]);
+    `, [movieId, parentId, slot, userAddress.toLowerCase(), fid || null]);
 
     // Check if lock was acquired
     if (result.rowCount === 0) {

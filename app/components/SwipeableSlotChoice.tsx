@@ -17,6 +17,7 @@ import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
 import ExtendStoryModal from "./ExtendStoryModal";
 import AboutModal from "./AboutModal";
 import SceneMapModal from "./SceneMapModal";
+import EarningsNotification from "./EarningsNotification";
 import type { SlotInfo } from "@/lib/db/types";
 import type { SceneData } from "@/lib/types";
 
@@ -718,6 +719,9 @@ export default function SwipeableSlotChoice({
       {renderVideoPreview('left', directionMap.left, leftVideoRef)}
       {renderVideoPreview('right', directionMap.right, rightVideoRef)}
       {renderVideoPreview('down', directionMap.down, downVideoRef)}
+
+      {/* Earnings notification */}
+      <EarningsNotification isVisible={isVisible} />
 
       <div
         className="relative w-full h-full flex items-center justify-center pointer-events-auto"

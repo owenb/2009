@@ -19,8 +19,8 @@ export const minikitConfig = {
 
   miniapp: {
     version: "1",
-    name: "2009",
-    subtitle: "An infinite adventure",
+    name: "BasedOn",
+    subtitle: "Co-create movies. Own every scene. Earn from infinite sequels.",
     description: "Game",
     screenshotUrls: [`${ROOT_URL}/screenshot-portrait.png`],
     iconUrl: `${ROOT_URL}/blue-icon.png`,
@@ -29,7 +29,7 @@ export const minikitConfig = {
     homeUrl: ROOT_URL,
     webhookUrl: `${ROOT_URL}/api/webhook`,
     primaryCategory: "games",
-    tags: ["game", "2009", "bitcoin", "ai"],
+    tags: ["game", "AI", "bitcoin", "ai"],
     heroImageUrl: `${ROOT_URL}/hero.png`,
     tagline: "",
     ogTitle: "",

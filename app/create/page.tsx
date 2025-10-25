@@ -180,7 +180,7 @@ function CreatePageContent() {
         {/* Prompt Input */}
         <textarea
           className="font-saira text-base text-white bg-white/5 border-2 border-white/20 rounded-lg py-4 px-5 resize-y min-h-[120px] transition-all duration-200 md:text-[0.95rem] focus:outline-none focus:border-[#FFD700]/50 focus:bg-white/8 focus:shadow-[0_0_20px_rgba(255,215,0,0.2)] placeholder:text-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
-          placeholder="Describe what happens next in 2009..."
+          placeholder="Describe what happens next"
           value={promptText}
           onChange={(e) => setPromptText(e.target.value)}
           rows={4}

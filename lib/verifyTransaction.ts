@@ -1,6 +1,6 @@
 /**
  * Smart Contract Transaction Verification Utility
- * Verifies VideoAdventure contract transactions on Base blockchain
+ * Verifies VideoAdventure contract transactions on Base mainnet
  */
 
 import { createPublicClient, http, type Address, type Hash, decodeEventLog } from 'viem';
@@ -20,7 +20,7 @@ export interface VerificationResult {
 }
 
 /**
- * Verify a scene creation transaction on Base blockchain
+ * Verify a scene creation transaction on Base mainnet
  * @param txHash - Transaction hash
  * @param expectedCreator - Expected creator address
  * @param expectedParentId - Expected parent scene ID
@@ -46,17 +46,17 @@ export async function verifySceneCreation(
     throw new Error('Transaction failed on blockchain');
   }
 
-  // Step 2: Parse SceneCreated event from transaction logs
+  // Step 2: Parse SlotClaimed event from transaction logs
   // This is more reliable than querying contract state which may lag behind
-  const sceneCreatedEvent = VideoAdventureABI.find(
-    (item) => item.type === 'event' && item.name === 'SceneCreated'
+  const slotClaimedEvent = VideoAdventureABI.find(
+    (item) => item.type === 'event' && item.name === 'SlotClaimed'
   );
 
-  if (!sceneCreatedEvent) {
-    throw new Error('SceneCreated event not found in ABI');
+  if (!slotClaimedEvent) {
+    throw new Error('SlotClaimed event not found in ABI');
   }
 
-  // Find SceneCreated event in transaction logs
+  // Find SlotClaimed event in transaction logs
   let sceneId: bigint | null = null;
   let parentId: bigint | null = null;
   let slot: number | null = null;
@@ -75,18 +75,20 @@ export async function verifySceneCreation(
         topics: log.topics
       });
 
-      if (decoded.eventName === 'SceneCreated') {
+      if (decoded.eventName === 'SlotClaimed') {
         // TypeScript doesn't narrow the type well, so we need to be explicit
         const args = decoded.args as unknown as {
           sceneId: bigint;
+          movieId: bigint;
           parentId: bigint;
           slot: number;
-          creator: string;
+          buyer: string;
+          amount: bigint;
         };
         sceneId = BigInt(args.sceneId);
         parentId = BigInt(args.parentId);
         slot = Number(args.slot);
-        creator = String(args.creator);
+        creator = String(args.buyer);
         break;
       }
     } catch {
@@ -96,7 +98,7 @@ export async function verifySceneCreation(
   }
 
   if (sceneId === null || parentId === null || slot === null || creator === null) {
-    throw new Error('SceneCreated event not found in transaction logs');
+    throw new Error('SlotClaimed event not found in transaction logs');
   }
 
   // Step 3: Verify the event details match what we expect

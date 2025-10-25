@@ -4,10 +4,25 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import type { Movie } from '@/lib/db/types';
 import Logo from './Logo';
+import { useComposeCast } from '@coinbase/onchainkit/minikit';
 
 type SortOption = 'created_at' | 'total_scenes' | 'total_views' | 'title';
 
 const LIMIT = 12;
+
+// Map of movie slugs to local thumbnail paths
+const LOCAL_THUMBNAILS: Record<string, string> = {
+  'mochi': '/mochi-thumbnail.jpg',
+};
+
+function getMovieThumbnail(movie: Movie): string | null {
+  // Check for local thumbnail first
+  if (movie.slug && LOCAL_THUMBNAILS[movie.slug]) {
+    return LOCAL_THUMBNAILS[movie.slug];
+  }
+  // Fall back to database cover image
+  return movie.cover_image_url || null;
+}
 
 export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -20,6 +35,9 @@ export default function Home() {
   const [sortBy, _setSortBy] = useState<SortOption>('total_views');
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
+
+  // Compose cast hook for social sharing
+  const { composeCastAsync } = useComposeCast();
 
   // Fetch movies with proper cleanup
   useEffect(() => {
@@ -87,6 +105,25 @@ export default function Home() {
     setOffset((prev) => prev + LIMIT);
   }, []);
 
+  const handleAddYourOwnMovie = async () => {
+    try {
+      const text = `I want my own movie within BasedOn! Let's talk.`;
+
+      const result = await composeCastAsync({
+        text: text,
+        embeds: ['https://2009-five.vercel.app']
+      });
+
+      if (result?.cast) {
+        console.log("Cast created successfully:", result.cast.hash);
+      } else {
+        console.log("User cancelled the cast");
+      }
+    } catch (error) {
+      console.error("Error sharing cast:", error);
+    }
+  };
+
   return (
     <section className="px-4 py-8 bg-black min-h-screen">
       {/* Logo */}
@@ -123,9 +160,9 @@ export default function Home() {
               >
                 {/* Cover image */}
                 <div className="aspect-video relative bg-gradient-to-br from-white/10 to-white/5">
-                  {movie.cover_image_url ? (
+                  {getMovieThumbnail(movie) ? (
                     <img
-                      src={movie.cover_image_url}
+                      src={getMovieThumbnail(movie)!}
                       alt={`${movie.title} cover`}
                       className="w-full h-full object-cover"
                     />
@@ -155,6 +192,34 @@ export default function Home() {
                 </div>
               </Link>
             ))}
+
+            {/* Add your own movie card */}
+            <div
+              onClick={handleAddYourOwnMovie}
+              className="bg-white/5 rounded-lg overflow-hidden hover:bg-white/10 transition-colors cursor-pointer group border-2 border-white/10 border-dashed"
+            >
+              {/* Question mark cover */}
+              <div className="aspect-video relative bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center">
+                <div className="text-9xl font-bold text-white/30 group-hover:text-white/50 transition-colors font-saira">
+                  ?
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="p-4">
+                <h3 className="font-saira text-lg font-bold text-white mb-2 group-hover:text-white/80 transition-colors">
+                  Add Your Own Movie
+                </h3>
+                <p className="text-white/70 text-sm mb-3 leading-relaxed">
+                  Create your own interactive adventure. We&apos;ll help you bring your vision to life with custom art style and the first 4 scenes.
+                  <span className="text-white/90 font-semibold"> You keep all the platform revenue</span> generated from your movie&apos;s scenes.
+                </p>
+                <div className="flex justify-between text-xs text-purple-400/60">
+                  <span>Launch your universe</span>
+                  <span>Earn from every scene →</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {hasMore && (

@@ -3,16 +3,20 @@
  * POST /api/prompts/submit
  *
  * Submits final prompt and triggers Sora 2 video generation
+ * Supports last frame extraction for continuity
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { generateVideo } from '@/lib/sora';
+import { resizeImageForVideo } from '@/lib/image-processing';
 
-interface SubmitRequest {
-  attemptId: number;
-  promptText: string;
-  refinedPromptText?: string;
-}
+// NOTE: This endpoint now accepts FormData to support file uploads
+// Parameters:
+// - attemptId: number
+// - promptText: string
+// - refinedPromptText?: string
+// - inputFrame?: File (optional last frame for continuity)
 
 interface AttemptRow {
   id: number;
@@ -27,8 +31,40 @@ interface PromptInsertRow {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: SubmitRequest = await request.json();
-    const { attemptId, promptText, refinedPromptText } = body;
+    // Parse request body - support both JSON and FormData
+    const contentType = request.headers.get('content-type') || '';
+    let attemptId: number;
+    let promptText: string;
+    let refinedPromptText: string | null = null;
+    let inputFrame: File | null = null;
+
+    try {
+      if (contentType.includes('application/json')) {
+        // Parse as JSON
+        const body = await request.json();
+        attemptId = parseInt(body.attemptId);
+        promptText = body.promptText;
+        refinedPromptText = body.refinedPromptText || null;
+        // Note: JSON requests cannot include files, inputFrame remains null
+      } else {
+        // Parse as FormData (supports file uploads)
+        const formData = await request.formData();
+        attemptId = parseInt(formData.get('attemptId') as string);
+        promptText = formData.get('promptText') as string;
+        refinedPromptText = formData.get('refinedPromptText') as string | null;
+        inputFrame = formData.get('inputFrame') as File | null;
+      }
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json(
+        {
+          error: 'Invalid request format',
+          details: 'Request body must be either JSON or FormData',
+          contentType
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate inputs
     if (!attemptId || isNaN(attemptId)) {
@@ -140,38 +176,54 @@ export async function POST(request: NextRequest) {
       WHERE id = $1
     `, [attempt.scene_id]);
 
-    // Start Sora 2 video generation (asynchronously)
+    // Process input frame if provided (for continuity)
+    let processedFrame: File | undefined;
+    if (inputFrame) {
+      try {
+        console.log('📸 Processing input frame for continuity...');
+        const resizeResult = await resizeImageForVideo(inputFrame, '1024x1792'); // Sora 2 Pro portrait size
+
+        // Convert buffer back to File for Sora
+        const blob = new Blob([resizeResult.resizedBuffer], { type: 'image/jpeg' });
+        processedFrame = new File([blob], 'last-frame.jpg', { type: 'image/jpeg' });
+
+        console.log('✅ Frame processed:', {
+          originalSize: `${resizeResult.originalWidth}x${resizeResult.originalHeight}`,
+          resizedSize: `${resizeResult.resizedWidth}x${resizeResult.resizedHeight}`,
+          wasResized: resizeResult.wasResized
+        });
+      } catch (error) {
+        console.error('❌ Failed to process input frame:', error);
+        // Continue without frame - don't fail the whole request
+      }
+    }
+
+    // Start Sora 2 video generation using new SDK
     let videoJobId: string;
     let generationStatus: string;
 
     try {
-      console.log('Starting Sora 2 video generation...');
-      console.log('Prompt:', finalPrompt);
+      console.log('🎬 Starting Sora 2 video generation...');
+      console.log('Prompt:', finalPrompt.substring(0, 200) + '...');
+      console.log('Has input frame:', !!processedFrame);
 
-      // Call Sora 2 API (this only creates the job, doesn't wait for completion)
-      const response = await fetch('https://api.openai.com/v1/videos', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'sora-2', // Standard model for 8-second videos
-          prompt: finalPrompt,
-          size: '720x1280', // 9:16 portrait for mobile
-          seconds: '8' // Fixed 8 seconds per scene
-        })
+      // Call Sora 2 Pro API (matching video-admin setup)
+      const result = await generateVideo({
+        prompt: finalPrompt,
+        model: 'sora-2-pro',
+        aspectRatio: '9:21', // Maps to 1024x1792 (Pro portrait)
+        duration: 12,
+        inputImage: processedFrame,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Sora 2 API error:', error);
+      if (result.status === 'failed') {
+        console.error('Sora 2 generation failed:', result.error);
 
         // Update prompt outcome based on error type
         let outcome = 'api_error';
-        if (error.error?.code === 'content_policy_violation' || error.error?.type === 'content_policy_violation') {
+        if (result.error?.code === 'content_policy_violation') {
           outcome = 'moderation_rejected';
-        } else if (error.error?.code === 'rate_limit_exceeded') {
+        } else if (result.error?.code === 'rate_limit_exceeded') {
           outcome = 'rate_limited';
         }
 
@@ -181,7 +233,7 @@ export async function POST(request: NextRequest) {
             outcome = $1,
             error_message = $2
           WHERE id = $3
-        `, [outcome, error.error?.message || 'Unknown error', promptRow.id]);
+        `, [outcome, result.error?.message || 'Unknown error', promptRow.id]);
 
         // Update scene back to awaiting_prompt for retry
         await query(`
@@ -194,7 +246,7 @@ export async function POST(request: NextRequest) {
           {
             error: 'Video generation failed',
             errorType: outcome,
-            details: error.error?.message || 'Unknown error',
+            details: result.error?.message || 'Unknown error',
             canRetry: true,
             promptId: promptRow.id
           },
@@ -202,11 +254,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const videoJob = await response.json();
-      videoJobId = videoJob.id;
-      generationStatus = videoJob.status || 'queued';
+      videoJobId = result.id;
+      generationStatus = result.status;
 
-      console.log('Sora 2 job created:', { videoJobId, status: generationStatus });
+      console.log('✅ Sora 2 job created:', { videoJobId, status: generationStatus });
 
       // Update prompt with video job ID
       await query(`

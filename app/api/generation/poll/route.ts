@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
           status: 'completed',
           promptId,
           videoJobId: promptRow.video_job_id,
-          downloadUrl: videoStatus.downloadUrl,
+          videoUrl: videoStatus.video_url,
           message: 'Video generation completed'
         });
       } else if (videoStatus.status === 'failed') {

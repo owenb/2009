@@ -743,4 +743,343 @@ contract VideoAdventureV1Test is Test {
         uint256 expectedEarnings = (SCENE_PRICE * 3000) / 10000;
         assertEq(adventure.earnings(user1), user1EarningsBefore + expectedEarnings);
     }
+
+    // ============ DETAILED REVENUE FLOW TEST WITH LOGGING ============
+
+    /**
+     * @notice Comprehensive test that logs detailed fund distribution flow across 5 generations
+     * @dev This test demonstrates the complete lifecycle of scene creation and revenue distribution
+     *      including how funds flow backward through the scene tree to reward all ancestors
+     */
+    function testDetailedRevenueFlowWithLogging() public {
+        console2.log("\n==========================================================");
+        console2.log("DETAILED REVENUE FLOW TEST - MULTI-GENERATION SCENE TREE");
+        console2.log("==========================================================\n");
+
+        console2.log("CONFIGURATION:");
+        console2.log("  Scene Price: 0.007 ETH (7000000000000000 wei)");
+        console2.log("  Revenue Split:");
+        console2.log("    - Parent Creator:        20% (2000 basis points)");
+        console2.log("    - Grandparent Creator:   10% (1000 basis points)");
+        console2.log("    - Great-GP Creator:       5% ( 500 basis points)");
+        console2.log("    - Movie Creator:         55% (5500 basis points)");
+        console2.log("    - Platform Treasury:     10% (1000 basis points)");
+        console2.log("                           -----");
+        console2.log("                           100% (10000 basis points)\n");
+
+        // ====== PHASE 1: Setup Movie and Genesis ======
+        console2.log("PHASE 1: Creating Movie and Genesis Scene");
+        console2.log("------------------------------------------");
+
+        uint256 movieId = adventure.createPlatformMovie("2009", "The First Decision", movieCreator, SCENE_PRICE);
+        console2.log("  Movie Created:");
+        console2.log("    - Movie ID:", movieId);
+        console2.log("    - Movie Creator:", movieCreator);
+        console2.log("    - Scene Price: 0.007 ETH\n");
+
+        uint256 genesisId = adventure.createGenesisScene(movieId, "ipfs://genesis");
+        console2.log("  Genesis Scene Minted:");
+        console2.log("    - Scene ID:", genesisId);
+        console2.log("    - Creator (Movie Creator):", movieCreator);
+        console2.log("    - Slot: 255 (genesis special slot)");
+        console2.log("    - NFT Owner:", adventure.ownerOf(genesisId), "\n");
+
+        // Create additional users for deep tree
+        address user4 = address(0x6);
+        address user5 = address(0x7);
+        vm.deal(user4, 10 ether);
+        vm.deal(user5, 10 ether);
+
+        // ====== PHASE 2: First Generation (Child of Genesis) ======
+        console2.log("\n==========================================================");
+        console2.log("PHASE 2: Creating Generation 1 (Child of Genesis)");
+        console2.log("==========================================================\n");
+
+        vm.prank(user1);
+        uint256 gen1Scene = adventure.claimSlot{value: SCENE_PRICE}(genesisId, 0);
+        console2.log("  User1 Claims Slot A under Genesis");
+        console2.log("    - Scene ID:", gen1Scene);
+        console2.log("    - Payment: 0.007 ETH");
+        console2.log("    - Status: ESCROWED (awaiting confirmation)\n");
+
+        // Snapshot balances before confirmation
+        uint256 movieCreatorBefore = adventure.earnings(movieCreator);
+        uint256 treasuryBefore = adventure.earnings(treasury);
+
+        vm.prank(user1);
+        adventure.confirmScene(gen1Scene, "ipfs://gen1");
+
+        console2.log("  User1 Confirms Scene - Distribution Executed:");
+        console2.log("    - NFT Minted to User1:", adventure.ownerOf(gen1Scene));
+        console2.log("\n  REVENUE DISTRIBUTION (0.007 ETH):");
+        console2.log("    [X] Parent:         N/A (genesis is movie creator)");
+        console2.log("    [X] Grandparent:    N/A (no grandparent)");
+        console2.log("    [X] Great-GP:       N/A (no great-grandparent)");
+
+        uint256 movieCreatorEarned = adventure.earnings(movieCreator) - movieCreatorBefore;
+        uint256 treasuryEarned = adventure.earnings(treasury) - treasuryBefore;
+
+        console2.log("    [+] Movie Creator:  %s wei (55%% base + 35%% unclaimed ancestors = 90%%)", movieCreatorEarned);
+        console2.log("    [+] Platform:       %s wei (10%%)", treasuryEarned);
+        console2.log("\n  EARNINGS SNAPSHOT:");
+        console2.log("    - Movie Creator Total: %s wei", adventure.earnings(movieCreator));
+        console2.log("    - Treasury Total:      %s wei", adventure.earnings(treasury));
+        console2.log("    - User1 Total:         %s wei\n", adventure.earnings(user1));
+
+        // ====== PHASE 3: Second Generation (Grandchild of Genesis) ======
+        console2.log("\n==========================================================");
+        console2.log("PHASE 3: Creating Generation 2 (Grandchild of Genesis)");
+        console2.log("==========================================================\n");
+
+        vm.prank(user2);
+        uint256 gen2Scene = adventure.claimSlot{value: SCENE_PRICE}(gen1Scene, 1);
+        console2.log("  User2 Claims Slot B under Gen1 Scene");
+        console2.log("    - Scene ID:", gen2Scene);
+        console2.log("    - Parent Scene:", gen1Scene, "(owned by User1)");
+        console2.log("    - Payment: 0.007 ETH\n");
+
+        // Snapshot all relevant balances
+        uint256 user1Before = adventure.earnings(user1);
+        movieCreatorBefore = adventure.earnings(movieCreator);
+        treasuryBefore = adventure.earnings(treasury);
+
+        vm.prank(user2);
+        adventure.confirmScene(gen2Scene, "ipfs://gen2");
+
+        console2.log("  User2 Confirms Scene - Distribution Executed:");
+        console2.log("    - NFT Minted to User2:", adventure.ownerOf(gen2Scene));
+        console2.log("\n  REVENUE DISTRIBUTION (0.007 ETH):");
+
+        uint256 user1Earned = adventure.earnings(user1) - user1Before;
+        movieCreatorEarned = adventure.earnings(movieCreator) - movieCreatorBefore;
+        treasuryEarned = adventure.earnings(treasury) - treasuryBefore;
+
+        console2.log("    [+] Parent (User1):       %s wei (20%%)", user1Earned);
+        console2.log("    [+] Grandparent (Genesis): %s wei (10%% -> Movie Creator)", (SCENE_PRICE * 1000) / 10000);
+        console2.log("    [X] Great-GP:             N/A (no great-grandparent)");
+        console2.log("    [+] Movie Creator:        %s wei (55%% + 10%% grandparent + 5%% great-GP = 70%%)", movieCreatorEarned);
+        console2.log("    [+] Platform:             %s wei (10%%)", treasuryEarned);
+
+        console2.log("\n  EARNINGS SNAPSHOT:");
+        console2.log("    - User1 Total:         %s wei (+%s)", adventure.earnings(user1), user1Earned);
+        console2.log("    - Movie Creator Total: %s wei (+%s)", adventure.earnings(movieCreator), movieCreatorEarned);
+        console2.log("    - Treasury Total:      %s wei (+%s)", adventure.earnings(treasury), treasuryEarned);
+        console2.log("    - User2 Total:         %s wei\n", adventure.earnings(user2));
+
+        // ====== PHASE 4: Third Generation (Great-Grandchild of Genesis) ======
+        console2.log("\n==========================================================");
+        console2.log("PHASE 4: Creating Generation 3 (Great-Grandchild of Genesis)");
+        console2.log("==========================================================\n");
+
+        vm.prank(user3);
+        uint256 gen3Scene = adventure.claimSlot{value: SCENE_PRICE}(gen2Scene, 2);
+        console2.log("  User3 Claims Slot C under Gen2 Scene");
+        console2.log("    - Scene ID:", gen3Scene);
+        console2.log("    - Parent Scene:", gen2Scene, "(owned by User2)");
+        console2.log("    - Grandparent Scene:", gen1Scene, "(owned by User1)");
+        console2.log("    - Payment: 0.007 ETH\n");
+
+        // Snapshot all balances
+        user1Before = adventure.earnings(user1);
+        uint256 user2Before = adventure.earnings(user2);
+        movieCreatorBefore = adventure.earnings(movieCreator);
+        treasuryBefore = adventure.earnings(treasury);
+
+        vm.prank(user3);
+        adventure.confirmScene(gen3Scene, "ipfs://gen3");
+
+        console2.log("  User3 Confirms Scene - Distribution Executed:");
+        console2.log("    - NFT Minted to User3:", adventure.ownerOf(gen3Scene));
+        console2.log("\n  REVENUE DISTRIBUTION (0.007 ETH):");
+
+        user1Earned = adventure.earnings(user1) - user1Before;
+        uint256 user2Earned = adventure.earnings(user2) - user2Before;
+        movieCreatorEarned = adventure.earnings(movieCreator) - movieCreatorBefore;
+        treasuryEarned = adventure.earnings(treasury) - treasuryBefore;
+
+        console2.log("    [+] Parent (User2):       %s wei (20%%)", user2Earned);
+        console2.log("    [+] Grandparent (User1):  %s wei (10%%)", user1Earned);
+        console2.log("    [+] Great-GP (Genesis):   %s wei (5%% -> Movie Creator)", (SCENE_PRICE * 500) / 10000);
+        console2.log("    [+] Movie Creator:        %s wei (55%% + 5%% great-GP = 60%%)", movieCreatorEarned);
+        console2.log("    [+] Platform:             %s wei (10%%)", treasuryEarned);
+
+        console2.log("\n  EARNINGS SNAPSHOT:");
+        console2.log("    - User1 Total:         %s wei (+%s)", adventure.earnings(user1), user1Earned);
+        console2.log("    - User2 Total:         %s wei (+%s)", adventure.earnings(user2), user2Earned);
+        console2.log("    - Movie Creator Total: %s wei (+%s)", adventure.earnings(movieCreator), movieCreatorEarned);
+        console2.log("    - Treasury Total:      %s wei (+%s)", adventure.earnings(treasury), treasuryEarned);
+        console2.log("    - User3 Total:         %s wei\n", adventure.earnings(user3));
+
+        // ====== PHASE 5: Fourth Generation (Full Distribution) ======
+        console2.log("\n==========================================================");
+        console2.log("PHASE 5: Creating Generation 4 (FULL DISTRIBUTION TEST)");
+        console2.log("==========================================================\n");
+
+        vm.prank(user4);
+        uint256 gen4Scene = adventure.claimSlot{value: SCENE_PRICE}(gen3Scene, 0);
+        console2.log("  User4 Claims Slot A under Gen3 Scene");
+        console2.log("    - Scene ID:", gen4Scene);
+        console2.log("    - Parent Scene:", gen3Scene, "(owned by User3)");
+        console2.log("    - Grandparent Scene:", gen2Scene, "(owned by User2)");
+        console2.log("    - Great-Grandparent Scene:", gen1Scene, "(owned by User1)");
+        console2.log("    - Payment: 0.007 ETH\n");
+
+        // Snapshot all balances
+        user1Before = adventure.earnings(user1);
+        user2Before = adventure.earnings(user2);
+        uint256 user3Before = adventure.earnings(user3);
+        movieCreatorBefore = adventure.earnings(movieCreator);
+        treasuryBefore = adventure.earnings(treasury);
+
+        vm.prank(user4);
+        adventure.confirmScene(gen4Scene, "ipfs://gen4");
+
+        console2.log("  User4 Confirms Scene - Distribution Executed:");
+        console2.log("    - NFT Minted to User4:", adventure.ownerOf(gen4Scene));
+        console2.log("\n  REVENUE DISTRIBUTION (0.007 ETH) - FULL CHAIN ACTIVE:");
+
+        user1Earned = adventure.earnings(user1) - user1Before;
+        user2Earned = adventure.earnings(user2) - user2Before;
+        uint256 user3Earned = adventure.earnings(user3) - user3Before;
+        movieCreatorEarned = adventure.earnings(movieCreator) - movieCreatorBefore;
+        treasuryEarned = adventure.earnings(treasury) - treasuryBefore;
+
+        console2.log("    [+] Parent (User3):           %s wei (20%%)", user3Earned);
+        console2.log("    [+] Grandparent (User2):      %s wei (10%%)", user2Earned);
+        console2.log("    [+] Great-GP (User1):         %s wei (5%%)", user1Earned);
+        console2.log("    [+] Movie Creator:            %s wei (55%%)", movieCreatorEarned);
+        console2.log("    [+] Platform:                 %s wei (10%%)", treasuryEarned);
+        console2.log("                                  ----------");
+        uint256 totalDistributed = user1Earned + user2Earned + user3Earned + movieCreatorEarned + treasuryEarned;
+        console2.log("    TOTAL DISTRIBUTED:            %s wei (should equal 0.007 ETH)", totalDistributed);
+
+        // Verify exact distribution
+        assertEq(user3Earned, (SCENE_PRICE * 2000) / 10000, "Parent should get exactly 20%");
+        assertEq(user2Earned, (SCENE_PRICE * 1000) / 10000, "Grandparent should get exactly 10%");
+        assertEq(user1Earned, (SCENE_PRICE * 500) / 10000, "Great-grandparent should get exactly 5%");
+        assertEq(movieCreatorEarned, (SCENE_PRICE * 5500) / 10000, "Movie creator should get exactly 55%");
+        assertEq(treasuryEarned, (SCENE_PRICE * 1000) / 10000, "Platform should get exactly 10%");
+        assertEq(totalDistributed, SCENE_PRICE, "Total distribution must equal scene price");
+
+        console2.log("\n  EARNINGS SNAPSHOT:");
+        console2.log("    - User1 Total:         %s wei (+%s)", adventure.earnings(user1), user1Earned);
+        console2.log("    - User2 Total:         %s wei (+%s)", adventure.earnings(user2), user2Earned);
+        console2.log("    - User3 Total:         %s wei (+%s)", adventure.earnings(user3), user3Earned);
+        console2.log("    - Movie Creator Total: %s wei (+%s)", adventure.earnings(movieCreator), movieCreatorEarned);
+        console2.log("    - Treasury Total:      %s wei (+%s)", adventure.earnings(treasury), treasuryEarned);
+        console2.log("    - User4 Total:         %s wei\n", adventure.earnings(user4));
+
+        // ====== PHASE 6: Fifth Generation (Branch Demonstration) ======
+        console2.log("\n==========================================================");
+        console2.log("PHASE 6: Creating Generation 5 (BRANCH DEMONSTRATION)");
+        console2.log("==========================================================\n");
+        console2.log("  Creating two scenes at Gen 5 to show independent distributions:\n");
+
+        // Branch 1: User5 extends Gen4 Scene
+        vm.prank(user5);
+        uint256 gen5SceneA = adventure.claimSlot{value: SCENE_PRICE}(gen4Scene, 1);
+
+        user1Before = adventure.earnings(user1);
+        user2Before = adventure.earnings(user2);
+        user3Before = adventure.earnings(user3);
+        uint256 user4Before = adventure.earnings(user4);
+        movieCreatorBefore = adventure.earnings(movieCreator);
+        treasuryBefore = adventure.earnings(treasury);
+
+        vm.prank(user5);
+        adventure.confirmScene(gen5SceneA, "ipfs://gen5a");
+
+        console2.log("  Branch A: User5 extends Gen4 (User4's scene)");
+        console2.log("    - Parent (User4) earns:       %s wei (20%%)", adventure.earnings(user4) - user4Before);
+        console2.log("    - Grandparent (User3) earns:  %s wei (10%%)", adventure.earnings(user3) - user3Before);
+        console2.log("    - Great-GP (User2) earns:     %s wei (5%%)", adventure.earnings(user2) - user2Before);
+        console2.log("    - Movie Creator earns:        %s wei (55%%)", adventure.earnings(movieCreator) - movieCreatorBefore);
+        console2.log("    - Platform earns:             %s wei (10%%)\n", adventure.earnings(treasury) - treasuryBefore);
+
+        // Branch 2: User1 creates another branch at Gen1
+        vm.prank(user1);
+        uint256 gen2SceneB = adventure.claimSlot{value: SCENE_PRICE}(gen1Scene, 2);
+
+        movieCreatorBefore = adventure.earnings(movieCreator);
+        treasuryBefore = adventure.earnings(treasury);
+
+        vm.prank(user1);
+        adventure.confirmScene(gen2SceneB, "ipfs://gen2b");
+
+        console2.log("  Branch B: User1 extends Gen1 (their own earlier scene)");
+        console2.log("    - Parent (User1/Genesis) earns: %s wei (20%% -> but User1 is parent!)", (SCENE_PRICE * 2000) / 10000);
+        console2.log("    - Grandparent (Genesis) earns:  %s wei (10%% -> Movie Creator)", (SCENE_PRICE * 1000) / 10000);
+        console2.log("    - Movie Creator earns:          %s wei (includes grandparent share)", adventure.earnings(movieCreator) - movieCreatorBefore);
+        console2.log("    - Platform earns:               %s wei (10%%)\n", adventure.earnings(treasury) - treasuryBefore);
+
+        // ====== PHASE 7: Withdrawal Test ======
+        console2.log("\n==========================================================");
+        console2.log("PHASE 7: WITHDRAWAL TEST");
+        console2.log("==========================================================\n");
+
+        console2.log("  Final Earnings Before Withdrawal:");
+        uint256 user1FinalEarnings = adventure.earnings(user1);
+        uint256 user2FinalEarnings = adventure.earnings(user2);
+        uint256 user3FinalEarnings = adventure.earnings(user3);
+        uint256 user4FinalEarnings = adventure.earnings(user4);
+        uint256 movieCreatorFinalEarnings = adventure.earnings(movieCreator);
+        uint256 treasuryFinalEarnings = adventure.earnings(treasury);
+
+        console2.log("    - User1:        %s wei", user1FinalEarnings);
+        console2.log("    - User2:        %s wei", user2FinalEarnings);
+        console2.log("    - User3:        %s wei", user3FinalEarnings);
+        console2.log("    - User4:        %s wei", user4FinalEarnings);
+        console2.log("    - User5:        %s wei", adventure.earnings(user5));
+        console2.log("    - Movie Creator: %s wei", movieCreatorFinalEarnings);
+        console2.log("    - Treasury:     %s wei\n", treasuryFinalEarnings);
+
+        // Test User2 withdrawal
+        uint256 user2BalanceBefore = user2.balance;
+        vm.prank(user2);
+        adventure.withdrawEarnings();
+
+        console2.log("  User2 Withdraws Earnings:");
+        console2.log("    - Amount Withdrawn: %s wei", user2FinalEarnings);
+        console2.log("    - New Balance:      %s wei", user2.balance);
+        console2.log("    - Earnings Reset:   %s wei", adventure.earnings(user2));
+        assertEq(user2.balance, user2BalanceBefore + user2FinalEarnings, "Withdrawal amount incorrect");
+        assertEq(adventure.earnings(user2), 0, "Earnings not reset after withdrawal");
+
+        // ====== FINAL SUMMARY ======
+        console2.log("\n==========================================================");
+        console2.log("FINAL SUMMARY: REVENUE MODEL VERIFICATION");
+        console2.log("==========================================================\n");
+
+        uint256 totalRevenue = SCENE_PRICE * 6; // 6 scenes confirmed (excluding gen1Scene that only received distributions)
+        console2.log("  Total Revenue Generated:    %s wei (6 scenes @ 0.007 ETH)", totalRevenue);
+        console2.log("  Total Earnings Distributed: %s wei",
+            adventure.earnings(user1) +
+            adventure.earnings(user2) + // Should be 0 after withdrawal
+            adventure.earnings(user3) +
+            adventure.earnings(user4) +
+            adventure.earnings(user5) +
+            adventure.earnings(movieCreator) +
+            adventure.earnings(treasury) +
+            user2FinalEarnings // Add back withdrawn amount
+        );
+
+        console2.log("\n  Key Insights:");
+        console2.log("    1. Each scene purchase distributes funds to up to 3 ancestors");
+        console2.log("    2. Movie creator receives base 55%% + any missing ancestor shares");
+        console2.log("    3. Platform always receives exactly 10%%");
+        console2.log("    4. Creators earn from ALL descendants (children, grandchildren, etc.)");
+        console2.log("    5. Early scenes earn passive income from entire sub-tree below them");
+        console2.log("\n  Break-Even Analysis (per GAME_DESIGN.md):");
+        console2.log("    - Cost per scene: 0.007 ETH");
+        console2.log("    - To break even, need:");
+        console2.log("      * 1 child (20%% = 0.0014) +");
+        console2.log("      * 3 grandchildren (10%% each = 0.0021) +");
+        console2.log("      * 8 great-grandchildren (5%% each = 0.0028)");
+        console2.log("      = 0.0063 ETH recovered");
+        console2.log("    - After ~12 descendants, scene becomes profitable!\n");
+
+        console2.log("==========================================================");
+        console2.log("TEST COMPLETED SUCCESSFULLY");
+        console2.log("==========================================================\n");
+    }
 }

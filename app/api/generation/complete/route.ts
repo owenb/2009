@@ -106,11 +106,10 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Download video from Sora
     let videoBlob: Blob;
-    const downloadUrl = `https://api.openai.com/v1/videos/${videoJobId}/content`;
 
     try {
       console.log('Downloading video from Sora...');
-      videoBlob = await downloadSoraVideo(downloadUrl);
+      videoBlob = await downloadSoraVideo(videoJobId);
       console.log(`Video downloaded: ${videoBlob.size} bytes`);
     } catch (error) {
       console.error('Failed to download video:', error);

@@ -8,6 +8,7 @@ import VideoAdventureABI from "../../lib/VideoAdventure.abi.json";
 import ExtendStoryModal from "./ExtendStoryModal";
 import AboutModal from "./AboutModal";
 import SceneMapModal from "./SceneMapModal";
+import EarningsNotification from "./EarningsNotification";
 import type { SlotInfo } from "@/lib/db/types";
 import type { SceneData } from "@/lib/types";
 
@@ -309,6 +310,9 @@ export default function SlotChoiceModal({ isVisible, parentSceneId = 'genesis', 
 
   return (
     <div className="absolute top-0 left-0 w-full h-full flex items-end justify-center z-10 animate-fade-in pointer-events-none">
+      {/* Earnings notification */}
+      <EarningsNotification isVisible={isVisible} />
+
       <div className="relative w-full max-w-[600px] bg-black/85 rounded-t-[20px] p-8 pb-[max(2rem,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-10px_40px_rgba(255,255,255,0.1),inset_0_0_40px_rgba(255,255,255,0.05)] animate-slide-up pointer-events-auto sm:p-6 sm:pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] sm:max-w-full">
         <h2 className="font-saira text-[1.5rem] font-bold text-white text-center m-0 mb-8 sm:mb-6 uppercase tracking-[0.1em]" style={{textShadow: '0 0 20px rgba(255, 255, 255, 0.5)'}}>
           What happens next?
